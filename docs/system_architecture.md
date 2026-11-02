@@ -88,9 +88,9 @@
 |---|---|
 | `identity` | `profiles`, `project_members`, `shared_reports` |
 | `projects` | `projects`, `phases`, `tasks`, `readiness_gates` |
-| `finance` | `budget_categories`, `expenses`, `exchange_rates`, `contracts`, `payments`, `change_orders` |
+| `finance` | `budget_categories`, `expenses`, `exchange_rates`, `contracts`, `payments`, `change_orders`, `obligations`, `expected_income` |
 | `materials` | `quantity_items`, `purchases`, `price_records`, `stock_counts` |
-| `quality` | `checklists`, `checklist_items`, `issues` |
+| `quality` | `checklists`, `checklist_items`, `issues`, `concrete_pours` |
 | `documents` | `documents`, `photos` |
 | `knowledge` | `kb_entries` (حالة المراجعة ومن راجع) |
 | `decisions` | `decision_scenarios` |
@@ -265,6 +265,7 @@ repo/
 6.  إضافة عرض `weekly_report_v` ودور `reporting_reader` بصلاحية SELECT عليه فقط.
 7.  اعتماد بادئة أو توثيق ملكية لكل جدول بحسب الجدول في القسم 4.3.
 8.  دعم 3.23: إضافة الحالة `closing` لحالات `phases`، وجدول `phase_closing_checks` في `projects`، وجدول `stock_counts` في `materials`، وقالب قائمة تسليم المرحلة في `quality`.
+9.  ترحيل 0002 (28 أكتوبر 2026، منفَّذ): `obligations` و`expected_income` في `finance`، و`concrete_pours` في `quality`، وحالات العيب (مفتوح، قيد المعالجة، مغلق)، ونوع قائمة «جاهزية»، وتكلفة النقل في سجل الأسعار.
 
 ---
 
@@ -295,6 +296,6 @@ repo/
 5.  **بعد المحرك الموحد:** `trades` (السباكة والكهرباء واللياسة أولًا).
 6.  **الأولوية 3:** `knowledge` والمساعد، `notifications` + n8n.
 7.  **L3:** `dashboard` و`decisions` تُبنى فوق ما سبق.
-8.  **الأخيرة:** `documents` المتقدمة وPWA (إن أُكدت).
+8.  **الأخيرة:** `documents` المتقدمة وPWA (بقرار المالك، بعد النواة).
 
 **قاعدة:** لا تبدأ وحدة قبل أن تكتمل تبعياتها الأدنى، ولا تُدمج وحدة قبل أن تمر اختبارات العزل.

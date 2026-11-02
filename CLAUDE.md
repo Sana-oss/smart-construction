@@ -9,7 +9,10 @@ target delivery **1 January 2027**. The team must be able to explain every line 
 - `docs/graduation_project_master_reference.md` — scope, priorities, decisions, risks. Section 17 = execution rules.
 - `docs/system_architecture.md` — modular monolith, layers, module ownership, events, security.
 - `docs/analysis_and_design.md` — use cases, activity/sequence diagrams, ERD v2.
-- `supabase/migrations/` — the database. Migrations are append-only: never edit an applied migration, add a new one.
+- `docs/requirements_specification.md` — numbered requirements (FR-/NFR-) with acceptance criteria. Implement by requirement ID
+  and cite the ID in commit messages. If a requirement conflicts with another doc, stop and ask.
+- `docs/project_change_register.md` — decisions, file status, known inconsistencies. Record every scope change there.
+- `supabase/migrations/` — the database (0001, then 0002; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
 
 If code and docs disagree, stop and ask; do not silently pick one.
 
@@ -17,6 +20,20 @@ If code and docs disagree, stop and ask; do not silently pick one.
 - `npm run check` — lint + typecheck + unit tests (run before every commit)
 - `npm run build` — production build (what Vercel runs)
 - `npm run test:db` — migration + RLS tests; needs `DATABASE_URL` of a THROWAWAY Postgres. Never a real project.
+
+## Scope (committed; see docs/graduation_project_master_reference.md section 17)
+All features 3.1–3.23 in the docs are in scope for v1, built minimal-first, then deepened. Priorities and the cut order live in
+master section 8. Before changing scope or a decision, check `docs/project_change_register.md` and record the change there.
+
+**Do NOT build** (explicitly excluded; ask first if you think one is needed):
+- AI analysis of site photos, automatic quantity extraction from drawings, or price forecasting. The replacements are:
+  structured photo documentation (3.8), a quantity table entered once (3.9), and the owner's own price log (3.10).
+- Engineer/contractor accounts. Use a read-only share link (hashed token, expiry, revocable) instead.
+- Hard-blocking phase closure or work start. Warn, require explicit owner confirmation, and log it (decision D2).
+- WhatsApp integration, supplier integrations, or live exchange-rate feeds.
+
+**Built on internal analysis, not proven user demand:** 3.20 (offline) and 3.23 (stock count and handover). Keep each behind a
+feature flag (`offline`, `handover` in `feature_flags`) so it can be switched off without rebuilding anything else.
 
 ## Architecture rules (enforced by lint/CI; do not work around them)
 1. **Modular monolith.** Code lives in `src/modules/<name>/{domain,application,infra,ui}` with one public file `index.ts`.
