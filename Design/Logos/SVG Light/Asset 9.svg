@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 174.86 45.18">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        font-family: thmanyahsans-Bold, 'thmanyah sans';
+        font-size: 16.75px;
+        font-weight: 700;
+      }
+
+      .cls-3 {
+        font-family: thmanyahsans-Light, 'thmanyah sans';
+        font-size: 9.34px;
+        font-weight: 300;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <g>
+        <path class="cls-1" d="M161.25,0l-43.29.02v42.54h14.24v-13.88l8.28,8.29,5.53,5.59,14.61-.03v-13.88h-13.96l-3.33-3.33-1.75-1.72-9.36-9.41h28.41v14.47l14.2,13.88h.05V13.64l-13.61-13.64Z"/>
+        <text class="cls-3" transform="translate(0 28.82)"><tspan x="0" y="0">للإنشاءات الهندسية والمعمارية</tspan><tspan x="46.72" y="11.21">والمقاولات العامة</tspan></text>
+        <text class="cls-2" transform="translate(24.6 14.24)"><tspan x="0" y="0">منصة ركــــيزة</tspan></text>
+      </g>
+      <g>
+        <path class="cls-1" d="M161.25,0l-43.29.02v42.54h14.24v-13.88l8.28,8.29,5.53,5.59,14.61-.03v-13.88h-13.96l-3.33-3.33-1.75-1.72-9.36-9.41h28.41v14.47l14.2,13.88h.05V13.64l-13.61-13.64Z"/>
+        <text class="cls-3" transform="translate(0 28.82)"><tspan x="0" y="0">للإنشاءات الهندسية والمعمارية</tspan><tspan x="46.72" y="11.21">والمقاولات العامة</tspan></text>
+        <text class="cls-2" transform="translate(24.6 14.24)"><tspan x="0" y="0">منصة ركــــيزة</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
