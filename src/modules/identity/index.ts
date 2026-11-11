@@ -1,3 +1,21 @@
 // Public API of the identity module. Other code imports ONLY from "@/modules/identity".
-// See docs/system_architecture.md section 4 for the tables and features this module owns.
-export {};
+// Owns tables: profiles, project_members, shared_reports (architecture §4.3).
+
+// Domain (pure, safe anywhere, including Client Components for instant form feedback)
+export { normalizeLibyanMobile, LIBYAN_MOBILE_PREFIXES } from './domain/phone';
+export {
+  validateSignUp,
+  validateSignIn,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  type FieldError,
+  type CredentialsField,
+} from './domain/credentials';
+export { OTP_LENGTH } from './domain/otp';
+
+// Messages (Arabic) for forms
+export { fieldMessagesAr, failureMessagesAr } from './ui/messages.ar';
+
+// Server Actions for the auth pages (FR-ID-01). Use with React's useActionState.
+export { signUpAction, signInAction, verifyPhoneAction, signOutAction, type AuthFormState } from './ui/actions';
+export { HOME_PATH, SIGN_IN_PATH, AFTER_SIGN_UP_PATH } from './ui/routes';
