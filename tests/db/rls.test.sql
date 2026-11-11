@@ -11,6 +11,9 @@ grant select, insert, update, delete on all tables in schema public to app_user;
 select 'app_user can read weekly view (must be false in schema)', has_table_privilege('app_user','weekly_report_v','select') as allowed;
 grant select on all tables in schema public to app_user;
 grant execute on all functions in schema public to app_user;
+-- app_user plays Supabase's "authenticated" role, which 0004 lets use the RLS helpers in "private".
+grant usage on schema private to app_user;
+grant execute on all functions in schema private to app_user;
 -- owner creates project as the table owner bypassing RLS for seed
 set app.uid='00000000-0000-0000-0000-00000000000a';
 insert into projects(id,owner_id,name,total_budget_lyd,weekly_report_enabled) values ('11111111-1111-1111-1111-111111111111','00000000-0000-0000-0000-00000000000a','House A',100000,true);
