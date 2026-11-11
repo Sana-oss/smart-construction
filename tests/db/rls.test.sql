@@ -33,11 +33,62 @@ exception when insufficient_privilege or others then
   if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: viewer write blocked';
 end $$;
 
--- stranger: sees nothing
+-- stranger: cannot read or write anything. Every check RAISES on a leak so CI fails (a printed count proves nothing).
 set app.uid='00000000-0000-0000-0000-00000000000c';
-select 'stranger sees projects', count(*) from projects;
-select 'stranger sees expenses', count(*) from expenses;
-select 'stranger sees quantities', count(*) from quantity_items;
+do $$
+declare
+  t text;
+  n bigint;
+  -- every project-scoped table in 0001 (checklist_items is covered through checklists below)
+  tbls text[] := array['projects','project_members','shared_reports','phases','phase_closing_checks','tasks',
+    'budget_categories','exchange_rates','expenses','contracts','payments','change_orders','quantity_items',
+    'purchases','stock_counts','price_records','photos','documents','checklists','checklist_items','issues',
+    'decision_scenarios','notification_settings','notification_log',
+    'quantity_progress','budget_summary','expiring_quotes'];
+begin
+  foreach t in array tbls loop
+    execute format('select count(*) from %I', t) into n;
+    if n > 0 then raise exception 'LEAK: stranger reads % (% rows)', t, n; end if;
+  end loop;
+  raise notice 'OK: stranger reads nothing in % tables/views', array_length(tbls, 1);
+end $$;
+
+-- stranger cannot insert into the owner's project
+do $$ begin
+  insert into expenses(project_id,amount_lyd) values ('11111111-1111-1111-1111-111111111111',1);
+  raise exception 'LEAK: stranger inserted expense';
+exception when others then if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: stranger expense insert blocked'; end $$;
+do $$ begin
+  insert into project_members(project_id,user_id,role) values ('11111111-1111-1111-1111-111111111111','00000000-0000-0000-0000-00000000000c','editor');
+  raise exception 'LEAK: stranger added self as member';
+exception when others then if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: stranger self-join blocked'; end $$;
+do $$ begin
+  insert into projects(owner_id,name) values ('00000000-0000-0000-0000-00000000000a','Fake for owner');
+  raise exception 'LEAK: stranger created project for another owner';
+exception when others then if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: stranger cannot create project for another owner'; end $$;
+
+-- stranger cannot update or delete the seeded rows (RLS hides them, so 0 rows must be affected)
+do $$
+declare
+  t text;
+  n bigint;
+begin
+  foreach t in array array['phases','quantity_items','purchases','expenses','project_members'] loop
+    execute format('update %I set project_id = project_id', t);
+    get diagnostics n = row_count;
+    if n > 0 then raise exception 'LEAK: stranger updated % rows in %', n, t; end if;
+    execute format('delete from %I', t);
+    get diagnostics n = row_count;
+    if n > 0 then raise exception 'LEAK: stranger deleted % rows in %', n, t; end if;
+  end loop;
+  update projects set name = 'hacked';
+  get diagnostics n = row_count;
+  if n > 0 then raise exception 'LEAK: stranger updated projects'; end if;
+  delete from projects;
+  get diagnostics n = row_count;
+  if n > 0 then raise exception 'LEAK: stranger deleted projects'; end if;
+  raise notice 'OK: stranger update/delete affected 0 rows';
+end $$;
 
 -- idempotency: same client_op_id twice must fail
 set role app_user;

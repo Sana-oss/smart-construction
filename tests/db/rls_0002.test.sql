@@ -45,4 +45,27 @@ do $$ begin
   end if;
   raise notice 'OK: stranger sees nothing in new tables';
 end $$;
+do $$ begin
+  insert into obligations(project_id,creditor,amount_lyd,due_on) values ('11111111-1111-1111-1111-111111111111','Z',10,current_date);
+  raise exception 'LEAK: stranger wrote obligation';
+exception when others then if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: stranger obligation write blocked'; end $$;
+do $$ begin
+  insert into expected_income(project_id,source,amount_lyd,expected_on) values ('11111111-1111-1111-1111-111111111111','Z',10,current_date);
+  raise exception 'LEAK: stranger wrote expected_income';
+exception when others then if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: stranger expected_income write blocked'; end $$;
+do $$ begin
+  insert into concrete_pours(project_id,poured_on,location,qty_m3,supplier) values ('11111111-1111-1111-1111-111111111111',current_date,'Z',1,'S');
+  raise exception 'LEAK: stranger wrote pour';
+exception when others then if sqlerrm like 'LEAK%' then raise; end if; raise notice 'OK: stranger pour write blocked'; end $$;
+do $$
+declare n bigint;
+begin
+  update obligations set paid = true;
+  get diagnostics n = row_count;
+  if n > 0 then raise exception 'LEAK: stranger updated obligations'; end if;
+  delete from concrete_pours;
+  get diagnostics n = row_count;
+  if n > 0 then raise exception 'LEAK: stranger deleted concrete_pours'; end if;
+  raise notice 'OK: stranger update/delete on new tables affected 0 rows';
+end $$;
 reset role;
