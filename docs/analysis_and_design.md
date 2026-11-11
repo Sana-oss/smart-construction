@@ -651,3 +651,46 @@ sequenceDiagram
 
 - **تم:** حالات الاستخدام، ومخططات الأنشطة، وERD الإصدار 2 (مطبّق في `schema.sql`)، ومخططات التسلسل لـUC-07 وUC-21.
 - **يتبقى:** مراجعة المخططات مع المراجع الهندسي فيما يخص قوائم التسليم، والقرارات الخمس لمراجعة المخططات (لم تُحسم)، ومخططات الواجهات والمتطلبات المرقّمة. أما التقنية فقد حُسمت (A8 وA9 وA11).
+
+---
+
+## 11. مخطط التسلسل: UC-01 التسجيل برقم الهاتف وكلمة المرور (ترحيل 0003، 12 نوفمبر 2026)
+
+القاعدة هنا: لا يوجد مستخدم بلا ملف شخصي. Supabase Auth يضيف المستخدم إلى `auth.users`، وفي المعاملة نفسها يُنشئ الـtrigger `on_auth_user_created` سجله في `profiles`. لذلك لا يحتاج التطبيق إلى جلسة مفتوحة لإنشاء الملف، وهذا مهم لأن التسجيل مع تأكيد الرقم لا يعيد جلسة.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor O as المالك
+  participant UI as واجهة التسجيل
+  participant ID as identity (application)
+  participant AUTH as Supabase Auth
+  participant DB as PostgreSQL
+
+  O->>UI: الاسم + رقم الهاتف + كلمة المرور
+  UI->>ID: signUp(phone, password, fullName)
+  ID->>ID: تحقق من الصيغة الليبية للرقم وطول كلمة المرور
+  alt مدخل غير صالح
+    ID-->>UI: رسالة خطأ عربية (لا يُرسل شيء)
+  else مدخل صالح
+    ID->>AUTH: signUp({ phone, password, options.data.full_name })
+    AUTH->>DB: insert into auth.users
+    DB->>DB: trigger on_auth_user_created → handle_new_user()
+    DB->>DB: insert into profiles(id, full_name) on conflict do nothing
+    DB-->>AUTH: تمّت المعاملة (المستخدم والملف معًا أو لا شيء)
+    opt تأكيد الرقم مفعّل (قرار SMS معلّق)
+      AUTH-->>O: رمز تحقق برسالة SMS
+      O->>UI: إدخال الرمز
+      UI->>AUTH: verifyOtp(phone, token)
+    end
+    AUTH-->>UI: جلسة
+    UI-->>O: الانتقال إلى معالج الدخول الأول (FR-ID-01)
+  end
+```
+
+**ملاحظات على UC-01:**
+- الدالة `handle_new_user` تعمل بصلاحية مالكها (`security definer`) لأن المستخدم الجديد لا يملك بعد حق الكتابة في `profiles`، و`search_path` فارغ وكل الأسماء مؤهلة بالمخطط، فلا يمكن خداعها بكائن بالاسم نفسه.
+- الاسم يأتي من بيانات التسجيل، ويُحذف ما حوله من مسافات، والاسم الفارغ يُخزَّن `null`.
+- حذف المستخدم من `auth.users` يحذف ملفه تلقائيًا (`on delete cascade`).
+- `profiles` خاص بصاحبه: لا يقرأ المستخدم ولا يعدّل إلا ملفه (سياسة `own_profile`)، وهذا مختبَر في `tests/db/rls_0003.test.sql`.
+- لا كيان جديد في ERD: الترحيل يضيف دالة وtrigger فقط.
