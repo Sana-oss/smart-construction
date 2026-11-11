@@ -12,7 +12,7 @@ target delivery **1 January 2027**. The team must be able to explain every line 
 - `docs/requirements_specification.md` — numbered requirements (FR-/NFR-) with acceptance criteria. Implement by requirement ID
   and cite the ID in commit messages. If a requirement conflicts with another doc, stop and ask.
 - `docs/project_change_register.md` — decisions, file status, known inconsistencies. Record every scope change there.
-- `supabase/migrations/` — the database (0001, then 0002; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
+- `supabase/migrations/` — the database (0001, 0002, 0003, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
 
 If code and docs disagree, stop and ask; do not silently pick one.
 

@@ -267,6 +267,7 @@ repo/
 7.  اعتماد بادئة أو توثيق ملكية لكل جدول بحسب الجدول في القسم 4.3.
 8.  دعم 3.23: إضافة الحالة `closing` لحالات `phases`، وجدول `phase_closing_checks` في `projects`، وجدول `stock_counts` في `materials`، وقالب قائمة تسليم المرحلة في `quality`.
 9.  ترحيل 0002 (28 أكتوبر 2026، منفَّذ): `obligations` و`expected_income` في `finance`، و`concrete_pours` في `quality`، وحالات العيب (مفتوح، قيد المعالجة، مغلق)، ونوع قائمة «جاهزية»، وتكلفة النقل في سجل الأسعار.
+10. ترحيل 0003 (12 نوفمبر 2026، منفَّذ، وحدة `identity`): الدالة `handle_new_user` والـtrigger `on_auth_user_created` على `auth.users`، فيُنشأ سجل `profiles` في معاملة التسجيل نفسها. الدالة `security definer` مع `search_path` فارغ، وصلاحية تنفيذها مسحوبة من `public` و`anon` و`authenticated`. لا جدول جديد.
 
 ---
 

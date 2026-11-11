@@ -8,6 +8,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q \
   -f tests/db/stub_auth.sql \
   -f supabase/migrations/0001_init.sql \
   -f supabase/migrations/0002_requirements_gaps.sql \
+  -f supabase/migrations/0003_identity_profile_on_signup.sql \
   -f tests/db/rls.test.sql \
-  -f tests/db/rls_0002.test.sql
+  -f tests/db/rls_0002.test.sql \
+  -f tests/db/rls_0003.test.sql
 echo "DB tests passed."

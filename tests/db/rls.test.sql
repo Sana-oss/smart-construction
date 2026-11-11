@@ -1,6 +1,8 @@
 -- RLS, views, constraints and role tests. Run through scripts/test-db.sh against a THROWAWAY database.
 insert into auth.users values ('00000000-0000-0000-0000-00000000000a'),('00000000-0000-0000-0000-00000000000b'),('00000000-0000-0000-0000-00000000000c');
-insert into profiles(id,full_name) values ('00000000-0000-0000-0000-00000000000a','Owner'),('00000000-0000-0000-0000-00000000000b','Viewer'),('00000000-0000-0000-0000-00000000000c','Stranger');
+-- Since 0003 the sign-up trigger already created these profiles; the seed only sets their names.
+insert into profiles(id,full_name) values ('00000000-0000-0000-0000-00000000000a','Owner'),('00000000-0000-0000-0000-00000000000b','Viewer'),('00000000-0000-0000-0000-00000000000c','Stranger')
+  on conflict (id) do update set full_name = excluded.full_name;
 grant usage on schema public, auth to reporting_reader;
 grant usage on schema public to postgres;
 do $$ begin if not exists (select 1 from pg_roles where rolname=$q$app_user$q$) then create role app_user nologin; end if; end $$;
