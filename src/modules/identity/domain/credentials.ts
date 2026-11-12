@@ -1,5 +1,11 @@
 import { normalizeLibyanMobile, type PhoneError } from './phone';
 import type { OtpResult } from './otp';
+import {
+  validateIdentityDocument,
+  type IdentityDocument,
+  type IdentityDocumentErrorCode,
+  type IdentityDocumentField,
+} from './identity-document';
 
 type OtpError = Extract<OtpResult, { ok: false }>['error'];
 
@@ -12,12 +18,13 @@ export const FULL_NAME_MAX_LENGTH = 100;
 export type CredentialsErrorCode =
   | PhoneError
   | OtpError
+  | IdentityDocumentErrorCode
   | 'password_required'
   | 'password_too_short'
   | 'password_too_long'
   | 'full_name_too_long';
 
-export type CredentialsField = 'phone' | 'password' | 'fullName' | 'code';
+export type CredentialsField = 'phone' | 'password' | 'fullName' | 'code' | IdentityDocumentField;
 export interface FieldError {
   field: CredentialsField;
   code: CredentialsErrorCode;
@@ -27,11 +34,16 @@ export interface SignUpInput {
   phone: string;
   password: string;
   fullName?: string | null;
+  /** 'libyan' or 'foreign' (FR-ID-06). */
+  nationality?: string | null;
+  nationalId?: string | null;
+  passportNumber?: string | null;
 }
 export interface SignUpData {
   phone: string; // E.164
   password: string;
   fullName: string | null;
+  identityDocument: IdentityDocument;
 }
 export interface SignInInput {
   phone: string;
@@ -52,7 +64,7 @@ function checkPassword(password: string, errors: FieldError[]) {
     errors.push({ field: 'password', code: 'password_too_long' });
 }
 
-export function validateSignUp(input: SignUpInput): Validation<SignUpData> {
+export function validateSignUp(input: SignUpInput, today: Date = new Date()): Validation<SignUpData> {
   const errors: FieldError[] = [];
   const phone = normalizeLibyanMobile(input.phone);
   if (!phone.ok) errors.push({ field: 'phone', code: phone.error });
@@ -61,8 +73,19 @@ export function validateSignUp(input: SignUpInput): Validation<SignUpData> {
   const name = (input.fullName ?? '').trim().replace(/\s+/g, ' ');
   if ([...name].length > FULL_NAME_MAX_LENGTH) errors.push({ field: 'fullName', code: 'full_name_too_long' });
 
-  if (errors.length > 0 || !phone.ok) return { ok: false, errors };
-  return { ok: true, value: { phone: phone.value, password: input.password, fullName: name === '' ? null : name } };
+  const document = validateIdentityDocument(input, today);
+  if (!document.ok) errors.push(document.error);
+
+  if (errors.length > 0 || !phone.ok || !document.ok) return { ok: false, errors };
+  return {
+    ok: true,
+    value: {
+      phone: phone.value,
+      password: input.password,
+      fullName: name === '' ? null : name,
+      identityDocument: document.value,
+    },
+  };
 }
 
 /**

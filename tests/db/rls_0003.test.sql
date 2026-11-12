@@ -3,7 +3,8 @@
 reset role;
 
 -- 1. Sign-up with a name creates a profile with that (trimmed) name
-insert into auth.users(id, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000d1', '{"full_name":"  Ali  "}');
+-- (identity documents are required since 0005; see rls_0005.test.sql)
+insert into auth.users(id, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000d1', '{"full_name":"  Ali  ","nationality":"libyan","national_id":"119900000031"}');
 do $$ begin
   if not exists (select 1 from profiles where id = '00000000-0000-0000-0000-0000000000d1' and full_name = 'Ali') then
     raise exception 'FAIL: sign-up with name did not create profile "Ali"';
@@ -12,8 +13,8 @@ do $$ begin
 end $$;
 
 -- 2. Sign-up without a name (or a blank one) still creates a profile, with a null name
-insert into auth.users(id) values ('00000000-0000-0000-0000-0000000000d2');
-insert into auth.users(id, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000d3', '{"full_name":"   "}');
+insert into auth.users(id, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000d2', '{"nationality":"foreign","passport_number":"D2PASS01"}');
+insert into auth.users(id, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000d3', '{"full_name":"   ","nationality":"foreign","passport_number":"D3PASS01"}');
 do $$ begin
   if (select count(*) from profiles where id in ('00000000-0000-0000-0000-0000000000d2','00000000-0000-0000-0000-0000000000d3') and full_name is null) <> 2 then
     raise exception 'FAIL: sign-up without a name did not create a profile with null name';

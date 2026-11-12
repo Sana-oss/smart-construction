@@ -13,6 +13,7 @@ export type AuthFailure =
   | 'phone_auth_disabled'
   | 'sms_failed'
   | 'weak_password'
+  | 'identity_document_rejected' // usually: national number / passport already registered (FR-ID-06)
   | 'auth_unavailable';
 
 export type SignUpOutcome =

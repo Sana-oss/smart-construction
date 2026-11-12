@@ -245,6 +245,9 @@ erDiagram
   PROFILES {
     uuid id PK
     text full_name
+    text nationality "libyan | foreign (0005)"
+    text national_id UK "12 رقمًا، لليبي فقط (0005)"
+    text passport_number UK "لغير الليبي فقط (0005)"
     timestamptz created_at
   }
   PROJECTS {
@@ -667,18 +670,24 @@ sequenceDiagram
   participant AUTH as Supabase Auth
   participant DB as PostgreSQL
 
-  O->>UI: الاسم + رقم الهاتف + كلمة المرور
-  UI->>ID: signUp(phone, password, fullName)
-  ID->>ID: تحقق من الصيغة الليبية للرقم وطول كلمة المرور
+  O->>UI: الاسم + الهاتف + كلمة المرور + الجنسية + (الرقم الوطني أو رقم الجواز)
+  UI->>ID: signUp(phone, password, fullName, nationality, nationalId | passportNumber)
+  ID->>ID: تحقق: صيغة الهاتف الليبي، وطول كلمة المرور، وصيغة الرقم الوطني (قانون 8/2014) أو الجواز
   alt مدخل غير صالح
-    ID-->>UI: رسالة خطأ عربية (لا يُرسل شيء)
+    ID-->>UI: رسالة خطأ عربية تحت الحقل (لا يُرسل شيء)
   else مدخل صالح
-    ID->>AUTH: signUp({ phone, password, options.data.full_name })
+    ID->>AUTH: signUp({ phone, password, options.data: full_name, nationality, national_id | passport_number })
     AUTH->>DB: insert into auth.users
     DB->>DB: trigger on_auth_user_created → handle_new_user()
-    DB->>DB: insert into profiles(id, full_name) on conflict do nothing
-    DB-->>AUTH: تمّت المعاملة (المستخدم والملف معًا أو لا شيء)
-    opt تأكيد الرقم مفعّل (قرار SMS معلّق)
+    alt لا وثيقة، أو رقم مسجّل من قبل
+      DB-->>AUTH: إلغاء المعاملة كاملة (لا مستخدم بلا ملف)
+      AUTH-->>UI: خطأ
+      UI-->>O: «تعذّر إنشاء الحساب...» (لا تحدد أي رقم مسجّل)
+    else الوثيقة صالحة وغير مكررة
+      DB->>DB: insert into profiles(id, full_name, nationality, national_id | passport_number)
+      DB-->>AUTH: تمّت المعاملة (المستخدم والملف معًا)
+    end
+    opt تأكيد الرقم مفعّل (مؤجَّل إلى آخر المشروع)
       AUTH-->>O: رمز تحقق برسالة SMS
       O->>UI: إدخال الرمز
       UI->>AUTH: verifyOtp(phone, token)
@@ -691,6 +700,8 @@ sequenceDiagram
 **ملاحظات على UC-01:**
 - الدالة `handle_new_user` تعمل بصلاحية مالكها (`security definer`) لأن المستخدم الجديد لا يملك بعد حق الكتابة في `profiles`، و`search_path` فارغ وكل الأسماء مؤهلة بالمخطط، فلا يمكن خداعها بكائن بالاسم نفسه.
 - الاسم يأتي من بيانات التسجيل، ويُحذف ما حوله من مسافات، والاسم الفارغ يُخزَّن `null`.
+- **وثيقة الهوية (FR-ID-06، ترحيل 0005):** الليبي يُدخل الرقم الوطني، وغير الليبي رقم الجواز، ويُحفظ الرقم المطابق للجنسية فقط. لا يمكن تجاوز النموذج باستدعاء Supabase مباشرة، لأن الـtrigger نفسه يرفض التسجيل بلا وثيقة. والرقم مكتوب مرة واحدة: يستطيع المستخدم تعديل اسمه فقط (صلاحيات أعمدة). ولا يراه أحد غير صاحبه، لا أعضاء المشروع ولا التقارير.
+- رسالة رفض الرقم المكرر لا تذكر أي رقم مسجّل، حتى لا يُستخدم النموذج للتحقق من أرقام الآخرين.
 - حذف المستخدم من `auth.users` يحذف ملفه تلقائيًا (`on delete cascade`).
 - `profiles` خاص بصاحبه: لا يقرأ المستخدم ولا يعدّل إلا ملفه (سياسة `own_profile`)، وهذا مختبَر في `tests/db/rls_0003.test.sql`.
 - لا كيان جديد في ERD: الترحيل يضيف دالة وtrigger فقط.

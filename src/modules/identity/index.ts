@@ -12,6 +12,15 @@ export {
   type CredentialsField,
 } from './domain/credentials';
 export { OTP_LENGTH } from './domain/otp';
+export {
+  validateIdentityDocument,
+  normalizeNationalId,
+  normalizePassportNumber,
+  PASSPORT_MIN_LENGTH,
+  PASSPORT_MAX_LENGTH,
+  type Nationality,
+  type IdentityDocument,
+} from './domain/identity-document';
 
 // Messages (Arabic) for forms
 export { fieldMessagesAr, failureMessagesAr } from './ui/messages.ar';

@@ -1,5 +1,9 @@
 -- RLS, views, constraints and role tests. Run through scripts/test-db.sh against a THROWAWAY database.
-insert into auth.users values ('00000000-0000-0000-0000-00000000000a'),('00000000-0000-0000-0000-00000000000b'),('00000000-0000-0000-0000-00000000000c');
+-- Since 0005 a sign-up must carry an identity document (FR-ID-06).
+insert into auth.users(id, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-00000000000a', '{"nationality":"libyan","national_id":"119800000011"}'),
+  ('00000000-0000-0000-0000-00000000000b', '{"nationality":"libyan","national_id":"219850000022"}'),
+  ('00000000-0000-0000-0000-00000000000c', '{"nationality":"foreign","passport_number":"STRANGER1"}');
 -- Since 0003 the sign-up trigger already created these profiles; the seed only sets their names.
 insert into profiles(id,full_name) values ('00000000-0000-0000-0000-00000000000a','Owner'),('00000000-0000-0000-0000-00000000000b','Viewer'),('00000000-0000-0000-0000-00000000000c','Stranger')
   on conflict (id) do update set full_name = excluded.full_name;
