@@ -4,6 +4,9 @@ import { mapAuthError } from './supabase-auth-gateway';
 describe('mapAuthError', () => {
   it.each([
     ['phone_exists', 'phone_taken'],
+    ['email_exists', 'phone_taken'],
+    ['email_not_confirmed', 'phone_not_confirmed'],
+    ['email_provider_disabled', 'phone_auth_disabled'],
     ['user_already_exists', 'phone_taken'],
     ['invalid_credentials', 'invalid_credentials'],
     ['phone_not_confirmed', 'phone_not_confirmed'],
@@ -30,6 +33,18 @@ describe('mapAuthError: sign-up refused by the database trigger (FR-ID-06)', () 
     expect(
       mapAuthError({ code: 'unexpected_failure', status: 500, message: 'Database error saving new user' }),
     ).toBe('identity_document_rejected');
+  });
+  it.each([
+    ['23505', 'duplicate key value violates unique constraint "profiles_national_id_key"'],
+    ['23514', 'identity document is required at sign-up (FR-ID-06)'],
+  ])('maps PostgreSQL code %s passed through by current Supabase', (code, message) => {
+    // Shape observed on rakeeza-staging, 13 Nov 2026 (HTTP 500 with the PostgreSQL code).
+    expect(mapAuthError({ code: code as never, status: 500, message })).toBe('identity_document_rejected');
+  });
+  it('maps what supabase-js really returns for a trigger failure (no code, status 500)', () => {
+    expect(mapAuthError({ code: undefined, status: 500, message: 'Database error saving new user' })).toBe(
+      'identity_document_rejected',
+    );
   });
   it('keeps other unexpected failures generic', () => {
     expect(mapAuthError({ code: 'unexpected_failure', status: 500, message: 'something else' })).toBe('auth_unavailable');

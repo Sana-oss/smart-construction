@@ -1,5 +1,6 @@
 import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 import type { AuthFailure, AuthGateway, SignInOutcome } from '../application/auth-gateway';
+import { loginEmailForPhone } from '../domain/login-identifier';
 
 /**
  * Translates Supabase Auth error codes into our own failure reasons.
@@ -10,16 +11,24 @@ export function mapAuthError(error: Pick<AuthError, 'code' | 'status'> & { messa
   // The sign-up trigger (migration 0005) aborts the sign-up when the identity number is already registered.
   // Supabase reports any trigger failure the same way, and our form already validated the number's format,
   // so at sign-up this almost always means "number already registered".
-  if (error.code === 'unexpected_failure' && /database error saving new user/i.test(error.message ?? '')) {
+  // Older Supabase versions report it as "Database error saving new user"; current ones pass PostgreSQL's code
+  // through: 23505 = unique violation (number already registered), 23514 = check violation (missing or malformed
+  // document). At sign-up the only constraints the database checks are those of the identity document: a
+  // duplicate phone is caught earlier by Supabase itself (email_exists).
+  // What @supabase/supabase-js actually returns (seen 13 Nov 2026): AuthRetryableFetchError, status 500, no code,
+  // message "Database error saving new user". So the message decides, whatever the code.
+  if (error.code === '23505' || error.code === '23514' || /database error saving new user/i.test(error.message ?? '')) {
     return 'identity_document_rejected';
   }
   switch (error.code) {
     case 'phone_exists':
+    case 'email_exists': // phone-as-login mode: the internal login name is taken = the phone is taken
     case 'user_already_exists':
       return 'phone_taken';
     case 'invalid_credentials':
       return 'invalid_credentials';
     case 'phone_not_confirmed':
+    case 'email_not_confirmed':
       return 'phone_not_confirmed';
     case 'otp_expired':
       return 'otp_rejected';
@@ -27,6 +36,7 @@ export function mapAuthError(error: Pick<AuthError, 'code' | 'status'> & { messa
     case 'over_sms_send_rate_limit':
       return 'rate_limited';
     case 'phone_provider_disabled':
+    case 'email_provider_disabled':
     case 'signup_disabled':
       return 'phone_auth_disabled';
     case 'sms_send_failed':
@@ -38,18 +48,25 @@ export function mapAuthError(error: Pick<AuthError, 'code' | 'status'> & { messa
   }
 }
 
+/**
+ * Supabase adapter, "phone as login" mode (decision 13 Nov 2026): the account is an email/password account whose
+ * login name is derived from the phone (see domain/login-identifier.ts). Requires "Confirm email" OFF in Supabase.
+ * Users never see the login name; every input and message is about the phone number.
+ */
 export function supabaseAuthGateway(supabase: SupabaseClient): AuthGateway {
   const failed = (error: AuthError): SignInOutcome => ({ status: 'failed', reason: mapAuthError(error) });
 
   return {
     async signUp({ phone, password, fullName, identityDocument }) {
       const { data, error } = await supabase.auth.signUp({
-        phone,
+        email: loginEmailForPhone(phone),
         password,
         // Read by the sign-up trigger (migrations 0003 and 0005) to fill the profile.
         // Only the document that matches the nationality is sent.
         options: {
           data: {
+            // Kept so accounts can be moved to Supabase's phone field once an SMS provider is available.
+            phone,
             full_name: fullName,
             nationality: identityDocument.nationality,
             ...(identityDocument.nationality === 'libyan'
@@ -59,15 +76,17 @@ export function supabaseAuthGateway(supabase: SupabaseClient): AuthGateway {
         },
       });
       if (error) return failed(error);
-      // With phone confirmation on, Supabase returns a user but no session until the SMS code is verified.
-      return data.session ? { status: 'signed_in' } : { status: 'needs_verification' };
+      // No session means "Confirm email" is ON in Supabase, which cannot work here (nobody receives mail at
+      // the internal login name). Report a generic failure rather than leave the user waiting for a message.
+      return data.session ? { status: 'signed_in' } : { status: 'failed', reason: 'auth_unavailable' };
     },
 
     async signIn({ phone, password }) {
-      const { error } = await supabase.auth.signInWithPassword({ phone, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmailForPhone(phone), password });
       return error ? failed(error) : { status: 'signed_in' };
     },
 
+    // SMS codes are not used in phone-as-login mode; kept for when an SMS provider is added.
     async verifyPhone(phone, code) {
       const { data, error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
       if (error) return failed(error);
