@@ -676,7 +676,8 @@ sequenceDiagram
   alt مدخل غير صالح
     ID-->>UI: رسالة خطأ عربية تحت الحقل (لا يُرسل شيء)
   else مدخل صالح
-    ID->>AUTH: signUp({ phone, password, options.data: full_name, nationality, national_id | passport_number })
+    ID->>ID: اسم الدخول = 218XXXXXXXXX@phone.rakeeza.invalid (قرار 13 نوفمبر)
+    ID->>AUTH: signUp({ email: اسم الدخول, password, options.data: phone, full_name, nationality, national_id | passport_number })
     AUTH->>DB: insert into auth.users
     DB->>DB: trigger on_auth_user_created → handle_new_user()
     alt لا وثيقة، أو رقم مسجّل من قبل
@@ -687,7 +688,7 @@ sequenceDiagram
       DB->>DB: insert into profiles(id, full_name, nationality, national_id | passport_number)
       DB-->>AUTH: تمّت المعاملة (المستخدم والملف معًا)
     end
-    opt تأكيد الرقم مفعّل (مؤجَّل إلى آخر المشروع)
+    opt تأكيد الرقم برسالة (غير مستخدم: لا مزوّد SMS في ليبيا حاليًا)
       AUTH-->>O: رمز تحقق برسالة SMS
       O->>UI: إدخال الرمز
       UI->>AUTH: verifyOtp(phone, token)

@@ -4,6 +4,9 @@ import { mapAuthError } from './supabase-auth-gateway';
 describe('mapAuthError', () => {
   it.each([
     ['phone_exists', 'phone_taken'],
+    ['email_exists', 'phone_taken'],
+    ['email_not_confirmed', 'phone_not_confirmed'],
+    ['email_provider_disabled', 'phone_auth_disabled'],
     ['user_already_exists', 'phone_taken'],
     ['invalid_credentials', 'invalid_credentials'],
     ['phone_not_confirmed', 'phone_not_confirmed'],
