@@ -38,13 +38,28 @@ export const failureMessagesAr: Record<AuthFailure, string> = {
   auth_unavailable: 'حدث خطأ غير متوقع. حاول مرة أخرى.',
 };
 
+// Brand block shared by the auth screens (design .auth-brand).
+export const brandTextAr = {
+  name: 'ركيزة',
+  tagline: 'كل خطوة تبني مشروعك',
+  logoAlt: 'شعار ركيزة',
+} as const;
+
+// Welcome screen for visitors. Design: v2 screen S01.1 (replaces Design/Screens/screen (1).png).
+export const welcomeTextAr = {
+  pageTitle: 'منصة ركيزة',
+  heading: 'منصة ركيزة',
+  intro: 'رفيقك من أول مخطط إلى التسليم',
+  info: 'تابع مشروعك ومراحله ومصروفاته في مكان واحد.',
+  signIn: 'تسجيل الدخول',
+  createAccount: 'إنشاء حساب جديد',
+} as const;
+
 // Screen text for the sign-in page. Design: v2 screen S01.2 (https://rakeeza-ux-review-v2.vercel.app/#S01.2).
 export const signInTextAr = {
   pageTitle: 'تسجيل الدخول',
   heading: 'مرحبًا بعودتك',
   intro: 'سجّل دخولك لمتابعة مشروعك',
-  brandName: 'ركيزة',
-  tagline: 'كل خطوة تبني مشروعك',
   requiredHint: 'الحقول المميزة بـ * مطلوبة.',
   phoneLabel: 'رقم الهاتف',
   phonePlaceholder: '+218 91 000 0000',
@@ -52,7 +67,6 @@ export const signInTextAr = {
   submit: 'تسجيل الدخول',
   submitting: 'جارٍ تسجيل الدخول…',
   createAccount: 'إنشاء حساب جديد',
-  logoAlt: 'شعار ركيزة',
 } as const;
 
 // Session text (home page until the dashboard is built).

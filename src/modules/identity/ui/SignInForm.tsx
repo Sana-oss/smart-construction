@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { signInAction, type AuthFormState } from './actions';
+import { AuthBrand } from './AuthBrand';
 import { signInTextAr as t } from './messages.ar';
 import { SIGN_UP_PATH } from './routes';
 import styles from './auth.module.css';
@@ -27,13 +28,7 @@ export function SignInForm() {
       </header>
 
       <div className={styles.scroll}>
-        <div className={styles.brand}>
-          <span className={styles.brandMark}>
-            <img src="/brand/logo-mark-white.svg" alt={t.logoAlt} width={44} height={33} />
-          </span>
-          <strong className={styles.brandName}>{t.brandName}</strong>
-          <p className={styles.tagline}>{t.tagline}</p>
-        </div>
+        <AuthBrand />
 
         <form id={FORM_ID} action={formAction} noValidate>
           {state.formError && (

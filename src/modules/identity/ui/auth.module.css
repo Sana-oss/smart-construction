@@ -37,6 +37,11 @@
   padding: var(--space-5);
 }
 
+/* Design: vertical rhythm between blocks inside the scroll area. */
+.scroll > * + * {
+  margin-block-start: var(--space-4);
+}
+
 /* Brand block: logo mark in a rounded gradient tile, name, tagline. */
 .brand {
   display: flex;
@@ -168,19 +173,43 @@
   text-decoration: underline;
 }
 
-/* Narrow phones (the design compacts the same way below ~380px). */
-@media (max-width: 380px) {
+/* Info box (design class .info), e.g. on the welcome screen S01.1. */
+.info {
+  padding: var(--space-4);
+  border: 1px solid rgb(182 186 186 / 0.333);
+  border-radius: 16px;
+  background: var(--color-bg);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+/* Responsive rules copied from the design's CSS. */
+@media (max-width: 700px) {
   .header {
     padding-inline: var(--space-4);
     padding-block-end: 10px;
   }
   .title {
-    font-size: 19px;
+    font-size: 20px;
     line-height: 28px;
   }
   .scroll {
     padding: var(--space-4);
   }
+  .actions {
+    padding-inline: var(--space-4);
+    padding-block-start: var(--space-2);
+  }
+}
+
+@media (max-width: 375px) {
+  .title {
+    font-size: 19px;
+  }
+}
+
+/* Short screens: smaller brand block so the form and buttons fit. */
+@media (max-height: 740px) {
   .brand {
     gap: var(--space-1);
     padding-block: var(--space-1) var(--space-3);
@@ -195,9 +224,5 @@
   }
   .brandName {
     font-size: 24px;
-  }
-  .actions {
-    padding-inline: var(--space-4);
-    padding-block-start: var(--space-2);
   }
 }

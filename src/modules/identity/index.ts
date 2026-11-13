@@ -23,10 +23,11 @@ export {
 } from './domain/identity-document';
 
 // Messages (Arabic) for forms and screens
-export { fieldMessagesAr, failureMessagesAr, signInTextAr, sessionTextAr } from './ui/messages.ar';
+export { fieldMessagesAr, failureMessagesAr, signInTextAr, welcomeTextAr, sessionTextAr } from './ui/messages.ar';
 
 // UI components and session lookup for pages
 export { SignInForm } from './ui/SignInForm';
+export { WelcomeScreen } from './ui/WelcomeScreen';
 export { SignOutButton } from './ui/SignOutButton';
 export { getSignedInUserId } from './ui/session';
 
