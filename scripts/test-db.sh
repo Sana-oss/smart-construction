@@ -11,9 +11,11 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q \
   -f supabase/migrations/0003_identity_profile_on_signup.sql \
   -f supabase/migrations/0004_private_access_helpers.sql \
   -f supabase/migrations/0005_identity_documents.sql \
+  -f supabase/migrations/0006_project_setup.sql \
   -f tests/db/rls.test.sql \
   -f tests/db/rls_0002.test.sql \
   -f tests/db/rls_0003.test.sql \
   -f tests/db/rls_0004.test.sql \
-  -f tests/db/rls_0005.test.sql
+  -f tests/db/rls_0005.test.sql \
+  -f tests/db/rls_0006.test.sql
 echo "DB tests passed."

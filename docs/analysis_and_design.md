@@ -259,6 +259,19 @@ erDiagram
     numeric contingency_pct
     bool weekly_report_enabled
     text status
+    numeric building_area_m2 "0006"
+    numeric spent_before_lyd "0006"
+    numeric available_now_lyd "0006"
+    date available_as_of "0006"
+  }
+  PHASE_TEMPLATES {
+    uuid id PK
+    int position UK
+    text name
+    text description
+    text status "unreviewed | approved"
+    text reviewed_by
+    date reviewed_on
   }
   PROJECT_MEMBERS {
     uuid project_id PK
@@ -453,8 +466,10 @@ erDiagram
   AUDIT_LOG {
     uuid id PK
     uuid actor_id
+    uuid project_id FK "0006"
     text table_name
     text action
+    jsonb detail "0006"
     timestamptz at
   }
   FEATURE_FLAGS {
@@ -706,3 +721,49 @@ sequenceDiagram
 - حذف المستخدم من `auth.users` يحذف ملفه تلقائيًا (`on delete cascade`).
 - `profiles` خاص بصاحبه: لا يقرأ المستخدم ولا يعدّل إلا ملفه (سياسة `own_profile`)، وهذا مختبَر في `tests/db/rls_0003.test.sql`.
 - لا كيان جديد في ERD: الترحيل يضيف دالة وtrigger فقط.
+
+---
+
+## 12. مخطط التسلسل: UC-02 معالج المشروع الأول (ترحيل 0006، 14 نوفمبر 2026)
+
+القاعدة هنا: الإجابات تبقى في المتصفح بين الخطوات، والمشروع لا يُنشأ إلا مرة واحدة في الخطوة الأخيرة، في معاملة واحدة، وبصلاحية المالك نفسه (RLS).
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor O as المالك
+  participant UI as صفحات المعالج (المتصفح)
+  participant S as sessionStorage
+  participant P as projects (application)
+  participant DB as PostgreSQL
+
+  O->>UI: 1. الاسم، المدينة (شعبية أو أخرى)، النوع، المساحة
+  UI->>UI: تحقق فوري بقواعد domain نفسها
+  UI->>S: حفظ الإجابات
+  UI->>DB: قراءة phase_templates (غير مراجَع)
+  O->>UI: 2. اختيار المرحلة الحالية
+  O->>UI: 3. الإجمالي، المتاح، المصروف السابق، الطوارئ %
+  opt المصروف السابق أكبر من الإجمالي
+    UI-->>O: تحذير (لا منع)
+  end
+  O->>UI: 4. مراجعة «مشروعك جاهز»
+  opt تجاوز الميزانية
+    O->>UI: تأكيد صريح
+  end
+  UI->>P: createFirstProjectAction(الإجابات)
+  P->>P: إعادة التحقق كاملًا وحساب المراحل (لا ثقة بالمتصفح)
+  P->>DB: rpc create_first_project (SECURITY INVOKER)
+  DB->>DB: insert projects + phases (RLS)
+  opt تأكيد التجاوز
+    DB->>DB: private.log_audit إلى audit_log (المستدعي هو الفاعل)
+  end
+  DB-->>P: معرّف المشروع (أو رفض: مشروع ثانٍ)
+  P-->>UI: نجاح
+  UI->>S: حذف الإجابات
+  UI-->>O: ملخص المشروع: المرحلة الحالية، الميزانية، المصروف، المتبقي، الطوارئ
+```
+
+**ملاحظات على UC-02:**
+- المعالج أربع خطوات؛ خطوة «فريق المشروع» في التصميم (S02.4) مؤجلة لأنها تدعو حسابات مهندس ومقاول المستبعدة.
+- كل الحسابات (المتبقي، الطوارئ) في domain بأرقام عشرية؛ الدالة في القاعدة تحفظ فقط، وقيود الجداول تتحقق مرة ثانية.
+- فشل أي إدخال (مثل حالة مرحلة غير صالحة) يلغي المعاملة كلها، فلا يبقى مشروع بلا مراحل.

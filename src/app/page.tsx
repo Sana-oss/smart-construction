@@ -1,18 +1,15 @@
-import { getSignedInUserId, sessionTextAr as t, SignOutButton, WelcomeScreen } from '@/modules/identity';
-import styles from '@/app/auth-screen.module.css';
+import { redirect } from 'next/navigation';
+import { ProjectSummary } from '@/modules/dashboard';
+import { getSignedInUserId, SignOutButton, WelcomeScreen } from '@/modules/identity';
+import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
 
-// Home.
-// - Not signed in: the welcome screen (design S01.1), with "sign in" and "create account".
-// - Signed in: temporary view (session state + sign-out) until the project dashboard (FR-DSH-01, design S07.1).
+// Home:
+// - not signed in: the welcome screen (design S01.1);
+// - signed in without a project: the first-project wizard (FR-PRJ-01);
+// - signed in with a project: the project summary (first slice of the dashboard, FR-DSH-01).
 export default async function Home() {
-  const userId = await getSignedInUserId();
-  if (!userId) return <WelcomeScreen />;
-
-  return (
-    <main className={styles.screen}>
-      <img src="/brand/logo-mark-white.svg" alt="" className={styles.logo} width={56} height={42} />
-      <p className={styles.intro}>{t.signedInAs}</p>
-      <SignOutButton />
-    </main>
-  );
+  if (!(await getSignedInUserId())) return <WelcomeScreen />;
+  const project = await getMyProject();
+  if (!project) redirect(SETUP_DETAILS_PATH);
+  return <ProjectSummary project={project} actions={<SignOutButton />} />;
 }
