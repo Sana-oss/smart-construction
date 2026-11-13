@@ -12,12 +12,19 @@ function fakeGateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
   };
 }
 
+const foreigner = { nationality: 'foreign', passportNumber: 'ab 1234567' };
+
 describe('signUp', () => {
   it('sends normalized data to the provider', async () => {
     const gw = fakeGateway();
-    const r = await signUp(gw, { phone: '091 234 5678', password: 'strong-pass', fullName: ' Ali ' });
+    const r = await signUp(gw, { phone: '091 234 5678', password: 'strong-pass', fullName: ' Ali ', ...foreigner });
     expect(r).toEqual({ ok: true, next: 'signed_in', phone: '+218912345678' });
-    expect(gw.signUp).toHaveBeenCalledWith({ phone: '+218912345678', password: 'strong-pass', fullName: 'Ali' });
+    expect(gw.signUp).toHaveBeenCalledWith({
+      phone: '+218912345678',
+      password: 'strong-pass',
+      fullName: 'Ali',
+      identityDocument: { nationality: 'foreign', passportNumber: 'AB1234567' },
+    });
   });
 
   it('never calls the provider with invalid input', async () => {
@@ -30,7 +37,7 @@ describe('signUp', () => {
 
   it('passes on the need for SMS verification', async () => {
     const gw = fakeGateway({ signUp: async () => ({ status: 'needs_verification' }) });
-    expect(await signUp(gw, { phone: '0921234567', password: 'strong-pass' })).toEqual({
+    expect(await signUp(gw, { phone: '0921234567', password: 'strong-pass', ...foreigner })).toEqual({
       ok: true,
       next: 'needs_verification',
       phone: '+218921234567',
@@ -39,7 +46,10 @@ describe('signUp', () => {
 
   it('passes on provider failures as reasons', async () => {
     const gw = fakeGateway({ signUp: async () => ({ status: 'failed', reason: 'phone_taken' }) });
-    expect(await signUp(gw, { phone: '0921234567', password: 'strong-pass' })).toEqual({ ok: false, failure: 'phone_taken' });
+    expect(await signUp(gw, { phone: '0921234567', password: 'strong-pass', ...foreigner })).toEqual({
+      ok: false,
+      failure: 'phone_taken',
+    });
   });
 });
 

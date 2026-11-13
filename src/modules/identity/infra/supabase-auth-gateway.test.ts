@@ -24,3 +24,14 @@ describe('mapAuthError', () => {
     expect(mapAuthError({ code: 'unexpected_failure', status: 500 })).toBe('auth_unavailable');
   });
 });
+
+describe('mapAuthError: sign-up refused by the database trigger (FR-ID-06)', () => {
+  it('maps a trigger failure to identity_document_rejected', () => {
+    expect(
+      mapAuthError({ code: 'unexpected_failure', status: 500, message: 'Database error saving new user' }),
+    ).toBe('identity_document_rejected');
+  });
+  it('keeps other unexpected failures generic', () => {
+    expect(mapAuthError({ code: 'unexpected_failure', status: 500, message: 'something else' })).toBe('auth_unavailable');
+  });
+});

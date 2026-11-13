@@ -316,6 +316,7 @@ repo/
 | domain | `domain/phone.ts` | يحوّل أي صيغة لرقم ليبي (0912345678، +218…، 00218…، أرقام عربية) إلى صيغة E.164، ويرفض غيرها. البادئات المقبولة (91–95) **بيانات** في ثابت واحد مع مصدرها |
 | domain | `domain/credentials.ts` | قواعد التسجيل والدخول: كلمة المرور 8 أحرف على الأقل و72 بايت على الأكثر (حد bcrypt)، والاسم اختياري حتى 100 حرف. الدخول لا يطبّق قواعد الطول حتى لا يُحرم حساب قديم |
 | domain | `domain/otp.ts` | رمز التحقق 6 أرقام (لا يُستخدم إلا إذا فُعّل تأكيد الرقم) |
+| domain | `domain/identity-document.ts` | وثيقة الهوية (FR-ID-06): الرقم الوطني لليبي (12 رقمًا، قانون 8/2014) أو الجواز لغيره، ويُبقي الرقم المطابق للجنسية فقط |
 | application | `application/auth-gateway.ts` | المنفذ `AuthGateway` وأسباب الفشل بلغتنا (`phone_taken`، `invalid_credentials`، ...) |
 | application | `application/auth-use-cases.ts` | تسجيل، دخول، تحقق، خروج. يتحقق أولًا ولا يستدعي المزوّد بمدخل غير صالح |
 | infra | `infra/supabase-auth-gateway.ts` | محوّل Supabase: يمرّر الاسم في `options.data.full_name` (يقرؤه trigger ترحيل 0003)، ويترجم رموز أخطاء Supabase |

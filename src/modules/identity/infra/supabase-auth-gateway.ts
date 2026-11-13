@@ -6,7 +6,13 @@ import type { AuthFailure, AuthGateway, SignInOutcome } from '../application/aut
  * Anything we do not recognise becomes 'auth_unavailable', so a new Supabase error never leaks raw text to users.
  * Codes: @supabase/auth-js ErrorCode.
  */
-export function mapAuthError(error: Pick<AuthError, 'code' | 'status'>): AuthFailure {
+export function mapAuthError(error: Pick<AuthError, 'code' | 'status'> & { message?: string }): AuthFailure {
+  // The sign-up trigger (migration 0005) aborts the sign-up when the identity number is already registered.
+  // Supabase reports any trigger failure the same way, and our form already validated the number's format,
+  // so at sign-up this almost always means "number already registered".
+  if (error.code === 'unexpected_failure' && /database error saving new user/i.test(error.message ?? '')) {
+    return 'identity_document_rejected';
+  }
   switch (error.code) {
     case 'phone_exists':
     case 'user_already_exists':
@@ -36,12 +42,21 @@ export function supabaseAuthGateway(supabase: SupabaseClient): AuthGateway {
   const failed = (error: AuthError): SignInOutcome => ({ status: 'failed', reason: mapAuthError(error) });
 
   return {
-    async signUp({ phone, password, fullName }) {
+    async signUp({ phone, password, fullName, identityDocument }) {
       const { data, error } = await supabase.auth.signUp({
         phone,
         password,
-        // Read by the sign-up trigger (migration 0003) to fill profiles.full_name.
-        options: { data: { full_name: fullName } },
+        // Read by the sign-up trigger (migrations 0003 and 0005) to fill the profile.
+        // Only the document that matches the nationality is sent.
+        options: {
+          data: {
+            full_name: fullName,
+            nationality: identityDocument.nationality,
+            ...(identityDocument.nationality === 'libyan'
+              ? { national_id: identityDocument.nationalId }
+              : { passport_number: identityDocument.passportNumber }),
+          },
+        },
       });
       if (error) return failed(error);
       // With phone confirmation on, Supabase returns a user but no session until the SMS code is verified.

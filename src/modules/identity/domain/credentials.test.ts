@@ -1,13 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import { PASSWORD_MIN_LENGTH, validateSignIn, validateSignUp } from './credentials';
 
-const good = { phone: '0912345678', password: 'strong-pass', fullName: '  علي   محمد ' };
+const good = {
+  phone: '0912345678',
+  password: 'strong-pass',
+  fullName: '  علي   محمد ',
+  nationality: 'libyan',
+  nationalId: '119850012345',
+};
 
 describe('validateSignUp', () => {
-  it('normalizes phone and name', () => {
+  it('normalizes phone, name and identity document', () => {
     expect(validateSignUp(good)).toEqual({
       ok: true,
-      value: { phone: '+218912345678', password: 'strong-pass', fullName: 'علي محمد' },
+      value: {
+        phone: '+218912345678',
+        password: 'strong-pass',
+        fullName: 'علي محمد',
+        identityDocument: { nationality: 'libyan', nationalId: '119850012345' },
+      },
+    });
+  });
+
+  it('requires the identity document (FR-ID-06)', () => {
+    expect(validateSignUp({ ...good, nationality: undefined })).toEqual({
+      ok: false,
+      errors: [{ field: 'nationality', code: 'nationality_required' }],
     });
   });
 
@@ -29,6 +47,7 @@ describe('validateSignUp', () => {
         { field: 'phone', code: 'phone_invalid' },
         { field: 'password', code: 'password_too_short' },
         { field: 'fullName', code: 'full_name_too_long' },
+        { field: 'nationality', code: 'nationality_required' },
       ],
     });
   });

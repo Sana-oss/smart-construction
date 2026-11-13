@@ -12,7 +12,7 @@ target delivery **1 January 2027**. The team must be able to explain every line 
 - `docs/requirements_specification.md` — numbered requirements (FR-/NFR-) with acceptance criteria. Implement by requirement ID
   and cite the ID in commit messages. If a requirement conflicts with another doc, stop and ask.
 - `docs/project_change_register.md` — decisions, file status, known inconsistencies. Record every scope change there.
-- `supabase/migrations/` — the database (0001–0004, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
+- `supabase/migrations/` — the database (0001–0005, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
 
 If code and docs disagree, stop and ask; do not silently pick one.
 
@@ -59,6 +59,8 @@ feature flag (`offline`, `handover` in `feature_flags`) so it can be switched of
   `tests/db/rls.test.sql` proving a stranger cannot read or write it. No exceptions.
 - RLS helpers (`private.is_member`, `private.can_write`) live in schema `private`. Never put a callable `security definer`
   function in `public`: Supabase exposes every `public` function as an API endpoint (migration 0004, test `rls_0004`).
+- Identity numbers (`profiles.national_id`, `profiles.passport_number`, FR-ID-06) are readable only by their owner and
+  written only by the sign-up trigger. Never expose them in views, reports, share links, logs, or to project members.
 - Tables written from offline/PWA flows carry `client_op_id` with a unique index per project (idempotent retries).
 - Dates: `date` for calendar dates, `timestamptz` for events; display in `Africa/Tripoli`.
 

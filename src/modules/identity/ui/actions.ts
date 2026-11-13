@@ -47,6 +47,10 @@ export async function signUpAction(_prev: AuthFormState, form: FormData): Promis
     phone: text(form, 'phone'),
     password: text(form, 'password'),
     fullName: text(form, 'fullName'),
+    // FR-ID-06. Form field names: nationality ("libyan" | "foreign"), nationalId, passportNumber.
+    nationality: text(form, 'nationality'),
+    nationalId: text(form, 'nationalId'),
+    passportNumber: text(form, 'passportNumber'),
   });
   if (!result.ok) return toState(result);
   if (result.next === 'needs_verification') return { needsVerification: { phone: result.phone } };
