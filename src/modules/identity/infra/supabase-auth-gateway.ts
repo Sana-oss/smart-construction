@@ -11,7 +11,13 @@ export function mapAuthError(error: Pick<AuthError, 'code' | 'status'> & { messa
   // The sign-up trigger (migration 0005) aborts the sign-up when the identity number is already registered.
   // Supabase reports any trigger failure the same way, and our form already validated the number's format,
   // so at sign-up this almost always means "number already registered".
-  if (error.code === 'unexpected_failure' && /database error saving new user/i.test(error.message ?? '')) {
+  // Older Supabase versions report it as "Database error saving new user"; current ones pass PostgreSQL's code
+  // through: 23505 = unique violation (number already registered), 23514 = check violation (missing or malformed
+  // document). At sign-up the only constraints the database checks are those of the identity document: a
+  // duplicate phone is caught earlier by Supabase itself (email_exists).
+  // What @supabase/supabase-js actually returns (seen 13 Nov 2026): AuthRetryableFetchError, status 500, no code,
+  // message "Database error saving new user". So the message decides, whatever the code.
+  if (error.code === '23505' || error.code === '23514' || /database error saving new user/i.test(error.message ?? '')) {
     return 'identity_document_rejected';
   }
   switch (error.code) {
