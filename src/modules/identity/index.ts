@@ -32,4 +32,4 @@ export { getSignedInUserId } from './ui/session';
 
 // Server Actions for the auth pages (FR-ID-01). Use with React's useActionState.
 export { signUpAction, signInAction, verifyPhoneAction, signOutAction, type AuthFormState } from './ui/actions';
-export { HOME_PATH, SIGN_IN_PATH, AFTER_SIGN_UP_PATH } from './ui/routes';
+export { HOME_PATH, SIGN_IN_PATH, SIGN_UP_PATH, AFTER_SIGN_UP_PATH } from './ui/routes';

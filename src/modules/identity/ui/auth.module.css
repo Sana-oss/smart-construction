@@ -1,70 +1,160 @@
-/* Auth forms (sign-in, later sign-up). Design: Design/Screens/screen (2).png. Logical properties only (RTL). */
+/* Auth screens (sign-in, later sign-up), copied from the teammate's v2 design:
+   https://rakeeza-ux-review-v2.vercel.app/#S01.2 (classes .auth-screen, .app-header, .app-scroll, .auth-brand,
+   .field, .app-actions, .primary, .secondary, .error-summary). Logical properties only (RTL). */
 
-.form {
+/* Full-height screen: title at the top, scrollable content, buttons fixed at the bottom. */
+.screen {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  block-size: 100dvh;
+  max-inline-size: 480px;
+  margin-inline: auto;
+  background: radial-gradient(at 100% 0, rgb(34 57 145 / 0.34), transparent 65%), var(--color-bg);
+}
+
+.header {
+  flex-shrink: 0;
+  padding-block: max(var(--space-6), env(safe-area-inset-top)) var(--space-3);
+  padding-inline: var(--space-5);
+}
+
+.title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.scroll {
+  flex: 1 1 0%;
+  min-block-size: 0;
+  overflow: hidden auto;
+  padding: var(--space-5);
+}
+
+/* Brand block: logo mark in a rounded gradient tile, name, tagline. */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-4) var(--space-6);
+  text-align: center;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  inline-size: 80px;
+  block-size: 80px;
+  border-radius: var(--radius-mark);
+  border: 1px solid var(--color-secondary);
+  background: linear-gradient(145deg, var(--color-primary), var(--color-surface));
+}
+
+.brandMark img {
+  inline-size: 44px;
+  block-size: auto;
+}
+
+.brandName {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.tagline {
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  margin-block-end: var(--space-5);
 }
 
 .label {
-  font-size: var(--font-size-label);
-  color: var(--color-text-muted);
+  display: block;
+  margin-block-end: var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .input {
   inline-size: 100%;
-  min-block-size: 48px; /* comfortable touch target on phones */
-  padding-inline: var(--space-4);
+  min-block-size: 48px;
+  padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
-  background: var(--color-surface);
+  background: var(--color-bg);
   color: var(--color-text);
-  font: inherit;
   font-size: 16px; /* 16px stops iOS from zooming into the field */
 }
 
-/* Phone numbers are written left to right even inside an Arabic page. */
-.input[dir='ltr'] {
-  text-align: end;
-}
-
 .input[aria-invalid='true'] {
-  border-color: var(--color-error);
+  border: 2px solid var(--color-accent);
 }
 
-.fieldError,
-.formError {
-  margin: 0;
-  color: var(--color-error);
-  font-size: var(--font-size-label);
-}
-
-.formError {
-  padding: var(--space-3);
-  border: 1px solid var(--color-error);
-  border-radius: var(--radius-input);
-}
-
-.primaryButton {
-  min-block-size: 52px;
+/* Design: errors are bold text plus a light-blue border, not red. */
+.fieldError {
   margin-block-start: var(--space-2);
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--color-button-light);
-  color: var(--color-primary);
-  font: inherit;
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
+}
+
+.errorSummary {
+  margin-block-end: var(--space-5);
+  padding: var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  font-weight: 700;
+}
+
+/* Buttons stay at the bottom of the screen, within thumb reach. */
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-3) max(var(--space-6), env(safe-area-inset-bottom));
+  padding-inline: var(--space-5);
+  border-block-start: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-button);
+  border: 1px solid rgb(144 170 252 / 0.4);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.primaryButton:disabled {
+.secondary {
+  background: transparent;
+  border-color: rgb(182 186 186 / 0.5);
+  font-weight: 300;
+}
+
+.primary:disabled {
   opacity: 0.6;
   cursor: progress;
 }
@@ -74,7 +164,40 @@
   border: 0;
   background: none;
   color: var(--color-accent);
-  font: inherit;
   cursor: pointer;
   text-decoration: underline;
+}
+
+/* Narrow phones (the design compacts the same way below ~380px). */
+@media (max-width: 380px) {
+  .header {
+    padding-inline: var(--space-4);
+    padding-block-end: 10px;
+  }
+  .title {
+    font-size: 19px;
+    line-height: 28px;
+  }
+  .scroll {
+    padding: var(--space-4);
+  }
+  .brand {
+    gap: var(--space-1);
+    padding-block: var(--space-1) var(--space-3);
+  }
+  .brandMark {
+    inline-size: 56px;
+    block-size: 56px;
+    border-radius: 16px;
+  }
+  .brandMark img {
+    inline-size: 32px;
+  }
+  .brandName {
+    font-size: 24px;
+  }
+  .actions {
+    padding-inline: var(--space-4);
+    padding-block-start: var(--space-2);
+  }
 }

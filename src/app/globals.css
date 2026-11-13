@@ -1,42 +1,39 @@
-/* Rakeeza design tokens. Source: Design/Guidelines/Rakeeza-Brand-Guidelines.md.
+/* Rakeeza design tokens.
+   Source: the teammate's v2 design (https://rakeeza-ux-review-v2.vercel.app, CSS :root), which is newer than
+   Design/Guidelines/Rakeeza-Brand-Guidelines.md and wins where they differ (e.g. background #2d2d2d, text #ededed).
    Components use these variables only, never raw colours, so the palette changes in one place. */
 :root {
   color-scheme: dark;
 
-  /* Colours */
-  --color-primary: #223991; /* main actions, platform identity */
-  --color-primary-gradient-start: #2d5597; /* gradient #2D5597 -> #223991 for prominent cards */
-  --color-secondary: #5e7fd3; /* active state, interactive elements */
-  --color-accent: #90aafc; /* progress, emphasis, links */
-  --color-bg: #3f3f3f; /* main background */
-  --color-surface: #525454; /* cards */
-  --color-nav: #2d3031; /* navigation bar */
-  --color-icon-bg: #454e69; /* icon containers */
-  --color-text: #ffffff;
-  --color-text-muted: #dddddd;
-  --color-button-light: #ededed; /* light buttons, with dark-blue text */
-  --color-border: #b6baba;
-  /* Not in the guideline: error colour for form messages, kept readable on the dark background. */
-  --color-error: #ffb4ab;
+  /* Colours (design variable name in brackets) */
+  --color-bg: #2d2d2d; /* [--bg] page background, input background */
+  --color-surface: #3f3f3f; /* [--surface] content areas */
+  --color-card: #525454; /* [--card] cards */
+  --color-primary: #223991; /* [--blue] primary buttons, brand */
+  --color-secondary: #5e7fd3; /* active state, brand mark border */
+  --color-accent: #90aafc; /* [--light] focus ring, errors, links */
+  --color-text: #ededed; /* [--text] */
+  --color-text-muted: #dddddd; /* [--muted] */
+  --color-border: #b6baba; /* [--stroke] input borders */
+  --color-nav: #2d3031; /* navigation bar (brand guideline) */
+  --color-icon-bg: #454e69; /* icon containers (brand guideline) */
 
-  /* Spacing (guideline: 8, 12, 16, 24; side margin 20) */
+  /* Spacing */
+  --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
-  --space-8: 32px;
 
-  /* Radius (guideline: cards 14–18 px; wide rounded buttons) */
-  --radius-card: 16px;
-  --radius-input: 14px;
-  --radius-pill: 999px;
+  /* Radius */
+  --radius-input: 12px;
+  --radius-mark: 24px;
+  --radius-button: 24px;
+  --radius-card: 20px; /* [--r] */
 
-  /* Type (guideline sizes for a 393 px wide phone) */
-  --font-size-title: 26px;
-  --font-size-section: 21px;
-  --font-size-body: 15px;
-  --font-size-label: 13px;
+  /* Motion */
+  --motion: 160ms;
 }
 
 * {
@@ -53,17 +50,38 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-thmanyah), system-ui, sans-serif;
-  font-weight: 300; /* Light for body text; Bold (700) for titles */
-  font-size: var(--font-size-body);
-  line-height: 1.6;
+  font-weight: 300; /* Light for text; Bold (700) for titles, labels and buttons */
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
 }
 
 a {
   color: var(--color-accent);
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
 }

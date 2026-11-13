@@ -38,16 +38,20 @@ export const failureMessagesAr: Record<AuthFailure, string> = {
   auth_unavailable: 'حدث خطأ غير متوقع. حاول مرة أخرى.',
 };
 
-// Screen text for the sign-in page (design: Design/Screens/screen (2).png).
+// Screen text for the sign-in page. Design: v2 screen S01.2 (https://rakeeza-ux-review-v2.vercel.app/#S01.2).
 export const signInTextAr = {
   pageTitle: 'تسجيل الدخول',
   heading: 'مرحبًا بعودتك',
-  intro: 'أدخل بياناتك لتسجيل الدخول والمتابعة.',
+  intro: 'سجّل دخولك لمتابعة مشروعك',
+  brandName: 'ركيزة',
+  tagline: 'كل خطوة تبني مشروعك',
+  requiredHint: 'الحقول المميزة بـ * مطلوبة.',
   phoneLabel: 'رقم الهاتف',
-  phonePlaceholder: '0912345678',
+  phonePlaceholder: '+218 91 000 0000',
   passwordLabel: 'كلمة المرور',
   submit: 'تسجيل الدخول',
   submitting: 'جارٍ تسجيل الدخول…',
+  createAccount: 'إنشاء حساب جديد',
   logoAlt: 'شعار ركيزة',
 } as const;
 
