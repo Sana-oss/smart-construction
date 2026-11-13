@@ -14,6 +14,8 @@ export const fieldMessagesAr: Record<CredentialsErrorCode, string> = {
   password_too_short: `كلمة المرور قصيرة. استخدم ${PASSWORD_MIN_LENGTH} أحرف على الأقل.`,
   password_too_long: 'كلمة المرور طويلة جدًا.',
   full_name_too_long: 'الاسم طويل جدًا.',
+  full_name_required: 'أدخل الاسم الكامل.',
+  password_mismatch: 'كلمتا المرور غير متطابقتين.',
   otp_required: 'أدخل رمز التحقق الذي وصلك برسالة.',
   otp_invalid: `رمز التحقق ${OTP_LENGTH} أرقام.`,
   nationality_required: 'اختر الجنسية: ليبي أو غير ليبي.',
@@ -37,3 +39,69 @@ export const failureMessagesAr: Record<AuthFailure, string> = {
   identity_document_rejected: 'تعذّر إنشاء الحساب. إن كان رقمك الوطني أو جوازك مسجّلًا من قبل، فسجّل الدخول بحسابك.',
   auth_unavailable: 'حدث خطأ غير متوقع. حاول مرة أخرى.',
 };
+
+// Brand block shared by the auth screens (design .auth-brand).
+export const brandTextAr = {
+  name: 'ركيزة',
+  tagline: 'كل خطوة تبني مشروعك',
+  logoAlt: 'شعار ركيزة',
+} as const;
+
+// Welcome screen for visitors. Design: v2 screen S01.1 (replaces Design/Screens/screen (1).png).
+export const welcomeTextAr = {
+  pageTitle: 'منصة ركيزة',
+  heading: 'منصة ركيزة',
+  intro: 'رفيقك من أول مخطط إلى التسليم',
+  info: 'تابع مشروعك ومراحله ومصروفاته في مكان واحد.',
+  signIn: 'تسجيل الدخول',
+  createAccount: 'إنشاء حساب جديد',
+} as const;
+
+// Screen text for the sign-in page. Design: v2 screen S01.2 (https://rakeeza-ux-review-v2.vercel.app/#S01.2).
+export const signInTextAr = {
+  pageTitle: 'تسجيل الدخول',
+  heading: 'مرحبًا بعودتك',
+  intro: 'سجّل دخولك لمتابعة مشروعك',
+  requiredHint: 'الحقول المميزة بـ * مطلوبة.',
+  phoneLabel: 'رقم الهاتف',
+  phonePlaceholder: '+218 91 000 0000',
+  passwordLabel: 'كلمة المرور',
+  submit: 'تسجيل الدخول',
+  submitting: 'جارٍ تسجيل الدخول…',
+  createAccount: 'إنشاء حساب جديد',
+} as const;
+
+// Session text (home page until the dashboard is built).
+export const sessionTextAr = {
+  signedInAs: 'أنت مسجّل الدخول.',
+  signOut: 'تسجيل الخروج',
+  signingOut: 'جارٍ تسجيل الخروج…',
+  signIn: 'تسجيل الدخول',
+  signedOut: 'لم تسجّل الدخول بعد.',
+} as const;
+
+// Screen text for the sign-up page. Design: v2 screen S01.3 (https://rakeeza-ux-review-v2.vercel.app/#S01.3),
+// plus the nationality and identity-number fields of FR-ID-06 (decision 13 Nov: keep them at sign-up).
+export const signUpTextAr = {
+  pageTitle: 'إنشاء حساب',
+  heading: 'إنشاء حساب',
+  intro: 'ابدأ إدارة مشروعك مع ركيزة',
+  back: 'رجوع',
+  requiredHint: 'الحقول المميزة بـ * مطلوبة.',
+  fullNameLabel: 'الاسم الكامل',
+  phoneLabel: 'رقم الهاتف',
+  phonePlaceholder: '+218 91 000 0000',
+  nationalityLabel: 'الجنسية',
+  nationalityLibyan: 'ليبي',
+  nationalityForeign: 'غير ليبي',
+  nationalIdLabel: 'الرقم الوطني',
+  nationalIdHelper: '12 رقمًا كما في البطاقة الشخصية.',
+  passportLabel: 'رقم جواز السفر',
+  identityHelper: 'نستخدمه لتوثيق العقود والمستندات فقط، ولا يراه أحد غيرك.',
+  passwordLabel: 'كلمة المرور',
+  passwordHelper: '8 أحرف على الأقل.',
+  passwordConfirmLabel: 'تأكيد كلمة المرور',
+  submit: 'متابعة إنشاء الحساب',
+  submitting: 'جارٍ إنشاء الحساب…',
+  haveAccount: 'لدي حساب بالفعل',
+} as const;

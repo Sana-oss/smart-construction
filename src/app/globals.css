@@ -1,2 +1,87 @@
-:root { color-scheme: light dark; }
-body { margin: 0; }
+/* Rakeeza design tokens.
+   Source: the teammate's v2 design (https://rakeeza-ux-review-v2.vercel.app, CSS :root), which is newer than
+   Design/Guidelines/Rakeeza-Brand-Guidelines.md and wins where they differ (e.g. background #2d2d2d, text #ededed).
+   Components use these variables only, never raw colours, so the palette changes in one place. */
+:root {
+  color-scheme: dark;
+
+  /* Colours (design variable name in brackets) */
+  --color-bg: #2d2d2d; /* [--bg] page background, input background */
+  --color-surface: #3f3f3f; /* [--surface] content areas */
+  --color-card: #525454; /* [--card] cards */
+  --color-primary: #223991; /* [--blue] primary buttons, brand */
+  --color-secondary: #5e7fd3; /* active state, brand mark border */
+  --color-accent: #90aafc; /* [--light] focus ring, errors, links */
+  --color-text: #ededed; /* [--text] */
+  --color-text-muted: #dddddd; /* [--muted] */
+  --color-border: #b6baba; /* [--stroke] input borders */
+  --color-nav: #2d3031; /* navigation bar (brand guideline) */
+  --color-icon-bg: #454e69; /* icon containers (brand guideline) */
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* Radius */
+  --radius-input: 12px;
+  --radius-mark: 24px;
+  --radius-button: 24px;
+  --radius-card: 20px; /* [--r] */
+
+  /* Motion */
+  --motion: 160ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-thmanyah), system-ui, sans-serif;
+  font-weight: 300; /* Light for text; Bold (700) for titles, labels and buttons */
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}

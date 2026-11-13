@@ -12,12 +12,17 @@ function fakeGateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
   };
 }
 
-const foreigner = { nationality: 'foreign', passportNumber: 'ab 1234567' };
+const foreigner = {
+  nationality: 'foreign',
+  passportNumber: 'ab 1234567',
+  fullName: 'Ali',
+  passwordConfirm: 'strong-pass',
+};
 
 describe('signUp', () => {
   it('sends normalized data to the provider', async () => {
     const gw = fakeGateway();
-    const r = await signUp(gw, { phone: '091 234 5678', password: 'strong-pass', fullName: ' Ali ', ...foreigner });
+    const r = await signUp(gw, { phone: '091 234 5678', password: 'strong-pass', ...foreigner, fullName: ' Ali ' });
     expect(r).toEqual({ ok: true, next: 'signed_in', phone: '+218912345678' });
     expect(gw.signUp).toHaveBeenCalledWith({
       phone: '+218912345678',
@@ -29,7 +34,7 @@ describe('signUp', () => {
 
   it('never calls the provider with invalid input', async () => {
     const gw = fakeGateway();
-    const r = await signUp(gw, { phone: 'abc', password: '1' });
+    const r = await signUp(gw, { phone: 'abc', password: '1', passwordConfirm: '1', fullName: '' });
     expect(r.ok).toBe(false);
     expect(r).toHaveProperty('fieldErrors');
     expect(gw.signUp).not.toHaveBeenCalled();

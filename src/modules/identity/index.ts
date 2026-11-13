@@ -22,9 +22,16 @@ export {
   type IdentityDocument,
 } from './domain/identity-document';
 
-// Messages (Arabic) for forms
-export { fieldMessagesAr, failureMessagesAr } from './ui/messages.ar';
+// Messages (Arabic) for forms and screens
+export { fieldMessagesAr, failureMessagesAr, signInTextAr, signUpTextAr, welcomeTextAr, sessionTextAr } from './ui/messages.ar';
+
+// UI components and session lookup for pages
+export { SignInForm } from './ui/SignInForm';
+export { SignUpForm } from './ui/SignUpForm';
+export { WelcomeScreen } from './ui/WelcomeScreen';
+export { SignOutButton } from './ui/SignOutButton';
+export { getSignedInUserId } from './ui/session';
 
 // Server Actions for the auth pages (FR-ID-01). Use with React's useActionState.
 export { signUpAction, signInAction, verifyPhoneAction, signOutAction, type AuthFormState } from './ui/actions';
-export { HOME_PATH, SIGN_IN_PATH, AFTER_SIGN_UP_PATH } from './ui/routes';
+export { HOME_PATH, SIGN_IN_PATH, SIGN_UP_PATH, AFTER_SIGN_UP_PATH } from './ui/routes';

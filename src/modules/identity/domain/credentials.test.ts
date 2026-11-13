@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { PASSWORD_MIN_LENGTH, validateSignIn, validateSignUp } from './credentials';
+import { PASSWORD_MIN_LENGTH, validateSignIn, validateSignUp, type SignUpInput } from './credentials';
 
-const good = {
+const good: SignUpInput = {
   phone: '0912345678',
   password: 'strong-pass',
+  passwordConfirm: 'strong-pass',
   fullName: '  علي   محمد ',
   nationality: 'libyan',
   nationalId: '119850012345',
 };
+
+/** Same input with a new password typed identically in both fields. */
+const withPassword = (password: string): SignUpInput => ({ ...good, password, passwordConfirm: password });
 
 describe('validateSignUp', () => {
   it('normalizes phone, name and identity document', () => {
@@ -29,23 +33,33 @@ describe('validateSignUp', () => {
     });
   });
 
-  it('treats a blank name as no name', () => {
-    const r = validateSignUp({ ...good, fullName: '   ' });
-    expect(r.ok && r.value.fullName).toBeNull();
+  it('requires the full name (design S01.3)', () => {
+    expect(validateSignUp({ ...good, fullName: '   ' })).toEqual({
+      ok: false,
+      errors: [{ field: 'fullName', code: 'full_name_required' }],
+    });
+  });
+
+  it('requires the confirmation to match the password exactly', () => {
+    expect(validateSignUp({ ...good, passwordConfirm: 'strong-pass ' })).toEqual({
+      ok: false,
+      errors: [{ field: 'passwordConfirm', code: 'password_mismatch' }],
+    });
   });
 
   it('does not trim the password', () => {
-    const r = validateSignUp({ ...good, password: ' pass word ' });
+    const r = validateSignUp(withPassword(' pass word '));
     expect(r.ok && r.value.password).toBe(' pass word ');
   });
 
   it('reports every invalid field at once', () => {
-    const r = validateSignUp({ phone: '123', password: 'short', fullName: 'x'.repeat(101) });
+    const r = validateSignUp({ phone: '123', password: 'short', passwordConfirm: 'other', fullName: 'x'.repeat(101) });
     expect(r).toEqual({
       ok: false,
       errors: [
         { field: 'phone', code: 'phone_invalid' },
         { field: 'password', code: 'password_too_short' },
+        { field: 'passwordConfirm', code: 'password_mismatch' },
         { field: 'fullName', code: 'full_name_too_long' },
         { field: 'nationality', code: 'nationality_required' },
       ],
@@ -53,11 +67,11 @@ describe('validateSignUp', () => {
   });
 
   it('enforces the password bounds', () => {
-    expect(validateSignUp({ ...good, password: '' })).toMatchObject({ errors: [{ code: 'password_required' }] });
-    expect(validateSignUp({ ...good, password: 'a'.repeat(PASSWORD_MIN_LENGTH) }).ok).toBe(true);
-    expect(validateSignUp({ ...good, password: 'a'.repeat(73) })).toMatchObject({ errors: [{ code: 'password_too_long' }] });
+    expect(validateSignUp(withPassword(''))).toMatchObject({ errors: [{ code: 'password_required' }] });
+    expect(validateSignUp(withPassword('a'.repeat(PASSWORD_MIN_LENGTH))).ok).toBe(true);
+    expect(validateSignUp(withPassword('a'.repeat(73)))).toMatchObject({ errors: [{ code: 'password_too_long' }] });
     // 8 Arabic letters = 8 characters (minimum met) but 16 bytes: length is counted in characters
-    expect(validateSignUp({ ...good, password: 'كلمةسرّا' }).ok).toBe(true);
+    expect(validateSignUp(withPassword('كلمةسرّا')).ok).toBe(true);
   });
 });
 
