@@ -322,6 +322,10 @@ repo/
 | infra | `infra/supabase-auth-gateway.ts` | محوّل Supabase: يمرّر الاسم في `options.data.full_name` (يقرؤه trigger ترحيل 0003)، ويترجم رموز أخطاء Supabase |
 | ui | `ui/actions.ts` | Server Actions للصفحات (`useActionState`): تعيد رسائل عربية لكل حقل أو للنموذج، أو تعيد التوجيه عند النجاح |
 | ui | `ui/messages.ar.ts` | كل النصوص العربية للوحدة في ملف واحد |
+| ui | `ui/SignInForm.tsx`، `ui/SignOutButton.tsx`، `ui/auth.module.css` | نموذج الدخول وزر الخروج. يعمل النموذج حتى قبل تحميل JavaScript لأنه يرسل إلى Server Action، ويعيد عرض ما كتبه المستخدم بعد الخطأ (عدا كلمة المرور) |
+| ui | `ui/session.ts` | `getSignedInUserId()` للصفحات: من المستخدم الحالي (بـ`getClaims()`). يحدد ما يُعرض فقط؛ الحماية الفعلية في RLS |
+
+وفي `src/app`: `sign-in/page.tsx` (صفحة رقيقة: التخطيط فقط)، و`globals.css` (متغيرات الهوية البصرية من دليل الهوية)، و`fonts.ts` (خط ثمانية من `Design/Fonts`).
 
 وفي `platform`: `env.ts` (تحقق Zod من المتغيرات العامة)، و`supabase/server.ts` و`browser.ts` (عميل بصلاحية المستخدم)، و`supabase/session.ts` (تجديد الجلسة)، يستدعيه `src/proxy.ts`.
 

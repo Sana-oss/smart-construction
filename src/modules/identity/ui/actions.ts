@@ -21,6 +21,11 @@ export interface AuthFormState {
   formError?: string;
   /** Sign-up succeeded but the phone must be confirmed with an SMS code. The page then shows the code step. */
   needsVerification?: { phone: string };
+  /**
+   * What the user typed, sent back after an error so the form can show it again (React resets the form
+   * after every submission). Passwords are NEVER sent back.
+   */
+  values?: Partial<Record<'phone' | 'fullName' | 'nationality' | 'nationalId' | 'passportNumber', string>>;
 }
 
 const text = (form: FormData, key: string) => {
@@ -43,16 +48,16 @@ function toState(result: Extract<AuthResult, { ok: false }>): AuthFormState {
 }
 
 export async function signUpAction(_prev: AuthFormState, form: FormData): Promise<AuthFormState> {
-  const result = await signUp(await gateway(), {
+  // FR-ID-06. Form field names: nationality ("libyan" | "foreign"), nationalId, passportNumber.
+  const values = {
     phone: text(form, 'phone'),
-    password: text(form, 'password'),
     fullName: text(form, 'fullName'),
-    // FR-ID-06. Form field names: nationality ("libyan" | "foreign"), nationalId, passportNumber.
     nationality: text(form, 'nationality'),
     nationalId: text(form, 'nationalId'),
     passportNumber: text(form, 'passportNumber'),
-  });
-  if (!result.ok) return toState(result);
+  };
+  const result = await signUp(await gateway(), { ...values, password: text(form, 'password') });
+  if (!result.ok) return { ...toState(result), values };
   if (result.next === 'needs_verification') return { needsVerification: { phone: result.phone } };
 
   revalidatePath('/', 'layout');
@@ -69,13 +74,14 @@ export async function verifyPhoneAction(_prev: AuthFormState, form: FormData): P
 }
 
 export async function signInAction(_prev: AuthFormState, form: FormData): Promise<AuthFormState> {
-  const result = await signIn(await gateway(), { phone: text(form, 'phone'), password: text(form, 'password') });
+  const phone = text(form, 'phone');
+  const result = await signIn(await gateway(), { phone, password: text(form, 'password') });
   if (!result.ok) {
     // An unconfirmed account goes to the code step instead of a dead end.
     if ('failure' in result && result.failure === 'phone_not_confirmed') {
-      return { ...toState(result), needsVerification: { phone: text(form, 'phone') } };
+      return { ...toState(result), needsVerification: { phone }, values: { phone } };
     }
-    return toState(result);
+    return { ...toState(result), values: { phone } };
   }
 
   revalidatePath('/', 'layout');

@@ -37,3 +37,25 @@ export const failureMessagesAr: Record<AuthFailure, string> = {
   identity_document_rejected: 'تعذّر إنشاء الحساب. إن كان رقمك الوطني أو جوازك مسجّلًا من قبل، فسجّل الدخول بحسابك.',
   auth_unavailable: 'حدث خطأ غير متوقع. حاول مرة أخرى.',
 };
+
+// Screen text for the sign-in page (design: Design/Screens/screen (2).png).
+export const signInTextAr = {
+  pageTitle: 'تسجيل الدخول',
+  heading: 'مرحبًا بعودتك',
+  intro: 'أدخل بياناتك لتسجيل الدخول والمتابعة.',
+  phoneLabel: 'رقم الهاتف',
+  phonePlaceholder: '0912345678',
+  passwordLabel: 'كلمة المرور',
+  submit: 'تسجيل الدخول',
+  submitting: 'جارٍ تسجيل الدخول…',
+  logoAlt: 'شعار ركيزة',
+} as const;
+
+// Session text (home page until the dashboard is built).
+export const sessionTextAr = {
+  signedInAs: 'أنت مسجّل الدخول.',
+  signOut: 'تسجيل الخروج',
+  signingOut: 'جارٍ تسجيل الخروج…',
+  signIn: 'تسجيل الدخول',
+  signedOut: 'لم تسجّل الدخول بعد.',
+} as const;

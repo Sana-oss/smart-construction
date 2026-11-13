@@ -1,0 +1,80 @@
+/* Auth forms (sign-in, later sign-up). Design: Design/Screens/screen (2).png. Logical properties only (RTL). */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--font-size-label);
+  color: var(--color-text-muted);
+}
+
+.input {
+  inline-size: 100%;
+  min-block-size: 48px; /* comfortable touch target on phones */
+  padding-inline: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS from zooming into the field */
+}
+
+/* Phone numbers are written left to right even inside an Arabic page. */
+.input[dir='ltr'] {
+  text-align: end;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.fieldError,
+.formError {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--font-size-label);
+}
+
+.formError {
+  padding: var(--space-3);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-input);
+}
+
+.primaryButton {
+  min-block-size: 52px;
+  margin-block-start: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-button-light);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
