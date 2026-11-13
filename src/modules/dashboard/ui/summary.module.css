@@ -1,0 +1,123 @@
+/* Project summary (first slice of the dashboard). Uses the design's pieces: .summary-card, .list/.list-row,
+   .info. Logical properties only (RTL). */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+  max-inline-size: 480px;
+  margin-inline: auto;
+  background: radial-gradient(ellipse at 95% 0%, rgb(34 57 145 / 0.7), transparent 50%), var(--color-bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: max(var(--space-3), env(safe-area-inset-top)) var(--space-3);
+  padding-inline: var(--space-4);
+}
+
+.title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.content {
+  padding: var(--space-4);
+}
+
+.content > * + * {
+  margin-block-start: var(--space-4);
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid rgb(144 170 252 / 0.333);
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+}
+
+.summaryCard small {
+  font-size: 13px;
+}
+
+.summaryCard strong {
+  font-size: 28px;
+  line-height: 36px;
+}
+
+.summaryCard p {
+  font-size: 14px;
+}
+
+.list {
+  border: 1px solid rgb(255 255 255 / 0.094);
+  border-radius: 16px;
+  background: var(--color-card);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: 72px;
+  padding: var(--space-3);
+  line-height: 24px;
+}
+
+.row + .row {
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
+}
+
+.rowText {
+  flex: 1 1 0%;
+  min-inline-size: 0;
+}
+
+.rowText strong {
+  display: block;
+  font-size: 16px;
+}
+
+.rowText small {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+.rowValue {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.info,
+.warning {
+  padding: var(--space-4);
+  border: 1px solid rgb(182 186 186 / 0.333);
+  border-radius: 16px;
+  background: var(--color-surface);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.warning {
+  border: 2px solid var(--color-accent);
+  font-weight: 700;
+}
+
+.info strong {
+  display: block;
+  font-size: 16px;
+  margin-block-end: var(--space-1);
+}

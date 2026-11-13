@@ -1,0 +1,398 @@
+/* First-project wizard and project summary, copied from the teammate's v2 design (screens S02.1–S02.5:
+   .app-header, .icon-btn, .progress, .field, .list/.list-row, .summary-card, .app-actions, .primary/.secondary).
+   Logical properties only (RTL). Same values as the identity screens; the two modules may not share files
+   (rule R2: modules on the same level do not import each other). */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  block-size: 100dvh;
+  max-inline-size: 480px;
+  margin-inline: auto;
+  background: var(--color-surface);
+}
+
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: max(var(--space-3), env(safe-area-inset-top)) var(--space-3);
+  padding-inline: var(--space-5);
+  background: var(--color-bg);
+  border-block-end: 1px solid rgb(255 255 255 / 0.05);
+}
+
+.headerText {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  inline-size: 44px;
+  block-size: 44px;
+  border: 1px solid rgb(255 255 255 / 0.125);
+  border-radius: 12px;
+  background: rgb(82 84 84 / 0.314);
+  color: var(--color-text);
+}
+
+.iconButton svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.scroll {
+  flex: 1 1 0%;
+  min-block-size: 0;
+  overflow: hidden auto;
+  padding: var(--space-5);
+}
+
+.scroll > * + * {
+  margin-block-start: var(--space-5);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.progress {
+  block-size: 6px;
+  margin-block-start: var(--space-1);
+  border-radius: 8px;
+  background: rgb(182 186 186 / 0.208);
+  overflow: hidden;
+}
+
+.progress > i {
+  display: block;
+  block-size: 100%;
+  border-radius: 8px;
+  background: var(--color-accent);
+}
+
+/* Form fields (design .field) */
+.field {
+  margin-block-end: var(--space-5);
+}
+
+.label {
+  display: block;
+  margin-block-end: var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input {
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 16px; /* 16px stops iOS from zooming into the field */
+}
+
+.input[aria-invalid='true'] {
+  border: 2px solid var(--color-accent);
+}
+
+.helper {
+  margin-block-start: var(--space-2);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.fieldError {
+  margin-block-start: var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.errorSummary {
+  padding: var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  font-weight: 700;
+}
+
+/* Two-option choice shown as pills (project type). */
+.choiceGroup {
+  margin: 0;
+  margin-block-end: var(--space-5);
+  padding: 0;
+  border: 0;
+}
+
+.choices {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.choice {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 48px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-primary);
+  font-weight: 700;
+}
+
+.choice:has(input:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+}
+
+/* List of rows (design .list / .list-row), used for phases and the review. */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.094);
+  border-radius: 16px;
+  background: var(--color-card);
+  overflow: hidden;
+}
+
+.listRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  min-block-size: 72px;
+  padding: var(--space-3);
+  line-height: 24px;
+}
+
+.listRow + .listRow {
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
+}
+
+label.listRow {
+  cursor: pointer;
+}
+
+.listRow:has(input:checked) {
+  background: rgb(34 57 145 / 0.44);
+}
+
+.listRow:has(input:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+.listRow input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+}
+
+.rowIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 12px;
+  background: rgb(34 57 145 / 0.44);
+  color: var(--color-accent);
+}
+
+.rowIcon svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.rowText {
+  flex: 1 1 0%;
+  min-inline-size: 0;
+}
+
+.rowText strong {
+  display: block;
+  font-size: 16px;
+}
+
+.rowText small {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+.rowValue {
+  min-inline-size: 64px;
+  max-inline-size: 120px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* Summary card (design .summary-card) */
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid rgb(144 170 252 / 0.333);
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+}
+
+.summaryCard small {
+  font-size: 13px;
+}
+
+.summaryCard strong {
+  font-size: 28px;
+  line-height: 36px;
+}
+
+.summaryCard p {
+  font-size: 14px;
+}
+
+/* Notices: info (design .info) and a stronger warning for safety/budget messages. */
+.info,
+.warning {
+  padding: var(--space-4);
+  border: 1px solid rgb(182 186 186 / 0.333);
+  border-radius: 16px;
+  background: var(--color-bg);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.warning {
+  border: 2px solid var(--color-accent);
+  font-weight: 700;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+  font-weight: 300;
+}
+
+.check input {
+  inline-size: 24px;
+  block-size: 24px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+/* Bottom actions (design .app-actions) */
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-3) max(var(--space-6), env(safe-area-inset-bottom));
+  padding-inline: var(--space-5);
+  background: var(--color-surface);
+  border-block-start: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgb(144 170 252 / 0.4);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.secondary {
+  background: transparent;
+  border-color: rgb(182 186 186 / 0.5);
+  font-weight: 300;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Responsive rules copied from the design's CSS. */
+@media (max-width: 700px) {
+  .title {
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .scroll {
+    padding: var(--space-4);
+  }
+  .scroll > * + * {
+    margin-block-start: var(--space-4);
+  }
+  .header,
+  .actions {
+    padding-inline: var(--space-4);
+  }
+}
+
+@media (max-width: 375px) {
+  .title {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 370px) {
+  .rowIcon {
+    display: none;
+  }
+}
