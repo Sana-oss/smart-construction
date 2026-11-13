@@ -56,7 +56,11 @@ export async function signUpAction(_prev: AuthFormState, form: FormData): Promis
     nationalId: text(form, 'nationalId'),
     passportNumber: text(form, 'passportNumber'),
   };
-  const result = await signUp(await gateway(), { ...values, password: text(form, 'password') });
+  const result = await signUp(await gateway(), {
+    ...values,
+    password: text(form, 'password'),
+    passwordConfirm: text(form, 'passwordConfirm'),
+  });
   if (!result.ok) return { ...toState(result), values };
   if (result.next === 'needs_verification') return { needsVerification: { phone: result.phone } };
 

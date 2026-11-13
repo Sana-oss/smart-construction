@@ -173,6 +173,88 @@
   text-decoration: underline;
 }
 
+/* Header with a back button (design S01.3: .app-header .icon-btn). The button comes first, so in RTL it sits on the right. */
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  inline-size: 44px;
+  block-size: 44px;
+  border: 1px solid rgb(255 255 255 / 0.125);
+  border-radius: 12px;
+  background: rgb(82 84 84 / 0.314);
+  color: var(--color-text);
+}
+
+.iconButton svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+/* Helper text under a field (design .field .helper). */
+.helper {
+  margin-block-start: var(--space-2);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Nationality choice (FR-ID-06): two radio options shown as pills. Not in the v2 design yet;
+   built from the design's own pieces (input border, button radius, primary colour). */
+.choiceGroup {
+  margin: 0;
+  margin-block-end: var(--space-5);
+  padding: 0;
+  border: 0;
+}
+
+.choices {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.choice {
+  position: relative; /* keeps the visually hidden radio inside its pill */
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 48px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-primary);
+  font-weight: 700;
+}
+
+.choice:has(input:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+}
+
+.choiceGroup[aria-invalid='true'] .choice {
+  border: 2px solid var(--color-accent);
+}
+
 /* Info box (design class .info), e.g. on the welcome screen S01.1. */
 .info {
   padding: var(--space-4);

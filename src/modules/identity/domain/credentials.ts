@@ -22,9 +22,11 @@ export type CredentialsErrorCode =
   | 'password_required'
   | 'password_too_short'
   | 'password_too_long'
+  | 'password_mismatch'
+  | 'full_name_required'
   | 'full_name_too_long';
 
-export type CredentialsField = 'phone' | 'password' | 'fullName' | 'code' | IdentityDocumentField;
+export type CredentialsField = 'phone' | 'password' | 'passwordConfirm' | 'fullName' | 'code' | IdentityDocumentField;
 export interface FieldError {
   field: CredentialsField;
   code: CredentialsErrorCode;
@@ -33,7 +35,10 @@ export interface FieldError {
 export interface SignUpInput {
   phone: string;
   password: string;
-  fullName?: string | null;
+  /** Must equal password (design S01.3: «تأكيد كلمة المرور»). */
+  passwordConfirm: string;
+  /** Required (design S01.3, decision 13 Nov). */
+  fullName: string;
   /** 'libyan' or 'foreign' (FR-ID-06). */
   nationality?: string | null;
   nationalId?: string | null;
@@ -42,7 +47,7 @@ export interface SignUpInput {
 export interface SignUpData {
   phone: string; // E.164
   password: string;
-  fullName: string | null;
+  fullName: string;
   identityDocument: IdentityDocument;
 }
 export interface SignInInput {
@@ -69,9 +74,14 @@ export function validateSignUp(input: SignUpInput, today: Date = new Date()): Va
   const phone = normalizeLibyanMobile(input.phone);
   if (!phone.ok) errors.push({ field: 'phone', code: phone.error });
   checkPassword(input.password ?? '', errors);
+  // Compared exactly (no trimming), like the password itself.
+  if (input.password && input.passwordConfirm !== input.password) {
+    errors.push({ field: 'passwordConfirm', code: 'password_mismatch' });
+  }
 
   const name = (input.fullName ?? '').trim().replace(/\s+/g, ' ');
-  if ([...name].length > FULL_NAME_MAX_LENGTH) errors.push({ field: 'fullName', code: 'full_name_too_long' });
+  if (name === '') errors.push({ field: 'fullName', code: 'full_name_required' });
+  else if ([...name].length > FULL_NAME_MAX_LENGTH) errors.push({ field: 'fullName', code: 'full_name_too_long' });
 
   const document = validateIdentityDocument(input, today);
   if (!document.ok) errors.push(document.error);
@@ -82,7 +92,7 @@ export function validateSignUp(input: SignUpInput, today: Date = new Date()): Va
     value: {
       phone: phone.value,
       password: input.password,
-      fullName: name === '' ? null : name,
+      fullName: name,
       identityDocument: document.value,
     },
   };
