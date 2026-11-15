@@ -346,5 +346,6 @@ repo/
 | application | `projects/application/create-first-project.ts` | يتحقق من كل شيء، ويطلب تأكيد التجاوز، ثم يحفظ عبر المنفذ `ProjectGateway` |
 | infra | `projects/infra/supabase-project-gateway.ts` | يقرأ القالب والمشروع، ويستدعي `create_first_project` |
 | ui | `projects/ui/*Step.tsx`، `WizardShell.tsx`، `use-wizard-draft.ts`، `actions.ts` | الخطوات الأربع، والإجابات في sessionStorage، وServer Action يعيد التحقق |
+| finance | `finance/domain/expense.ts`، `application/create-expense.ts`، `infra/supabase-expense-gateway.ts` | تسجيل مصروف (FR-FIN-02): النطاق يتحقق، وحالة الاستخدام تستدعي الدالة `create_expense` (ترحيل 0008) التي تحفظ المصروف وحدث `expense.created` في معاملة واحدة، وتكرار `client_op_id` لا ينشئ شيئًا |
 | dashboard | `dashboard/ui/ProjectSummary.tsx` | ملخص المشروع (أول جزء من FR-DSH-01): يجمع projects وfinance (`budgetSummary`) ومجموع المصروفات من العرض `budget_summary` (`dashboard/infra/recorded-expenses.ts`، صف واحد يُجمع في قاعدة البيانات) ويعرض فقط |
 | shared-kernel | `digits.ts`، `format.ts` | قراءة الأرقام العربية والفواصل كنص عشري، وعرض المبالغ «450,000» |
