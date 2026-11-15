@@ -4,9 +4,10 @@
 
 import type { ReactNode } from 'react';
 import { addMoney, formatAmount } from '@/shared-kernel';
-import { budgetSummary, getExpensesTotalLyd } from '@/modules/finance';
+import { budgetSummary } from '@/modules/finance';
 import type { MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
+import { getRecordedExpensesLyd } from './queries';
 import styles from './summary.module.css';
 
 function Row({ title, note, value }: { title: string; note?: string; value: ReactNode }) {
@@ -27,7 +28,7 @@ const dateAr = (iso: string) =>
   );
 
 export async function ProjectSummary({ project, actions }: { project: MyProject; actions?: ReactNode }) {
-  const expenses = await getExpensesTotalLyd(project.id);
+  const expenses = await getRecordedExpensesLyd(project.id);
   // Spent = money spent before the app + recorded expenses (decision 2).
   const summary = budgetSummary(project.totalBudgetLyd, addMoney(project.spentBeforeLyd, expenses), project.contingencyPct);
   const current = project.phases.find((p) => p.status === 'in_progress');

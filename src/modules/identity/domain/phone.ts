@@ -1,3 +1,5 @@
+import { toAsciiDigits } from '@/shared-kernel';
+
 // Libyan mobile numbers (FR-ID-01: sign-up and sign-in by phone number + password).
 //
 // Format (source: "Telephone numbers in Libya", Wikipedia, checked 12 Nov 2026):
@@ -13,12 +15,7 @@ const SUBSCRIBER_DIGITS = 7; // after the 2-digit prefix
 export type PhoneError = 'phone_required' | 'phone_invalid';
 export type PhoneResult = { ok: true; value: string } | { ok: false; error: PhoneError };
 
-// Owners type on Arabic keyboards, so accept Arabic-Indic (٠-٩) and Persian (۰-۹) digits too.
-function toAsciiDigits(input: string): string {
-  return input
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-}
+// Owners type on Arabic keyboards, so Arabic-Indic (٠-٩) and Persian (۰-۹) digits are accepted too (toAsciiDigits).
 
 /**
  * Normalizes any common way of writing a Libyan mobile number to E.164 (+2189XXXXXXXX),

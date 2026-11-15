@@ -1,3 +1,5 @@
+import { toAsciiDigits } from '@/shared-kernel';
+
 // Identity document at sign-up (FR-ID-06, decision of 12 Nov 2026).
 // Why we collect it: to document contracts and project records with the owner's identity.
 // Rule: a Libyan gives the national number; a non-Libyan gives a passport number. One account per number.
@@ -38,12 +40,6 @@ const NATIONAL_ID_LENGTH = 12;
 const EARLIEST_BIRTH_YEAR = 1900; // sanity bound for digits 2–5, not a legal rule
 export const PASSPORT_MIN_LENGTH = 6;
 export const PASSPORT_MAX_LENGTH = 20;
-
-function toAsciiDigits(input: string): string {
-  return input
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-}
 
 /** Validates the structure from Law 8/2014: 12 digits, sex digit 1 or 2, a plausible birth year. */
 export function normalizeNationalId(input: string, today: Date = new Date()): string | null {
