@@ -16,17 +16,17 @@ function fakeSupabase(result: { data: unknown; error: { message: string } | null
 
 describe('recordedExpensesLyd', () => {
   it('reads one total from the budget_summary view, as text', async () => {
-    const { client, calls } = fakeSupabase({ data: { spent_lyd: '12500.5' }, error: null });
+    const { client, calls } = fakeSupabase({ data: { recorded_expenses_lyd: '12500.5' }, error: null });
     expect(await recordedExpensesLyd(client, 'p1')).toBe('12500.500');
     expect(calls).toEqual([
       ['from', 'budget_summary'],
-      ['select', 'spent_lyd::text'],
+      ['select', 'recorded_expenses_lyd::text'],
       ['eq', 'project_id', 'p1'],
     ]);
   });
 
   it('keeps large totals exact (no JS number on the way)', async () => {
-    const { client } = fakeSupabase({ data: { spent_lyd: '12345678901.123' }, error: null });
+    const { client } = fakeSupabase({ data: { recorded_expenses_lyd: '12345678901.123' }, error: null });
     expect(await recordedExpensesLyd(client, 'p1')).toBe('12345678901.123');
   });
 

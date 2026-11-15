@@ -459,6 +459,7 @@ erDiagram
   }
   OUTBOX_EVENTS {
     uuid id PK
+    uuid project_id FK "0007"
     text event_type
     jsonb payload
     timestamptz processed_at
