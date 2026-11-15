@@ -3,8 +3,8 @@
 // domain (budgetSummary, Decimal) — this file only displays numbers (rule R5).
 
 import type { ReactNode } from 'react';
-import { addMoney, formatAmount } from '@/shared-kernel';
-import { budgetSummary } from '@/modules/finance';
+import { formatAmount } from '@/shared-kernel';
+import { budgetSummary, totalSpent } from '@/modules/finance';
 import type { MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
 import { getRecordedExpensesLyd } from './queries';
@@ -29,8 +29,8 @@ const dateAr = (iso: string) =>
 
 export async function ProjectSummary({ project, actions }: { project: MyProject; actions?: ReactNode }) {
   const expenses = await getRecordedExpensesLyd(project.id);
-  // Spent = money spent before the app + recorded expenses (decision 2).
-  const summary = budgetSummary(project.totalBudgetLyd, addMoney(project.spentBeforeLyd, expenses), project.contingencyPct);
+  // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
+  const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
   const current = project.phases.find((p) => p.status === 'in_progress');
   // <bdi dir="ltr"> keeps the number (and a minus sign such as "-10,000") in the right order inside Arabic text.
   const lyd = (v: Parameters<typeof formatAmount>[0]) => (
