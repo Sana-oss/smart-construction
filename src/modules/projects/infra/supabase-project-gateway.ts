@@ -33,7 +33,7 @@ export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway
       const { data, error } = await supabase
         .from('projects')
         .select(
-          'id, name, city, project_type, building_area_m2, total_budget_lyd, spent_before_lyd, contingency_pct, available_now_lyd, available_as_of, phases(position, name, status)',
+          'id, name, city, project_type, building_area_m2, total_budget_lyd, spent_before_lyd, contingency_pct, available_now_lyd, available_as_of, phases(id, position, name, status)',
         )
         .eq('owner_id', owner)
         .eq('status', 'active')
@@ -53,8 +53,8 @@ export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway
         contingencyPct: str(data.contingency_pct),
         availableNowLyd: strOrNull(data.available_now_lyd),
         availableAsOf: strOrNull(data.available_as_of),
-        phases: ((data.phases ?? []) as { position: number; name: string; status: PhaseStatus }[])
-          .map((p) => ({ position: Number(p.position), name: String(p.name), status: p.status }))
+        phases: ((data.phases ?? []) as { id: string; position: number; name: string; status: PhaseStatus }[])
+          .map((p) => ({ id: String(p.id), position: Number(p.position), name: String(p.name), status: p.status }))
           .sort((a, b) => a.position - b.position),
       };
     },

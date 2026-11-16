@@ -34,7 +34,8 @@ export interface MyProject {
   contingencyPct: string;
   availableNowLyd: string | null;
   availableAsOf: string | null;
-  phases: { position: number; name: string; status: PhaseStatus }[];
+  /** id: needed by other modules to link a row to a phase (for example an expense). */
+  phases: { id: string; position: number; name: string; status: PhaseStatus }[];
 }
 
 export type CreateProjectOutcome =

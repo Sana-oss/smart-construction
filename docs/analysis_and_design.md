@@ -318,6 +318,9 @@ erDiagram
     uuid category_id FK
     uuid phase_id FK
     numeric amount_lyd
+    text title "0009"
+    text expense_type "0009"
+    text payee "0009"
     numeric original_amount
     text original_currency
     date paid_on

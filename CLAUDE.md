@@ -12,7 +12,7 @@ target delivery **1 January 2027**. The team must be able to explain every line 
 - `docs/requirements_specification.md` — numbered requirements (FR-/NFR-) with acceptance criteria. Implement by requirement ID
   and cite the ID in commit messages. If a requirement conflicts with another doc, stop and ask.
 - `docs/project_change_register.md` — decisions, file status, known inconsistencies. Record every scope change there.
-- `supabase/migrations/` — the database (0001–0008, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
+- `supabase/migrations/` — the database (0001–0009, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
 
 If code and docs disagree, stop and ask; do not silently pick one.
 
@@ -71,7 +71,7 @@ feature flag (`offline`, `handover` in `feature_flags`) so it can be switched of
 ## UI rules
 - Arabic first, RTL. Use **logical** CSS properties (`margin-inline-start`, `padding-inline`, `text-align: start`), not
   left/right. User-facing strings go in message files, not inline in components.
-- Mobile first: owners use phones on site. Quick expense entry must stay at 3 taps.
+- Mobile first: owners use phones on site. Quick expense entry follows the six fields of design screen S14.1 (decision 16 Nov 2026); the owner must type at most three of them (name, amount, type).
 
 ## Engineering content: do NOT invent
 Concrete cover, waste percentages, pressure-test values, curing days, tolerances, and checklist items are engineering

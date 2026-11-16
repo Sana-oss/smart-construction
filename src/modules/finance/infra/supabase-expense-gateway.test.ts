@@ -5,10 +5,11 @@ import { mapExpenseError, supabaseExpenseGateway } from './supabase-expense-gate
 
 const expense: NewExpenseRecord = {
   projectId: '11111111-1111-4111-8111-111111111111',
-  amountLyd: '2500.750',
-  categoryId: null,
+  title: 'حديد تسليح',
+  amountLyd: '12000.750',
+  expenseType: 'materials',
   phaseId: null,
-  note: null,
+  payee: 'مورد الحديد',
   paidOn: null,
   clientOpId: '33333333-3333-4333-8333-333333333333',
 };
@@ -37,11 +38,12 @@ describe('supabaseExpenseGateway.createExpense', () => {
     expect(await supabaseExpenseGateway(client).createExpense(expense)).toEqual({ status: 'created', expenseId: 'e1' });
     expect(rpc).toHaveBeenCalledWith('create_expense', {
       p_project_id: expense.projectId,
-      p_amount_lyd: '2500.750',
+      p_amount_lyd: '12000.750',
       p_client_op_id: expense.clientOpId,
-      p_category_id: null,
+      p_title: 'حديد تسليح',
+      p_expense_type: 'materials',
       p_phase_id: null,
-      p_note: null,
+      p_payee: 'مورد الحديد',
       p_paid_on: null,
     });
   });

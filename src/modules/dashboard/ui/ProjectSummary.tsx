@@ -2,9 +2,10 @@
 // FR-DSH-01, decision 12 of 14 Nov 2026). Server Component: reads under RLS; all money math is done by the finance
 // domain (budgetSummary, Decimal) — this file only displays numbers (rule R5).
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount } from '@/shared-kernel';
-import { budgetSummary, totalSpent } from '@/modules/finance';
+import { budgetSummary, EXPENSE_NEW_PATH, totalSpent } from '@/modules/finance';
 import type { MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
 import { getRecordedExpensesLyd } from './queries';
@@ -83,8 +84,13 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
 
         <div className={styles.info}>
           <strong>{t.nextStep}</strong>
-          {t.nextStepSoon}
+          {t.nextStepBody}
         </div>
+
+        {/* Design S07.1: the quick-expense button on the dashboard. */}
+        <Link href={EXPENSE_NEW_PATH} className={styles.primary}>
+          {t.addExpense}
+        </Link>
       </div>
     </main>
   );
