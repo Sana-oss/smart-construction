@@ -2,5 +2,5 @@
 export const HOME_PATH = '/';
 export const SIGN_IN_PATH = '/sign-in';
 export const SIGN_UP_PATH = '/sign-up';
-// FR-ID-01: a new account goes to the first-run wizard (FR-PRJ-01). Until that page exists, home.
+// FR-ID-01: a new account goes home, and home sends an owner without a project to the wizard (FR-PRJ-01).
 export const AFTER_SIGN_UP_PATH = HOME_PATH;
