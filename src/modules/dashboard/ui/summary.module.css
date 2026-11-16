@@ -121,3 +121,20 @@
   font-size: 16px;
   margin-block-end: var(--space-1);
 }
+
+/* Primary action (design .primary), here the quick-expense button of S07.1. */
+.primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgb(144 170 252 / 0.4);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}

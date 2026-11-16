@@ -3,10 +3,10 @@ import type { CreateExpenseOutcome, ExpenseFailure, ExpenseGateway } from '../ap
 
 /**
  * Translates PostgreSQL error codes into our own failure reasons, so a raw database message never reaches the
- * user (NFR-USE-04). Codes raised by create_expense (migration 0008) and by the table's rules:
+ * user (NFR-USE-04). Codes raised by create_expense (migration 0009) and by the table's rules:
  *   42501 insufficient privilege: not signed in, or RLS refused the insert (no write access to the project)
- *   23503 foreign key violation:  the category or phase does not belong to this project
- *   23514 check violation:        amount not positive, future date, missing client_op_id
+ *   23503 foreign key violation:  the phase does not belong to this project
+ *   23514 check violation:        amount not positive, future date, missing name, type or client_op_id
  *   22003 numeric out of range:   amount too large for numeric(14,3)
  */
 export function mapExpenseError(error: { code?: string }): ExpenseFailure {
@@ -27,14 +27,15 @@ export function mapExpenseError(error: { code?: string }): ExpenseFailure {
 export function supabaseExpenseGateway(supabase: SupabaseClient): ExpenseGateway {
   return {
     async createExpense(e): Promise<CreateExpenseOutcome> {
-      // One database function = one transaction: the expense and its expense.created event (0008).
+      // One database function = one transaction: the expense and its expense.created event (0009).
       const { data, error } = await supabase.rpc('create_expense', {
         p_project_id: e.projectId,
         p_amount_lyd: e.amountLyd, // a decimal string; PostgreSQL reads it as numeric, no JS number involved
         p_client_op_id: e.clientOpId,
-        p_category_id: e.categoryId,
+        p_title: e.title,
+        p_expense_type: e.expenseType,
         p_phase_id: e.phaseId,
-        p_note: e.note,
+        p_payee: e.payee,
         p_paid_on: e.paidOn,
       });
       if (error) return { status: 'failed', reason: mapExpenseError(error) };

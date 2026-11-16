@@ -1,21 +1,35 @@
 import { isIsoDate, isUuid, money, parseDecimalInput, type Money } from '@/shared-kernel';
 
-// Rules for recording an expense (FR-FIN-02, UC-07). Pure: no React, Next or Supabase (rule R4).
-// Only the amount is required. Category, phase, note and date are optional, so the quick entry stays at
-// 3 taps (NFR-USE-03). Foreign currency (FR-FIN-04) and the receipt photo come later.
-// Money stays Decimal, never a JS number.
+// Rules for recording an expense (FR-FIN-02, UC-07; design screen S14.1 "مصروف سريع").
+// Pure: no React, Next or Supabase (rule R4). Money stays Decimal, never a JS number.
+//
+// The six fields of the design (decision of 16 Nov 2026, change register): name, amount, type, phase,
+// supplier or beneficiary, date. The owner must TYPE three of them (name, amount, type); the phase and the
+// date are filled in by the screen (current phase, today) and the supplier is optional.
+// Foreign currency (FR-FIN-04) and the receipt photo come later.
 
-/** Project decision (16 Nov 2026, change register), not a legal or accounting rule. */
-export const EXPENSE_NOTE_MAX = 500;
+/**
+ * The expense types shown in the design (S13.1 rows: «مواد», «عمالة», «خدمات»). Stored as these English keys;
+ * the Arabic labels live in the UI messages. The database has the same list in a check constraint (0009).
+ */
+export const EXPENSE_TYPES = ['materials', 'labor', 'services'] as const;
+export type ExpenseType = (typeof EXPENSE_TYPES)[number];
 
-export type ExpenseField = 'amount' | 'categoryId' | 'phaseId' | 'note' | 'paidOn' | 'clientOpId';
+/** Project decisions (16 Nov 2026, change register), not legal or accounting rules. */
+export const EXPENSE_TITLE_MIN = 2;
+export const EXPENSE_TITLE_MAX = 80;
+export const EXPENSE_PAYEE_MAX = 80;
+
+export type ExpenseField = 'title' | 'amount' | 'expenseType' | 'phaseId' | 'payee' | 'paidOn' | 'clientOpId';
 
 export type ExpenseErrorCode =
   | 'required'
+  | 'too_short'
+  | 'too_long'
   | 'invalid_number'
   | 'must_be_positive'
   | 'too_large'
-  | 'too_long'
+  | 'unknown_choice'
   | 'invalid_id'
   | 'invalid_date'
   | 'date_in_future';
@@ -27,10 +41,14 @@ export interface ExpenseError {
 
 /** What the form sends: text exactly as the owner typed it. */
 export interface NewExpenseInput {
+  /** What the money was paid for, e.g. «حديد تسليح». */
+  title?: string | null;
   amount?: string | null;
-  categoryId?: string | null;
+  /** One of EXPENSE_TYPES. */
+  expenseType?: string | null;
   phaseId?: string | null;
-  note?: string | null;
+  /** Supplier or beneficiary. Optional. */
+  payee?: string | null;
   /** "YYYY-MM-DD". Empty means today (in Libya). */
   paidOn?: string | null;
   /**
@@ -43,10 +61,11 @@ export interface NewExpenseInput {
 
 /** A validated expense, ready to store. */
 export interface NewExpense {
+  title: string;
   amountLyd: Money;
-  categoryId: string | null;
+  expenseType: ExpenseType;
   phaseId: string | null;
-  note: string | null;
+  payee: string | null;
   /** null = let the database use today's date in Libya. */
   paidOn: string | null;
   clientOpId: string;
@@ -55,6 +74,10 @@ export interface NewExpense {
 export type ExpenseValidation = { ok: true; value: NewExpense } | { ok: false; errors: ExpenseError[] };
 
 const blank = (s: string | null | undefined) => (s ?? '').trim() === '';
+/** Trim and turn any run of spaces into one space. */
+const clean = (s: string | null | undefined) => (s ?? '').trim().replace(/\s+/g, ' ');
+/** Length in characters as a person counts them (an Arabic letter is one, whatever its bytes). */
+const length = (s: string) => [...s].length;
 
 function readAmount(raw: string | null | undefined, errors: ExpenseError[]): Money | null {
   const fail = (code: ExpenseErrorCode) => {
@@ -71,17 +94,6 @@ function readAmount(raw: string | null | undefined, errors: ExpenseError[]): Mon
   return amount.lte(0) ? fail('must_be_positive') : amount;
 }
 
-/** An optional reference to another row: empty means "none"; anything else must look like an id. */
-function readOptionalId(field: ExpenseField, raw: string | null | undefined, errors: ExpenseError[]): string | null {
-  if (blank(raw)) return null;
-  const id = (raw as string).trim().toLowerCase();
-  if (!isUuid(id)) {
-    errors.push({ field, code: 'invalid_id' });
-    return null;
-  }
-  return id;
-}
-
 /**
  * @param today Today's date in Libya, "YYYY-MM-DD" (todayInTripoli() from the shared kernel). Passed in so this
  *   function stays pure and testable. An expense is money already paid, so its date cannot be after today.
@@ -89,12 +101,27 @@ function readOptionalId(field: ExpenseField, raw: string | null | undefined, err
 export function validateNewExpense(input: NewExpenseInput, today: string): ExpenseValidation {
   const errors: ExpenseError[] = [];
 
-  const amountLyd = readAmount(input.amount, errors);
-  const categoryId = readOptionalId('categoryId', input.categoryId, errors);
-  const phaseId = readOptionalId('phaseId', input.phaseId, errors);
+  const title = clean(input.title);
+  if (title === '') errors.push({ field: 'title', code: 'required' });
+  else if (length(title) < EXPENSE_TITLE_MIN) errors.push({ field: 'title', code: 'too_short' });
+  else if (length(title) > EXPENSE_TITLE_MAX) errors.push({ field: 'title', code: 'too_long' });
 
-  const note = blank(input.note) ? null : (input.note as string).trim().replace(/\s+/g, ' ');
-  if (note !== null && [...note].length > EXPENSE_NOTE_MAX) errors.push({ field: 'note', code: 'too_long' });
+  const amountLyd = readAmount(input.amount, errors);
+
+  const type = clean(input.expenseType);
+  if (type === '') errors.push({ field: 'expenseType', code: 'required' });
+  else if (!(EXPENSE_TYPES as readonly string[]).includes(type)) errors.push({ field: 'expenseType', code: 'unknown_choice' });
+
+  // Optional reference to a phase: empty means "none"; anything else must look like an id.
+  let phaseId: string | null = null;
+  if (!blank(input.phaseId)) {
+    const id = (input.phaseId as string).trim().toLowerCase();
+    if (isUuid(id)) phaseId = id;
+    else errors.push({ field: 'phaseId', code: 'invalid_id' });
+  }
+
+  const payee = blank(input.payee) ? null : clean(input.payee);
+  if (payee !== null && length(payee) > EXPENSE_PAYEE_MAX) errors.push({ field: 'payee', code: 'too_long' });
 
   let paidOn: string | null = null;
   if (!blank(input.paidOn)) {
@@ -110,5 +137,5 @@ export function validateNewExpense(input: NewExpenseInput, today: string): Expen
   else clientOpId = (input.clientOpId as string).trim().toLowerCase();
 
   if (errors.length > 0 || amountLyd === null) return { ok: false, errors };
-  return { ok: true, value: { amountLyd, categoryId, phaseId, note, paidOn, clientOpId } };
+  return { ok: true, value: { title, amountLyd, expenseType: type as ExpenseType, phaseId, payee, paidOn, clientOpId } };
 }

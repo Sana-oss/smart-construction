@@ -17,7 +17,9 @@ export const summaryTextAr = {
   available: (date: string) => `المتاح حتى ${date}`,
   lyd: 'د.ل',
   nextStep: 'الخطوة التالية: سجّل أول مصروف',
-  nextStepSoon: 'تسجيل المصروفات هو الميزة التالية في التطبيق.',
+  // Wording from the design: S13.3 (empty expenses) and the S07.1 action button.
+  nextStepBody: 'سجّل الإنفاق لتتابع تكلفة المشروع وتقارنها بالميزانية.',
+  addExpense: 'إضافة مصروف سريع',
   // FR-PRJ-02. Warning text; to be reviewed by the project's engineer (engineering content).
   addFloorWarning:
     'مشروع إضافة طابق: قبل بدء العمل يجب أن يقيّم مهندس إنشائي قدرة المبنى الحالي على تحمّل الطابق الجديد. النظام ينبّه ولا يعتمد السلامة.',

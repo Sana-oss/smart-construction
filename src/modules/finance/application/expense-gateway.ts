@@ -1,13 +1,16 @@
+import type { ExpenseType } from '../domain/expense';
+
 // Port: what the expense use case needs from storage, in our own words. The Supabase adapter
 // (infra/supabase-expense-gateway.ts) implements it; tests use a fake. Database error codes stay out of here.
 
 export interface NewExpenseRecord {
   projectId: string;
-  /** Money as a canonical decimal string ("2500.750"), never a JS number. */
+  title: string;
+  /** Money as a canonical decimal string ("12000.750"), never a JS number. */
   amountLyd: string;
-  categoryId: string | null;
+  expenseType: ExpenseType;
   phaseId: string | null;
-  note: string | null;
+  payee: string | null;
   /** "YYYY-MM-DD", or null to let the database use today's date in Libya. */
   paidOn: string | null;
   clientOpId: string;
@@ -15,7 +18,7 @@ export interface NewExpenseRecord {
 
 export type ExpenseFailure =
   | 'not_allowed' // not signed in, or no write access to this project
-  | 'unknown_reference' // the category or the phase does not belong to this project
+  | 'unknown_reference' // the phase does not belong to this project
   | 'rejected' // the database refused the values (its own double-check of the domain rules)
   | 'unavailable';
 
