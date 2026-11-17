@@ -23,7 +23,7 @@ answers**, then records several quick expenses in a row and measures how long th
 |---|---|---|
 | open | tap «إضافة مصروف سريع» on the dashboard | the form is ready (save button enabled) |
 | save | tap «حفظ المصروف» | «تم حفظ المصروف» is shown |
-| back | tap «العودة للوحة المشروع» | the dashboard is shown |
+| list | tap «عرض المصروفات» | the expenses list is shown (S13.1; since 18 Nov, before that: back to the dashboard) |
 
 The robot types instantly, so these numbers are the app's share only. The first round is a warm-up and is left out
 of the medians. The test does not fail on time: the threshold is agreed with the supervisor (requirements spec).

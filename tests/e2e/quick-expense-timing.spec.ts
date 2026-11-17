@@ -11,7 +11,8 @@ import { createFirstProjectThroughUi, expectNoSidewaysScroll, newTestAccount, si
 //   - MEASURES how long the app makes the owner wait, at phone size, over several rounds:
 //       open = tap «إضافة مصروف سريع» on the dashboard  -> form ready (save button enabled)
 //       save = tap «حفظ المصروف»                           -> «تم حفظ المصروف» shown
-//       back = tap «العودة للوحة المشروع»                  -> dashboard shown
+//       list = tap «عرض المصروفات»                        -> the expenses list shown (S13.1)
+//     Then «رجوع» goes back to the dashboard for the next round (not timed).
 //     The robot types instantly, so this is the app's share of the time, not a person's reading and typing.
 //     The person's share is measured by hand with the protocol in tests/e2e/README.md.
 //   - does NOT fail on time unless E2E_QUICK_EXPENSE_MAX_MS is set (no threshold is agreed yet; we do not invent one).
@@ -23,7 +24,7 @@ interface Round {
   round: number;
   openMs: number;
   saveMs: number;
-  backMs: number;
+  listMs: number;
 }
 
 const median = (xs: number[]) => {
@@ -70,11 +71,15 @@ test('quick expense: three required answers, and how long the app takes', async 
       () => saveButton.click(),
       () => expect(page.getByText('تم حفظ المصروف')).toBeVisible(),
     );
-    const backMs = await timed(
-      () => page.getByRole('link', { name: 'العودة للوحة المشروع' }).click(),
-      () => expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible(),
+    const listMs = await timed(
+      () => page.getByRole('link', { name: 'عرض المصروفات' }).click(),
+      () => expect(page.getByRole('heading', { name: 'المصروفات' })).toBeVisible(),
     );
-    rounds.push({ round, openMs, saveMs, backMs });
+    rounds.push({ round, openMs, saveMs, listMs });
+
+    // Back to the dashboard for the next round (not timed).
+    await page.getByRole('link', { name: 'رجوع' }).click();
+    await expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible();
   }
 
   // Round 1 includes first-visit costs (in dev mode: compiling the page), so the summary uses the later rounds.
@@ -88,7 +93,7 @@ test('quick expense: three required answers, and how long the app takes', async 
     medianWarmMs: {
       open: median(warm.map((r) => r.openMs)),
       save: median(warm.map((r) => r.saveMs)),
-      back: median(warm.map((r) => r.backMs)),
+      list: median(warm.map((r) => r.listMs)),
       openPlusSave: median(warm.map((r) => r.openMs + r.saveMs)),
     },
     worstWarmOpenPlusSaveMs: Math.max(...warm.map((r) => r.openMs + r.saveMs)),

@@ -34,8 +34,25 @@ export const expenseTextAr = {
     status: 'حالة التسجيل',
     statusValue: 'محفوظ',
     statusNote: 'مضاف إلى مصروفات المشروع',
-    toDashboard: 'العودة للوحة المشروع',
+    toList: 'عرض المصروفات',
     another: 'إضافة مصروف آخر',
+  },
+
+  // Expenses list. Wording from the design: S13.1 (list), S13.3 (empty state).
+  list: {
+    pageTitle: 'المصروفات',
+    title: 'المصروفات',
+    monthTotal: 'مصروفات هذا الشهر',
+    allTotal: 'إجمالي المصروفات',
+    startHint: 'ابدأ بإضافة أول مصروف',
+    emptyTitle: 'لا توجد مصروفات بعد',
+    emptyBody: 'سجّل الإنفاق لتتابع تكلفة المشروع وتقارنها بالميزانية.',
+    emptySubtitle: 'لا توجد عمليات مسجلة لهذا المشروع',
+    addFirst: 'إضافة أول مصروف',
+    add: 'مصروف سريع',
+    noTitle: 'مصروف بلا اسم',
+    /** Shown when the project has more expenses than the list shows (EXPENSE_LIST_LIMIT). */
+    olderHidden: (shown: number, total: number) => `يُعرض آخر ${shown} مصروفًا من ${total}. عرض الأقدم يأتي مع التصفية.`,
   },
 } as const;
 
@@ -45,6 +62,28 @@ export const expenseTypeAr: Record<ExpenseType, string> = {
   labor: 'عمالة',
   services: 'خدمات',
 };
+
+/**
+ * "5 مصروفات مسجلة", with Arabic number agreement (Intl plural categories for Arabic):
+ * 0 zero, 1 one, 2 two, 3–10 few, 11–99 many, 100+ other.
+ */
+const arPlural = new Intl.PluralRules('ar');
+export function expenseCountAr(n: number): string {
+  switch (arPlural.select(n)) {
+    case 'zero':
+      return 'لا مصروفات مسجلة';
+    case 'one':
+      return 'مصروف واحد مسجل';
+    case 'two':
+      return 'مصروفان مسجلان';
+    case 'few':
+      return `${n} مصروفات مسجلة`;
+    case 'many':
+      return `${n} مصروفًا مسجلًا`;
+    default:
+      return `${n} مصروف مسجل`;
+  }
+}
 
 export const expenseErrorsAr: Record<ExpenseErrorCode, string> = {
   required: 'هذا الحقل مطلوب.',
