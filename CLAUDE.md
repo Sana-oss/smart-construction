@@ -20,6 +20,8 @@ If code and docs disagree, stop and ask; do not silently pick one.
 - `npm run check` — lint + typecheck + unit tests (run before every commit)
 - `npm run build` — production build (what Vercel runs)
 - `npm run test:db` — migration + RLS tests; needs `DATABASE_URL` of a THROWAWAY Postgres. Never a real project.
+- `npm run test:e2e` — Playwright journey + stranger test at phone size, against STAGING only (creates two test accounts;
+  delete them with `scripts/e2e-cleanup.sql`). See `tests/e2e/README.md`.
 
 ## Scope (committed; see docs/graduation_project_master_reference.md section 17)
 All features 3.1–3.23 in the docs are in scope for v1, built minimal-first, then deepened. Priorities and the cut order live in
