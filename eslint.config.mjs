@@ -16,7 +16,7 @@ const policy = (from, allowed) => ({
 });
 
 export default tseslint.config(
-  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'coverage/**'] },
+  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'coverage/**', 'test-results/**', 'playwright-report/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

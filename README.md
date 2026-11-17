@@ -19,6 +19,13 @@ createdb scm_test
 DATABASE_URL=postgresql:///scm_test npm run test:db
 ```
 
+## اختبار الرحلة الكاملة (Playwright)
+متصفح حقيقي بمقاس الهاتف: تسجيل، ثم المعالج، ثم اللوحة، ثم مصروف سريع، ثم اختبار الغريب. يعمل على القاعدة **التجريبية** فقط وينشئ حسابَي اختبار في كل تشغيل (تُحذفان بـ`scripts/e2e-cleanup.sql`). التفاصيل في `tests/e2e/README.md`.
+```bash
+npx playwright install chromium   # مرة واحدة لكل جهاز
+npm run test:e2e
+```
+
 ## الهيكل
 ```
 src/app/            مسارات Next.js (رقيقة)
