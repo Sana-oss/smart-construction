@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { formatAmount } from '@/shared-kernel';
+import { formatAmount, money } from '@/shared-kernel';
 import { budgetSummary, EXPENSE_NEW_PATH, totalSpent } from '@/modules/finance';
 import { currentPhaseOf, type MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
@@ -34,6 +34,9 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
   // The furthest phase in progress: an earlier phase may also be in progress (not finished yet).
   const current = currentPhaseOf(project.phases);
+  // The "record your first expense" prompt is for a project with no expense recorded in the app yet. Money spent
+  // before the app does not count: it was never recorded here. A comparison, not a calculation (rule R5).
+  const firstExpenseRecorded = money(expenses).gt(0);
   // <bdi dir="ltr"> keeps the number (and a minus sign such as "-10,000") in the right order inside Arabic text.
   const lyd = (v: Parameters<typeof formatAmount>[0]) => (
     <>
@@ -83,10 +86,12 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
           </p>
         )}
 
-        <div className={styles.info}>
-          <strong>{t.nextStep}</strong>
-          {t.nextStepBody}
-        </div>
+        {!firstExpenseRecorded && (
+          <div className={styles.info}>
+            <strong>{t.nextStep}</strong>
+            {t.nextStepBody}
+          </div>
+        )}
 
         {/* Design S07.1: the quick-expense button on the dashboard. */}
         <Link href={EXPENSE_NEW_PATH} className={styles.primary}>
