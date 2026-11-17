@@ -32,6 +32,10 @@ function sanitize(raw: unknown): WizardDraft {
   const draft: WizardDraft = {};
   for (const k of TEXT_FIELDS) if (typeof src[k] === 'string') draft[k] = src[k] as string;
   if (typeof src.currentPhase === 'number' && Number.isInteger(src.currentPhase)) draft.currentPhase = src.currentPhase;
+  // Positions of earlier phases marked "not finished": whole numbers only, at most a template's worth.
+  if (Array.isArray(src.unfinishedPhases)) {
+    draft.unfinishedPhases = src.unfinishedPhases.filter((p): p is number => typeof p === 'number' && Number.isInteger(p)).slice(0, 50);
+  }
   draft.overBudgetConfirmed = src.overBudgetConfirmed === true;
   return draft;
 }

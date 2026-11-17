@@ -3,7 +3,7 @@
 
 // Domain (pure)
 export { validateProjectDetails, validateBudget, DEFAULT_CONTINGENCY_PCT, type ProjectType } from './domain/project-setup';
-export { planInitialPhases, type PhaseStatus, type PlannedPhase } from './domain/phase-plan';
+export { planInitialPhases, currentPhaseOf, type PhaseStatus, type PlannedPhase } from './domain/phase-plan';
 export { LIBYA_DISTRICTS } from './domain/libya-districts';
 
 // Types for other modules and pages

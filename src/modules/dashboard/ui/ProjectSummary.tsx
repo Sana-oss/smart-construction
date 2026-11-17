@@ -6,7 +6,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount } from '@/shared-kernel';
 import { budgetSummary, EXPENSE_NEW_PATH, totalSpent } from '@/modules/finance';
-import type { MyProject } from '@/modules/projects';
+import { currentPhaseOf, type MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
 import { getRecordedExpensesLyd } from './queries';
 import styles from './summary.module.css';
@@ -32,7 +32,8 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
   const expenses = await getRecordedExpensesLyd(project.id);
   // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
-  const current = project.phases.find((p) => p.status === 'in_progress');
+  // The furthest phase in progress: an earlier phase may also be in progress (not finished yet).
+  const current = currentPhaseOf(project.phases);
   // <bdi dir="ltr"> keeps the number (and a minus sign such as "-10,000") in the right order inside Arabic text.
   const lyd = (v: Parameters<typeof formatAmount>[0]) => (
     <>

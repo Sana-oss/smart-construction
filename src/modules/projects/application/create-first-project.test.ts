@@ -49,6 +49,19 @@ describe('createFirstProject', () => {
     });
   });
 
+  it('stores an earlier phase as in progress when the owner said it is not finished (solution B)', async () => {
+    const gw = fakeGateway();
+    await createFirstProject(gw, { ...draft, unfinishedPhases: [1] });
+    expect(gw.createFirstProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phases: [
+          { position: 1, name: 'الحفر والأساسات', status: 'in_progress' },
+          { position: 2, name: 'الهيكل الخرساني', status: 'in_progress' },
+        ],
+      }),
+    );
+  });
+
   it('never stores invalid input', async () => {
     const gw = fakeGateway();
     const r = await createFirstProject(gw, { ...draft, name: '', currentPhase: null });
