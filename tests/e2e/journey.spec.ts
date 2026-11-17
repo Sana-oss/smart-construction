@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-import { expectNoSidewaysScroll, newTestAccount, signedInClient, signUpThroughUi } from './helpers';
+import {
+  createFirstProjectThroughUi,
+  expectNoSidewaysScroll,
+  newTestAccount,
+  signedInClient,
+  signUpThroughUi,
+} from './helpers';
 
 // Week-1 task 15. Two tests, run in order:
 // 1. The owner's journey (degree 1 "works end to end"): sign up -> first-project wizard -> dashboard ->
@@ -16,36 +22,7 @@ const projectName = `مشروع اختبار آلي ${owner.localPhone.slice(-4)
 test.describe.serial('owner journey and stranger', () => {
   test('owner signs up, creates the first project and records an expense', async ({ page }) => {
     await signUpThroughUi(page, owner);
-
-    // Wizard step 1: project details (design S02.1).
-    await expectNoSidewaysScroll(page);
-    await page.getByLabel('اسم المشروع').fill(projectName);
-    await page.locator('#city').selectOption({ index: 1 });
-    await page.getByRole('radio', { name: 'بناء جديد' }).check();
-    await page.getByLabel('مساحة البناء · م²').fill('240');
-    await page.getByRole('button', { name: 'التالي: خطة المراحل' }).click();
-
-    // Step 2: phases (S02.2). The owner is at the second phase; the first stays marked as finished (solution B).
-    await expect(page).toHaveURL(/\/setup\/phases/);
-    await expectNoSidewaysScroll(page);
-    await page.locator('input[name="currentPhase"]').nth(1).check();
-    await page.getByRole('button', { name: 'التالي: الميزانية' }).click();
-
-    // Step 3: budget (S02.3). The contingency field keeps its suggested value.
-    await expect(page).toHaveURL(/\/setup\/budget/);
-    await expectNoSidewaysScroll(page);
-    await page.getByLabel('الميزانية الإجمالية · د.ل').fill('450000');
-    await page.getByLabel('المبلغ المتاح حاليًا · د.ل').fill('100000');
-    await page.getByLabel('المصروف قبل استخدام التطبيق · د.ل').fill('5000');
-    await page.getByRole('button', { name: 'التالي: مراجعة الإعداد' }).click();
-
-    // Step 4: review (S02.5), then the dashboard.
-    await expect(page).toHaveURL(/\/setup\/review/);
-    await expectNoSidewaysScroll(page);
-    await expect(page.getByText(projectName)).toBeVisible();
-    await page.getByRole('button', { name: 'فتح لوحة المشروع' }).click();
-
-    await expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible();
+    await createFirstProjectThroughUi(page, projectName);
     await expect(page.getByText(projectName)).toBeVisible();
     await expect(page.getByText('الخطوة التالية: سجّل أول مصروف')).toBeVisible();
     await expectNoSidewaysScroll(page);
