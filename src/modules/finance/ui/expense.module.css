@@ -262,3 +262,27 @@
     font-size: 19px;
   }
 }
+
+/* Expenses list (S13.1): the list is a <ul>, so its bullets and padding are removed. */
+ul.list {
+  list-style: none;
+  padding: 0;
+}
+
+/* Empty state (S13.3) */
+.empty {
+  padding-block: var(--space-6);
+  text-align: center;
+}
+
+.empty strong {
+  display: block;
+  font-size: 18px;
+}
+
+.empty p {
+  margin-block-start: var(--space-2);
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--color-text-muted);
+}

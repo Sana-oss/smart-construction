@@ -27,6 +27,14 @@ test.describe.serial('owner journey and stranger', () => {
     await expect(page.getByText('الخطوة التالية: سجّل أول مصروف')).toBeVisible();
     await expectNoSidewaysScroll(page);
 
+    // Empty expenses list (S13.3) before the first expense, opened from the dashboard.
+    await page.getByRole('link', { name: 'عرض المصروفات' }).click();
+    await expect(page.getByText('لا توجد مصروفات بعد')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'إضافة أول مصروف' })).toBeVisible();
+    await expectNoSidewaysScroll(page);
+    await page.getByRole('link', { name: 'رجوع' }).click();
+    await expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible();
+
     // Quick expense (S14.1): the three required answers, then save.
     await page.getByRole('link', { name: 'إضافة مصروف سريع' }).click();
     await expect(page).toHaveURL(/\/expenses\/new/);
@@ -39,7 +47,17 @@ test.describe.serial('owner journey and stranger', () => {
     // Saved screen (S14.2).
     await expect(page.getByText('تم حفظ المصروف')).toBeVisible();
     await expectNoSidewaysScroll(page);
-    await page.getByRole('link', { name: 'العودة للوحة المشروع' }).click();
+    await page.getByRole('link', { name: 'عرض المصروفات' }).click();
+
+    // Expenses list (S13.1): the new expense, and this month's total from the finance domain.
+    await expect(page).toHaveURL(/\/expenses$/);
+    await expect(page.getByRole('heading', { name: 'المصروفات' })).toBeVisible();
+    const row = page.getByRole('listitem').filter({ hasText: 'إسمنت للأساسات' });
+    await expect(row).toContainText('1,250.5');
+    await expect(row).toContainText('مواد');
+    await expect(page.getByText('مصروف واحد مسجل')).toBeVisible();
+    await expectNoSidewaysScroll(page);
+    await page.getByRole('link', { name: 'رجوع' }).click();
 
     // Spent = 5,000 before the app + 1,250.5 recorded = 6,250.5; the first-expense prompt is gone.
     await expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible();

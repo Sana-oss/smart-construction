@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
-import { budgetSummary, EXPENSE_NEW_PATH, totalSpent } from '@/modules/finance';
+import { budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
 import { currentPhaseOf, type MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
 import { getRecordedExpensesLyd } from './queries';
@@ -93,9 +93,12 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
           </div>
         )}
 
-        {/* Design S07.1: the quick-expense button on the dashboard. */}
+        {/* Design S07.1: the quick-expense button on the dashboard, and the way to the expenses list (S13.1). */}
         <Link href={EXPENSE_NEW_PATH} className={styles.primary}>
           {t.addExpense}
+        </Link>
+        <Link href={EXPENSES_PATH} className={styles.secondary}>
+          {t.viewExpenses}
         </Link>
       </div>
     </main>

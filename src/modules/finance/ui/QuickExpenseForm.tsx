@@ -3,8 +3,8 @@
 // Quick expense (FR-FIN-02, UC-07). Design: S14.1 «مصروف سريع» and S14.2 «تم حفظ المصروف».
 // Six fields, as in the design: name, amount, type, phase, supplier or beneficiary, date. The owner types
 // three (name, amount, type); the phase starts on the current phase, the date on today, the supplier is optional.
-// Not built yet: the bottom navigation bar and the "عرض المصروفات" button (the expenses list does not exist
-// yet), so the saved screen offers "back to the dashboard" instead.
+// The saved screen's main button opens the expenses list (S13.1), as in the design. Not built yet: the bottom
+// navigation bar.
 // The form posts to createExpenseAction (a Server Action); all rules are checked again on the server.
 
 import Link from 'next/link';
@@ -15,6 +15,7 @@ import { EXPENSE_TYPES, type ExpenseField } from '../domain/expense';
 import { createExpenseAction, type ExpenseFormState } from './actions';
 import { BackIcon } from './icons';
 import { expenseTextAr as t, expenseTypeAr } from './messages.ar';
+import { EXPENSES_PATH } from './routes';
 import styles from './expense.module.css';
 
 export interface ExpensePhaseOption {
@@ -28,7 +29,7 @@ interface Props {
   phases: ExpensePhaseOption[];
   /** Today's date in Libya, "YYYY-MM-DD", from the server. */
   today: string;
-  /** Where the back button and "back to the dashboard" go. */
+  /** Where the back button goes. */
   homeHref: string;
 }
 
@@ -61,7 +62,7 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
     setClientOpId(crypto.randomUUID());
   }, []);
 
-  if (state.saved) return <Saved expense={state.saved} phases={phases} homeHref={homeHref} onAnother={onAnother} />;
+  if (state.saved) return <Saved expense={state.saved} phases={phases} onAnother={onAnother} />;
 
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? {};
@@ -228,12 +229,10 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
 function Saved({
   expense,
   phases,
-  homeHref,
   onAnother,
 }: {
   expense: SavedExpense & { duplicate: boolean };
   phases: ExpensePhaseOption[];
-  homeHref: string;
   onAnother: () => void;
 }) {
   const phaseName = phases.find((p) => p.id === expense.phaseId)?.name;
@@ -280,8 +279,8 @@ function Saved({
       </div>
 
       <div className={styles.actions}>
-        <Link href={homeHref} className={styles.primary}>
-          {t.saved.toDashboard}
+        <Link href={EXPENSES_PATH} className={styles.primary}>
+          {t.saved.toList}
         </Link>
         <button type="button" className={styles.secondary} onClick={onAnother}>
           {t.saved.another}

@@ -123,7 +123,8 @@
 }
 
 /* Primary action (design .primary), here the quick-expense button of S07.1. */
-.primary {
+.primary,
+.secondary {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,4 +138,11 @@
   font-size: 16px;
   font-weight: 700;
   text-decoration: none;
+}
+
+/* Secondary button (design .secondary): outlined, same size as .primary. */
+.secondary {
+  background: transparent;
+  border-color: rgb(182 186 186 / 0.5);
+  font-weight: 300;
 }

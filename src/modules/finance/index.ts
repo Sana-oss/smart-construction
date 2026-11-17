@@ -17,8 +17,13 @@ export {
 export { createExpense, type CreateExpenseCommand, type CreateExpenseResult, type SavedExpense } from './application/create-expense';
 export type { ExpenseFailure } from './application/expense-gateway';
 
+// Expenses list (design S13.1, S13.3): the use case, the screen and its read
+export { listExpenses, EXPENSE_LIST_LIMIT, type ExpenseList as ExpenseListData, type ExpenseListItem } from './application/list-expenses';
+export { ExpenseList, type ExpenseListPhase } from './ui/ExpenseList';
+export { getExpenseList } from './ui/queries';
+
 // Quick-expense screen (design S14.1, S14.2), its Server Action, route and text
 export { QuickExpenseForm, type ExpensePhaseOption } from './ui/QuickExpenseForm';
 export { createExpenseAction, type ExpenseFormState } from './ui/actions';
-export { EXPENSE_NEW_PATH } from './ui/routes';
+export { EXPENSE_NEW_PATH, EXPENSES_PATH } from './ui/routes';
 export { expenseTextAr } from './ui/messages.ar';
