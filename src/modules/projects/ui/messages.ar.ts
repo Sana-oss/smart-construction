@@ -29,6 +29,11 @@ export const wizardTextAr = {
     title: 'خطة المراحل',
     subtitle: 'اختر المرحلة التي وصلت إليها',
     done: 'مكتملة',
+    notFinished: 'لم تكتمل',
+    // Solution B (16 Nov): earlier phases start as finished; the owner unticks the ones that are not.
+    earlierTitle: 'المراحل السابقة',
+    earlierHelper: 'أزل العلامة عن أي مرحلة لم تكتمل بعد.',
+    finishedCheck: (name: string) => `اكتملت مرحلة «${name}»`,
     current: 'الحالية',
     later: 'لاحقًا',
     unreviewedNote: 'قائمة المراحل مقترحة ولم يراجعها مهندس بعد. يمكنك تعديل الأسماء والترتيب لاحقًا.',
@@ -64,7 +69,7 @@ export const wizardTextAr = {
     teamOwner: 'مالك',
     // FR-PRJ-02. Warning text; to be reviewed by the project's engineer (engineering content).
     addFloorWarning:
-      'مشروع إضافة طابق: قبل بدء العمل يجب أن يقيّم مهندس إنشائي قدرة المبنى الحالي على تحمّل الطابق الجديد. النظام ينبّه ولا يعتمد السلامة.',
+      'مشروع إضافة طابق: قبل بدء أعمال الطابق الجديد يجب أن يقيّم مهندس إنشائي قدرة المبنى الحالي على تحمّله. هذا تنبيه، ويمكنك إنشاء المشروع الآن. النظام ينبّه ولا يعتمد السلامة.',
     overBudgetConfirm: 'أؤكد أن المصروف السابق أكبر من الميزانية الإجمالية، وأريد المتابعة.',
     overBudgetNeeded: 'المصروف السابق أكبر من الميزانية. أكّد المتابعة أولًا.',
     create: 'فتح لوحة المشروع',

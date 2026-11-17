@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { todayInTripoli } from '@/shared-kernel';
 import { expenseTextAr as t, QuickExpenseForm } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
-import { getMyProject, PROJECT_HOME_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
+import { currentPhaseOf, getMyProject, PROJECT_HOME_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
 
 export const metadata = { title: `${t.pageTitle} · ركيزة` };
 
@@ -13,9 +13,11 @@ export default async function NewExpensePage() {
   const project = await getMyProject();
   if (!project) redirect(SETUP_DETAILS_PATH);
 
+  // The form starts on the current phase: the furthest one in progress (an earlier one may be unfinished too).
+  const current = currentPhaseOf(project.phases);
   return (
     <QuickExpenseForm
-      phases={project.phases.map((p) => ({ id: p.id, name: p.name, current: p.status === 'in_progress' }))}
+      phases={project.phases.map((p) => ({ id: p.id, name: p.name, current: p.id === current?.id }))}
       today={todayInTripoli()}
       homeHref={PROJECT_HOME_PATH}
     />

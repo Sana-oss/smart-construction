@@ -14,6 +14,8 @@ import type { CreateProjectOutcome, ProjectGateway } from './project-gateway';
 
 export interface WizardDraft extends ProjectDetailsInput, BudgetInput {
   currentPhase?: number | null;
+  /** Positions of earlier phases the owner marked as NOT finished (solution B, 16 Nov). Default: none. */
+  unfinishedPhases?: number[];
   overBudgetConfirmed?: boolean;
 }
 
@@ -27,7 +29,7 @@ export async function createFirstProject(gateway: ProjectGateway, draft: WizardD
   const details = validateProjectDetails(draft);
   const budget = validateBudget(draft);
   const template = await gateway.phaseTemplate();
-  const phases = planInitialPhases(template, draft.currentPhase);
+  const phases = planInitialPhases(template, draft.currentPhase, draft.unfinishedPhases ?? []);
 
   const errors: SetupError[] = [
     ...(details.ok ? [] : details.errors),
