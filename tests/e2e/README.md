@@ -1,6 +1,8 @@
-# End-to-end tests (week-1 task 15)
+# End-to-end tests (week-1 tasks 15 and 16)
 
-`journey.spec.ts` drives a real Chromium browser at a phone's screen size (Pixel 7) through the app:
+The tests drive a real Chromium browser at a phone's screen size (Pixel 7) through the app.
+
+`journey.spec.ts` (task 15):
 
 1. **Owner journey** (NFR-USE-02; FR-ID-01, FR-PRJ-01, FR-FIN-02, FR-DSH-01): sign up, the first-project wizard,
    the dashboard, a quick expense, and back to the dashboard (spent = money spent before the app + the new expense;
@@ -14,6 +16,44 @@
 Checked on 17 Nov 2026 that the stranger test really catches a leak: with the stranger signed in as the owner by
 mistake, it fails with "stranger can read projects".
 
+`quick-expense-timing.spec.ts` (task 16, NFR-USE-03): checks that the quick expense asks for **at most three required
+answers**, then records several quick expenses in a row and measures how long the **app** makes the owner wait:
+
+| Measure | From | To |
+|---|---|---|
+| open | tap «إضافة مصروف سريع» on the dashboard | the form is ready (save button enabled) |
+| save | tap «حفظ المصروف» | «تم حفظ المصروف» is shown |
+| back | tap «العودة للوحة المشروع» | the dashboard is shown |
+
+The robot types instantly, so these numbers are the app's share only. The first round is a warm-up and is left out
+of the medians. The test does not fail on time: the threshold is agreed with the supervisor (requirements spec).
+Once agreed, `E2E_QUICK_EXPENSE_MAX_MS` makes it fail when the median open + save is above it. Results are printed
+and written to `test-results/quick-expense-timing.json`.
+
+### Results, 17 Nov 2026 (phone size, staging database in Frankfurt, 8 rounds)
+
+| Where the app ran | open (median) | save (median) | open + save (median) | open + save (worst) |
+|---|---|---|---|---|
+| **Vercel site** (`fra1`, next to the database) | 382 ms | 437 ms | **826 ms** | 1,384 ms |
+| Production build on a laptop (database far away) | 277 ms | 943 ms | 1,215 ms | 1,257 ms |
+
+The Vercel numbers are the ones that matter: there the server sits next to the database. They were measured from
+one laptop on one network; a phone on a slow mobile connection will wait longer. Dev mode (`npm run dev`) is slower
+still and is not a measure of the real app.
+
+### The person's share (measure by hand with the supervisor)
+
+The app's share is under a second; most of the real time is the owner reading and typing. To measure it, ask 3 to 5
+people who have not used the app to record one expense on their own phone, on the Vercel site, signed in to a test
+account with a project:
+
+1. Start the stopwatch when they tap «إضافة مصروف سريع» on the dashboard.
+2. They type a name, an amount, and choose a type (the three required answers). Nothing else.
+3. Stop when «تم حفظ المصروف» appears.
+
+Note each time and any hesitation. The median of these times, compared with the threshold agreed with the
+supervisor, is the result for NFR-USE-03.
+
 ## Run
 
 Needs `.env.local` pointing at the **staging** project (the same two public values as the dev server).
@@ -23,15 +63,17 @@ npx playwright install chromium   # once per machine (about 300 MB; set PLAYWRIG
 npm run test:e2e                  # starts `npm run dev` if nothing is running on port 3000
 ```
 
-Against a deployed site instead: `E2E_BASE_URL=https://... npm run test:e2e`. A Vercel site behind Vercel's
-sign-in cannot be tested this way unless protection is bypassed for the run.
+Against a deployed site: `E2E_BASE_URL=https://... npm run test:e2e`. The Vercel site is behind Vercel's sign-in, so
+also set `E2E_VERCEL_SHARE_URL` to a temporary share link (Vercel dashboard → the deployment → Share). The link
+expires; never commit it. More rounds: `E2E_TIMING_ROUNDS=10`.
 
 ## Test accounts
 
-Each run creates **two accounts on staging**, named `حساب اختبار آلي`, with phone numbers `09500XXXXX` and random
-passwords that are never printed. They are not deleted automatically, because the app has no server-side key
-(rule R8). Delete them with [`scripts/e2e-cleanup.sql`](../../scripts/e2e-cleanup.sql) in the staging project's SQL
-editor. Never run these tests against a production database.
+Each run creates **three accounts on staging** (two for the journey, one for the timing), named `حساب اختبار آلي`,
+with phone numbers `09500XXXXX` and random passwords that are never printed. They are not deleted automatically,
+because the app has no server-side key (rule R8). Delete them with
+[`scripts/e2e-cleanup.sql`](../../scripts/e2e-cleanup.sql) in the staging project's SQL editor. Never run these
+tests against a production database.
 
 Not in CI yet: the run needs the staging values as GitHub secrets and creates accounts on every pull request
 (team decision, change register 17 Nov 2026).
