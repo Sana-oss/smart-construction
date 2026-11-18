@@ -16,6 +16,8 @@ The tests drive a real Chromium browser at a phone's screen size (Pixel 7) throu
 Checked on 17 Nov 2026 that the stranger test really catches a leak: with the stranger signed in as the owner by
 mistake, it fails with "stranger can read projects".
 
+`photos.spec.ts` (FR-DOC-02, NFR-SEC-03): a 4032x3024 JPEG is compressed in the browser (stored smaller, 1600 px), without downloading the HEIC converter; the signed link works and a tampered one does not; a stranger can neither list, download, link, upload nor delete the owner's files (the owner can); delete asks first and removes the file. HEIC: set `E2E_HEIC_FILE` to a real iPhone photo kept OUTSIDE the repository; skipped otherwise. The tests remove their own stored files (Supabase refuses to delete files with SQL).
+
 `quick-expense-timing.spec.ts` (task 16, NFR-USE-03): checks that the quick expense asks for **at most three required
 answers**, then records several quick expenses in a row and measures how long the **app** makes the owner wait:
 

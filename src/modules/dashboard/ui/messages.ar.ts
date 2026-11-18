@@ -24,6 +24,8 @@ export const summaryTextAr = {
   viewExpenses: 'عرض المصروفات',
   // S07.1 «مراحل المشروع» row: opens the phases screen (S09.1).
   viewPhases: 'مراحل المشروع',
+  // Design S31.1 «صور الموقع».
+  viewPhotos: 'صور الموقع',
   // FR-PRJ-02. Warning text; to be reviewed by the project's engineer (engineering content).
   addFloorWarning:
     'مشروع إضافة طابق: قبل بدء أعمال الطابق الجديد يجب أن يقيّم مهندس إنشائي قدرة المبنى الحالي على تحمّله. هذا تنبيه لا يمنعك من استخدام التطبيق، والنظام لا يعتمد السلامة.',

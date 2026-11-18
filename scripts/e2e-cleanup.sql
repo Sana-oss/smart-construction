@@ -6,6 +6,13 @@
 --   - its full name is exactly 'حساب اختبار آلي'.
 -- Deleting the auth user cascades to the profile, its project, phases, expenses and the rest (0001: on delete
 -- cascade). outbox_events and audit_log keep only plain uuids (weak references), so their rows are deleted here.
+--
+-- Stored FILES are not deleted here: Supabase refuses to delete storage files with SQL ("use the Storage API").
+-- The e2e tests remove their own files before they end (removeProjectFiles in tests/e2e/helpers.ts). To check
+-- that none are left, run before this script:
+--   select name from storage.objects where bucket_id = 'project-files'
+--     and private.project_of_path(name) in (select p.id from public.projects p join auth.users u on u.id = p.owner_id
+--       where u.email like '2189500%@phone.rakeeza.invalid' and u.raw_user_meta_data->>'full_name' = 'حساب اختبار آلي');
 
 begin;
 
