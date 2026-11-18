@@ -12,7 +12,7 @@ target delivery **1 January 2027**. The team must be able to explain every line 
 - `docs/requirements_specification.md` — numbered requirements (FR-/NFR-) with acceptance criteria. Implement by requirement ID
   and cite the ID in commit messages. If a requirement conflicts with another doc, stop and ask.
 - `docs/project_change_register.md` — decisions, file status, known inconsistencies. Record every scope change there.
-- `supabase/migrations/` — the database (0001–0009, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
+- `supabase/migrations/` — the database (0001–0011, applied in order; the source of truth, not `schema.sql`). Migrations are append-only: never edit an applied migration, add a new one.
 
 If code and docs disagree, stop and ask; do not silently pick one.
 
@@ -67,6 +67,8 @@ feature flag (`offline`, `handover` in `feature_flags`) so it can be switched of
   written only by the sign-up trigger. Never expose them in views, reports, share links, logs, or to project members.
 - Confirmed warnings (decision D2) are logged with `private.log_audit(project_id, table, action, detail)`, the only writer of
   `audit_log`. Writes spanning several tables go through one SECURITY INVOKER function (e.g. `create_first_project`).
+- **New functions in `public`:** Supabase grants EXECUTE to `anon` by default. Revoke it explicitly (`revoke all ... from anon`),
+  as in 0009 and 0011; `revoke ... from public` is not enough.
 - Tables written from offline/PWA flows carry `client_op_id` with a unique index per project (idempotent retries).
 - Dates: `date` for calendar dates, `timestamptz` for events; display in `Africa/Tripoli`.
 

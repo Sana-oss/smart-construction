@@ -5,3 +5,6 @@ export const SETUP_BUDGET_PATH = '/setup/budget';
 export const SETUP_REVIEW_PATH = '/setup/review';
 /** Where an owner with a project lands (the dashboard later, FR-DSH-01). */
 export const PROJECT_HOME_PATH = '/';
+/** Phases screen (design S09.1) and one phase's status and dates. */
+export const PHASES_PATH = '/phases';
+export const phasePath = (phaseId: string) => `/phases/${phaseId}`;
