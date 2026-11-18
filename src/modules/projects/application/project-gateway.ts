@@ -1,4 +1,5 @@
-import type { PhaseStatus, PhaseTemplateRow, PlannedPhase } from '../domain/phase-plan';
+import type { PhaseTemplateRow, PlannedPhase } from '../domain/phase-plan';
+import type { PhaseSchedule } from '../domain/phase-schedule';
 import type { ProjectType } from '../domain/project-setup';
 
 // Port: what the projects use cases need from storage. The Supabase adapter implements it; tests use a fake.
@@ -34,9 +35,23 @@ export interface MyProject {
   contingencyPct: string;
   availableNowLyd: string | null;
   availableAsOf: string | null;
-  /** id: needed by other modules to link a row to a phase (for example an expense). */
-  phases: { id: string; position: number; name: string; status: PhaseStatus }[];
+  /**
+   * Sorted by position. id: needed by other modules to link a row to a phase (for example an expense).
+   * Status and the four dates: FR-PRJ-03 (the phases screen, S09.1).
+   */
+  phases: ProjectPhase[];
 }
+
+export interface ProjectPhase extends PhaseSchedule {
+  id: string;
+  position: number;
+  name: string;
+}
+
+export type PhaseUpdateFailure =
+  | 'not_allowed' // not signed in, or no write access to this phase (RLS)
+  | 'rejected' // the database refused the values (its own check of the same rules)
+  | 'unavailable';
 
 export type CreateProjectOutcome =
   | { status: 'created'; projectId: string }
@@ -47,4 +62,6 @@ export interface ProjectGateway {
   /** The signed-in owner's project (one per owner for now, decision 10), or null. */
   myProject(): Promise<MyProject | null>;
   createFirstProject(project: NewProject): Promise<CreateProjectOutcome>;
+  /** Changes only the status and the four dates of one phase, with an audit row, in one transaction (0010). */
+  updatePhaseSchedule(phaseId: string, schedule: PhaseSchedule): Promise<{ status: 'updated' } | { status: 'failed'; reason: PhaseUpdateFailure }>;
 }

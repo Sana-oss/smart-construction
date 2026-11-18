@@ -12,6 +12,7 @@ function fakeGateway(overrides: Partial<ProjectGateway> = {}): ProjectGateway {
     phaseTemplate: vi.fn(async () => template),
     myProject: vi.fn(async () => null),
     createFirstProject: vi.fn(async () => ({ status: 'created' as const, projectId: 'p1' })),
+    updatePhaseSchedule: vi.fn(async () => ({ status: 'updated' as const })),
     ...overrides,
   };
 }

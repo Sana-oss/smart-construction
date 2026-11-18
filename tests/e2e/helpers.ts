@@ -63,6 +63,23 @@ export async function signUpThroughUi(page: Page, account: TestAccount) {
   await expect(page).toHaveURL(/\/setup/);
 }
 
+/** Signs in through the real form (design S01.2) and waits for the dashboard. */
+export async function signInThroughUi(page: Page, account: TestAccount) {
+  await page.goto('/sign-in');
+  await page.getByLabel('رقم الهاتف').fill(account.localPhone);
+  await page.getByRole('textbox', { name: 'كلمة المرور', exact: true }).fill(account.password);
+  await page.getByRole('button', { name: 'تسجيل الدخول' }).click();
+  await expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible();
+}
+
+/** Today in Libya plus `offsetDays`, as "YYYY-MM-DD" (the app counts days in Africa/Tripoli). */
+export function tripoliDate(offsetDays: number): string {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Tripoli' }).format(new Date()); // YYYY-MM-DD
+  const d = new Date(`${today}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+}
+
 /**
  * Walks the first-project wizard (designs S02.1, S02.2, S02.3, S02.5) and waits for the dashboard.
  * Spent before the app: 5,000 (the journey test checks the total). Each page is checked for sideways scrolling.

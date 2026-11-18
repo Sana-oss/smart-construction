@@ -396,3 +396,42 @@ label.listRow {
     display: none;
   }
 }
+
+/* Phases screen (S09.1): the list is a <ul> of links, one per phase. */
+ul.list {
+  list-style: none;
+}
+
+ul.list > li + li {
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
+}
+
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rowLink:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+/* Two dates side by side in the phase form; one under the other on very narrow screens. */
+.dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 340px) {
+  .dateRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.groupTitle {
+  margin-block-end: var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PhaseStatus } from '../domain/phase-plan';
 import type { ProjectType } from '../domain/project-setup';
-import type { MyProject, ProjectGateway, TemplatePhase } from '../application/project-gateway';
+import type { MyProject, ProjectGateway, ProjectPhase, TemplatePhase } from '../application/project-gateway';
 
 // Supabase adapter for the projects module. Always used with the signed-in user's client: RLS decides what is visible.
 // Money columns come back from PostgREST as numbers or strings depending on size; they are turned into strings here
@@ -9,6 +9,31 @@ import type { MyProject, ProjectGateway, TemplatePhase } from '../application/pr
 
 const str = (v: unknown): string => (v === null || v === undefined ? '' : String(v));
 const strOrNull = (v: unknown): string | null => (v === null || v === undefined ? null : String(v));
+
+interface PhaseRow {
+  id: string;
+  position: number;
+  name: string;
+  status: PhaseStatus;
+  planned_start: string | null;
+  planned_end: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+}
+
+/** Row -> phase. Dates arrive as "YYYY-MM-DD" text (PostgreSQL date), never as JS Date objects. */
+export function toProjectPhase(p: PhaseRow): ProjectPhase {
+  return {
+    id: String(p.id),
+    position: Number(p.position),
+    name: String(p.name),
+    status: p.status,
+    plannedStart: p.planned_start,
+    plannedEnd: p.planned_end,
+    actualStart: p.actual_start,
+    actualEnd: p.actual_end,
+  };
+}
 
 export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway {
   return {
@@ -33,7 +58,7 @@ export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway
       const { data, error } = await supabase
         .from('projects')
         .select(
-          'id, name, city, project_type, building_area_m2, total_budget_lyd, spent_before_lyd, contingency_pct, available_now_lyd, available_as_of, phases(id, position, name, status)',
+          'id, name, city, project_type, building_area_m2, total_budget_lyd, spent_before_lyd, contingency_pct, available_now_lyd, available_as_of, phases(id, position, name, status, planned_start, planned_end, actual_start, actual_end)',
         )
         .eq('owner_id', owner)
         .eq('status', 'active')
@@ -53,10 +78,24 @@ export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway
         contingencyPct: str(data.contingency_pct),
         availableNowLyd: strOrNull(data.available_now_lyd),
         availableAsOf: strOrNull(data.available_as_of),
-        phases: ((data.phases ?? []) as { id: string; position: number; name: string; status: PhaseStatus }[])
-          .map((p) => ({ id: String(p.id), position: Number(p.position), name: String(p.name), status: p.status }))
-          .sort((a, b) => a.position - b.position),
+        phases: ((data.phases ?? []) as PhaseRow[]).map(toProjectPhase).sort((a, b) => a.position - b.position),
       };
+    },
+
+    async updatePhaseSchedule(phaseId, s) {
+      // One database function = one transaction: the phase and its audit row (0010). Runs under RLS.
+      const { error } = await supabase.rpc('update_phase_schedule', {
+        p_phase_id: phaseId,
+        p_status: s.status,
+        p_planned_start: s.plannedStart,
+        p_planned_end: s.plannedEnd,
+        p_actual_start: s.actualStart,
+        p_actual_end: s.actualEnd,
+      });
+      if (!error) return { status: 'updated' };
+      if (error.code === '42501') return { status: 'failed', reason: 'not_allowed' };
+      if (error.code === '23514' || error.code === '22007' || error.code === '22008') return { status: 'failed', reason: 'rejected' };
+      return { status: 'failed', reason: 'unavailable' };
     },
 
     async createFirstProject(p) {

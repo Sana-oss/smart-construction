@@ -1,4 +1,6 @@
 import type { SetupErrorCode, SetupField } from '../domain/project-setup';
+import type { PhaseStatus } from '../domain/phase-plan';
+import type { PhaseScheduleErrorCode } from '../domain/phase-schedule';
 
 // Arabic text for the first-project wizard and the project summary.
 // Design: teammate's v2 screens S02.1, S02.2, S02.3, S02.5 (S02.4 "project team" deferred, decision 14 Nov).
@@ -97,3 +99,86 @@ export const createFailedAr = {
 } as const;
 
 export type SetupFieldErrors = Partial<Record<SetupField, string>>;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Phases screen (FR-PRJ-03). Design: S09.1 «مراحل المشروع». Status words from the design (S09.1, S02.2).
+
+
+export const phaseStatusAr: Record<PhaseStatus, string> = {
+  not_started: 'لم تبدأ',
+  in_progress: 'قيد التنفيذ',
+  closing: 'قيد الإغلاق',
+  done: 'مكتملة',
+  blocked: 'معلقة',
+};
+
+/**
+ * "3 أيام", with Arabic number agreement (Intl plural categories for Arabic):
+ * 1 one, 2 two, 3–10 few, 11–99 many, 100+ other.
+ */
+const arPlural = new Intl.PluralRules('ar');
+export function daysAr(n: number): string {
+  switch (arPlural.select(n)) {
+    case 'one':
+      return 'يوم واحد';
+    case 'two':
+      return 'يومان';
+    case 'few':
+      return `${n} أيام`;
+    case 'many':
+      return `${n} يومًا`;
+    default:
+      return `${n} يوم`;
+  }
+}
+
+export const phasesTextAr = {
+  pageTitle: 'مراحل المشروع',
+  title: 'مراحل المشروع',
+  back: 'رجوع',
+  subtitle: (project: string, current: string | null) => (current ? `${project} · المرحلة الحالية: ${current}` : project),
+  doneCard: 'المراحل المكتملة',
+  doneOf: (done: number, total: number) => `${done} من ${total}`,
+  lateCount: (n: number) => (n === 0 ? 'لا مراحل متأخرة' : n === 1 ? 'مرحلة واحدة متأخرة' : n === 2 ? 'مرحلتان متأخرتان' : `${n} مراحل متأخرة`),
+  current: 'المرحلة الحالية',
+  planned: (from: string | null, to: string | null) =>
+    from && to ? `المخطط: ${from} – ${to}` : from ? `البدء المخطط: ${from}` : to ? `الانتهاء المخطط: ${to}` : 'بلا تواريخ مخططة',
+  // Delay (FR-PRJ-03: the difference between planned and actual dates).
+  delay: {
+    unknown: '—',
+    onTime: 'في الموعد',
+    lateNow: (days: string) => `متأخرة · ${days}`,
+    lateDone: (days: string) => `تأخرت · ${days}`,
+    early: (days: string) => `مبكرة · ${days}`,
+  },
+  edit: 'تعديل',
+  note: 'التأخير هو الفرق بين التاريخ المخطط والفعلي. أضف التواريخ من «تعديل» لكل مرحلة.',
+
+  form: {
+    subtitle: 'الحالة والتواريخ',
+    status: 'حالة المرحلة',
+    plannedStart: 'بداية مخططة',
+    plannedEnd: 'نهاية مخططة',
+    actualStart: 'بداية فعلية',
+    actualEnd: 'نهاية فعلية',
+    plannedTitle: 'المخطط',
+    actualTitle: 'الفعلي',
+    actualHelper: 'ما حدث فعلًا، فلا يكون بعد اليوم.',
+    closingNote: 'إنهاء المرحلة بقائمة تسليم يأتي لاحقًا. الآن تكفي الحالة «مكتملة».',
+    save: 'حفظ',
+    saving: 'جارٍ الحفظ…',
+  },
+} as const;
+
+export const phaseScheduleErrorsAr: Record<PhaseScheduleErrorCode, string> = {
+  unknown_status: 'اختر حالة من القائمة.',
+  invalid_date: 'التاريخ غير صحيح.',
+  end_before_start: 'النهاية لا تكون قبل البداية.',
+  date_in_future: 'التاريخ الفعلي لا يكون بعد اليوم.',
+};
+
+export const phaseUpdateFailedAr = {
+  not_allowed: 'لا تملك صلاحية تعديل هذه المرحلة، أو انتهت الجلسة.',
+  rejected: 'رُفضت القيم. راجع التواريخ والحالة.',
+  unavailable: 'تعذّر الحفظ. حاول مرة أخرى.',
+} as const;
