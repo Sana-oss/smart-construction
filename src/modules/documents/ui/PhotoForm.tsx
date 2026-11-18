@@ -11,12 +11,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { createBrowserSupabase } from '@/platform/supabase/browser';
 import { PROJECT_FILES_BUCKET } from '@/platform/supabase/storage';
-import { checkPickedFile, type PhotoField } from '../domain/photo';
+import { checkPickedFile, validatePhotoDetails, type PhotoField } from '../domain/photo';
 import { preparePhotoUploadAction, savePhotoAction } from './actions';
 import { compressPhoto, sizeAr, type CompressedPhoto } from './compress-photo';
 import { photoClientErrorsAr, photoErrorsAr, photosTextAr } from './messages.ar';
 import { PHOTOS_PATH } from './routes';
-import styles from './photos.module.css';
+import styles from './documents.module.css';
 
 const t = photosTextAr.form;
 
@@ -70,6 +70,15 @@ export function PhotoForm({ phases, today }: { phases: PhotoPhaseOption[]; today
     }
     const form = new FormData(e.currentTarget);
     const text = (k: string) => String(form.get(k) ?? '');
+
+    // Check the details first, so nothing is uploaded when one is wrong (the server checks again).
+    const checked = validatePhotoDetails({ phaseId: text('phaseId'), takenOn: text('takenOn'), note: text('note') }, today);
+    if (!checked.ok) {
+      const errors: Partial<Record<PhotoField, string>> = {};
+      for (const err of checked.errors) errors[err.field] ??= photoErrorsAr[err.code];
+      setFieldErrors(errors);
+      return;
+    }
 
     setStep('uploading');
     const ticket = await preparePhotoUploadAction();

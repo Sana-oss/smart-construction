@@ -5,6 +5,8 @@
   display: flex;
   flex-direction: column;
   min-block-size: 100dvh;
+  /* The page scrolls as a whole: keep its end clear of the bottom navigation (globals.css). */
+  padding-block-end: var(--bottom-nav-space, 0px);
   max-inline-size: 480px;
   margin-inline: auto;
   background: radial-gradient(ellipse at 95% 0%, rgb(34 57 145 / 0.7), transparent 50%), var(--color-bg);

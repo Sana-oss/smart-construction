@@ -5,7 +5,8 @@
 .screen {
   display: flex;
   flex-direction: column;
-  block-size: 100dvh;
+  /* Leaves room for the bottom navigation when the page shows it (globals.css). */
+  block-size: calc(100dvh - var(--bottom-nav-space, 0px));
   max-inline-size: 480px;
   margin-inline: auto;
   background: var(--color-surface);

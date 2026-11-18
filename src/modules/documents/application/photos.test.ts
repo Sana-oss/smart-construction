@@ -82,11 +82,19 @@ describe('savePhoto', () => {
     expect(store.remove).toHaveBeenCalledWith([PATH]);
   });
 
-  it('checks the details before anything else', async () => {
+  it('refuses invalid details AND removes the photo the browser already uploaded', async () => {
     const store = fakeStore();
-    const r = await savePhoto(fakeGateway(), store, P, { storagePath: PATH, takenOn: '2026-11-19' }, TODAY);
+    const gateway = fakeGateway();
+    const r = await savePhoto(gateway, store, P, { storagePath: PATH, takenOn: '2026-11-19' }, TODAY);
     expect(r).toEqual({ ok: false, kind: 'invalid', errors: [{ field: 'takenOn', code: 'date_in_future' }] });
-    expect(store.info).not.toHaveBeenCalled();
+    expect(store.remove).toHaveBeenCalledWith([PATH]);
+    expect(gateway.insertPhoto).not.toHaveBeenCalled();
+  });
+
+  it("never removes a file outside the project's folder, even with invalid details", async () => {
+    const store = fakeStore();
+    await savePhoto(fakeGateway(), store, P, { storagePath: `${Q}/photos/${ID}.jpg`, takenOn: '2026-11-19' }, TODAY);
+    expect(store.remove).not.toHaveBeenCalled();
   });
 });
 

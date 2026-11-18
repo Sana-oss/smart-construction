@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getProjectPhotos, PhotoGallery, photosTextAr } from '@/modules/documents';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
-import { getMyProject, PROJECT_HOME_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
+import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
+import { BottomNav, MORE_PATH } from '../_shell/BottomNav';
 
 export const metadata = { title: `${photosTextAr.gallery.pageTitle} · ركيزة` };
 
@@ -12,5 +13,10 @@ export default async function PhotosPage() {
   const project = await getMyProject();
   if (!project) redirect(SETUP_DETAILS_PATH);
   const photos = await getProjectPhotos(project.id);
-  return <PhotoGallery photos={photos} phases={project.phases} homeHref={PROJECT_HOME_PATH} />;
+  return (
+    <>
+      <PhotoGallery photos={photos} phases={project.phases} homeHref={MORE_PATH} />
+      <BottomNav active="more" />
+    </>
+  );
 }

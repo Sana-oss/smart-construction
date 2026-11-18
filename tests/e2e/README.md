@@ -18,6 +18,8 @@ mistake, it fails with "stranger can read projects".
 
 `photos.spec.ts` (FR-DOC-02, NFR-SEC-03): a 4032x3024 JPEG is compressed in the browser (stored smaller, 1600 px), without downloading the HEIC converter; the signed link works and a tampered one does not; a stranger can neither list, download, link, upload nor delete the owner's files (the owner can); delete asks first and removes the file. HEIC: set `E2E_HEIC_FILE` to a real iPhone photo kept OUTSIDE the repository; skipped otherwise. The tests remove their own stored files (Supabase refuses to delete files with SQL).
 
+`documents.spec.ts` (FR-DOC-01): PDF and PNG stored as they are; a Word file and a PDF over 10 MB refused in the browser; a form missing a field leaves NO file in storage; the signed link returns the PDF; the phase page lists only that phase's documents; a stranger reaches nothing while the owner can; delete asks first and removes the file.
+
 `quick-expense-timing.spec.ts` (task 16, NFR-USE-03): checks that the quick expense asks for **at most three required
 answers**, then records several quick expenses in a row and measures how long the **app** makes the owner wait:
 

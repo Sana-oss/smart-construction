@@ -3,6 +3,7 @@ import { todayInTripoli } from '@/shared-kernel';
 import { expenseTextAr, ExpenseList, getExpenseList } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, PROJECT_HOME_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
+import { BottomNav } from '../_shell/BottomNav';
 
 export const metadata = { title: `${expenseTextAr.list.pageTitle} · ركيزة` };
 
@@ -15,11 +16,14 @@ export default async function ExpensesPage() {
 
   const list = await getExpenseList(project.id, todayInTripoli());
   return (
-    <ExpenseList
-      projectName={project.name}
-      list={list}
-      phases={project.phases.map((p) => ({ id: p.id, name: p.name }))}
-      homeHref={PROJECT_HOME_PATH}
-    />
+    <>
+      <ExpenseList
+        projectName={project.name}
+        list={list}
+        phases={project.phases.map((p) => ({ id: p.id, name: p.name }))}
+        homeHref={PROJECT_HOME_PATH}
+      />
+      <BottomNav active="expenses" />
+    </>
   );
 }

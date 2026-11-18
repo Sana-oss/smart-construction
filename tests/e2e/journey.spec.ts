@@ -6,6 +6,7 @@ import {
   newTestAccount,
   signedInClient,
   signInThroughUi,
+  navTab,
   signUpThroughUi,
   tripoliDate,
 } from './helpers';
@@ -29,8 +30,15 @@ test.describe.serial('owner journey and stranger', () => {
     await expect(page.getByText('الخطوة التالية: سجّل أول مصروف')).toBeVisible();
     await expectNoSidewaysScroll(page);
 
-    // Empty expenses list (S13.3) before the first expense, opened from the dashboard.
-    await page.getByRole('link', { name: 'عرض المصروفات' }).click();
+    // Bottom navigation: on the dashboard with «الرئيسية» current; «المواد» shown but not active yet.
+    const bar = page.getByRole('navigation', { name: 'التبويبات الرئيسية' });
+    await expect(navTab(page, 'الرئيسية')).toHaveAttribute('aria-current', 'page');
+    await expect(bar.getByText('المواد')).toBeVisible();
+    await expect(bar.getByRole('link', { name: /المواد/ })).toHaveCount(0);
+
+    // Empty expenses list (S13.3) before the first expense, opened from the bottom navigation.
+    await navTab(page, 'المصروفات').click();
+    await expect(navTab(page, 'المصروفات')).toHaveAttribute('aria-current', 'page');
     await expect(page.getByText('لا توجد مصروفات بعد')).toBeVisible();
     await expect(page.getByRole('link', { name: 'إضافة أول مصروف' })).toBeVisible();
     await expectNoSidewaysScroll(page);
@@ -40,6 +48,8 @@ test.describe.serial('owner journey and stranger', () => {
     // Quick expense (S14.1): the three required answers, then save.
     await page.getByRole('link', { name: 'إضافة مصروف سريع' }).click();
     await expect(page).toHaveURL(/\/expenses\/new/);
+    // Forms have no bottom navigation: their save button stays at the bottom.
+    await expect(page.getByRole('navigation', { name: 'التبويبات الرئيسية' })).toHaveCount(0);
     await expectNoSidewaysScroll(page);
     await page.getByLabel('اسم المصروف').fill('إسمنت للأساسات');
     await page.getByLabel('المبلغ · د.ل').fill('1250.5');
@@ -69,7 +79,7 @@ test.describe.serial('owner journey and stranger', () => {
 
   test('owner plans a phase, sees its delay, and tracks its tasks (FR-PRJ-03, FR-PRJ-04)', async ({ page }) => {
     await signInThroughUi(page, owner);
-    await page.getByRole('link', { name: 'مراحل المشروع' }).click();
+    await navTab(page, 'المراحل').click();
     await expect(page).toHaveURL(/\/phases$/);
     await expect(page.getByRole('heading', { name: 'مراحل المشروع' })).toBeVisible();
     await expectNoSidewaysScroll(page);

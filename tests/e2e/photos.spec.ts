@@ -3,6 +3,7 @@ import { basename } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import {
   createFirstProjectThroughUi,
+  navTab,
   newTestAccount,
   removeProjectFiles,
   signedInClient,
@@ -69,7 +70,8 @@ test.describe.serial('site photos', () => {
     await signUpThroughUi(page, owner);
     await createFirstProjectThroughUi(page, `مشروع صور ${owner.localPhone.slice(-4)}`);
 
-    await page.getByRole('link', { name: 'صور الموقع' }).click();
+    await navTab(page, 'المزيد').click();
+    await page.getByRole('link', { name: /صور الموقع/ }).click();
     await expect(page).toHaveURL(/\/photos$/);
     await expect(page.getByText('لا توجد صور بعد')).toBeVisible();
 

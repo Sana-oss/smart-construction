@@ -1,0 +1,63 @@
+/* Bottom navigation. Values from the design file (.app-nav): items at least 52 px tall, 21 px icons, 11 px labels,
+   the active tab on a translucent blue with light text; background from the brand guideline (#2D3031, --color-nav).
+   Fixed to the bottom of the screen; the screens shrink by --bottom-nav-space (set in globals.css) to make room. */
+
+.nav {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-around;
+  max-inline-size: 480px;
+  margin-inline: auto;
+  padding-block: 4px max(8px, env(safe-area-inset-bottom));
+  padding-inline: 4px;
+  background: var(--color-nav);
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-inline-size: 52px;
+  min-block-size: 52px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.item svg {
+  inline-size: 21px;
+  block-size: 21px;
+}
+
+.item[aria-current='page'] {
+  background: rgb(34 57 145 / 0.5);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.item:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+.disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

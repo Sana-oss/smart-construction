@@ -1,6 +1,6 @@
 'use server';
 
-// Server Actions for site photos (FR-DOC-02). Run as the signed-in user: RLS and the storage policies decide what
+// Server Actions for site photos (FR-DOC-02) and documents (FR-DOC-01). Run as the signed-in user: RLS and the storage policies decide what
 // is allowed; the values are checked again by the domain rules.
 
 import { revalidatePath } from 'next/cache';
@@ -11,8 +11,11 @@ import { getMyProject } from '@/modules/projects';
 import type { PhotoField } from '../domain/photo';
 import { deletePhoto, preparePhotoUpload, savePhoto } from '../application/photos';
 import { supabasePhotoGateway } from '../infra/supabase-photo-gateway';
-import { photoErrorsAr, photoFailedAr } from './messages.ar';
-import { PHOTOS_PATH } from './routes';
+import type { DocumentField } from '../domain/document';
+import { deleteDocument, prepareDocumentUpload, saveDocument } from '../application/documents';
+import { supabaseDocumentGateway } from '../infra/supabase-document-gateway';
+import { documentErrorsAr, documentFailedAr, photoErrorsAr, photoFailedAr } from './messages.ar';
+import { DOCUMENTS_PATH, PHOTOS_PATH } from './routes';
 
 export type PrepareUploadResult = { ok: true; path: string; token: string } | { ok: false; message: string };
 
@@ -58,4 +61,51 @@ export async function deletePhotoAction(photoId: string): Promise<void> {
   const supabase = await createServerSupabase();
   await deletePhoto(supabasePhotoGateway(supabase), supabaseFileStore(supabase), photoId);
   revalidatePath(PHOTOS_PATH);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Documents (FR-DOC-01): the same three steps as photos.
+
+export async function prepareDocumentUploadAction(contentType: string): Promise<PrepareUploadResult> {
+  const project = await getMyProject();
+  if (!project) return { ok: false, message: documentFailedAr.not_allowed };
+  const store = supabaseFileStore(await createServerSupabase());
+  const r = await prepareDocumentUpload(store, project.id, contentType, () => crypto.randomUUID());
+  return r.ok ? r : { ok: false, message: documentFailedAr[r.reason] };
+}
+
+export interface SaveDocumentState {
+  ok?: boolean;
+  formError?: string;
+  fieldErrors?: Partial<Record<DocumentField, string>>;
+}
+
+export async function saveDocumentAction(input: {
+  storagePath: string;
+  contentType: string;
+  title: string;
+  kind: string;
+  phaseId: string;
+  version: string;
+}): Promise<SaveDocumentState> {
+  const project = await getMyProject();
+  if (!project) return { formError: documentFailedAr.not_allowed };
+  const supabase = await createServerSupabase();
+  const r = await saveDocument(supabaseDocumentGateway(supabase), supabaseFileStore(supabase), project.id, input);
+  if (!r.ok) {
+    if (r.kind === 'failed') return { formError: documentFailedAr[r.reason] };
+    const fieldErrors: SaveDocumentState['fieldErrors'] = {};
+    for (const e of r.errors) fieldErrors[e.field] ??= documentErrorsAr[e.code];
+    return { fieldErrors };
+  }
+  revalidatePath(DOCUMENTS_PATH);
+  return { ok: true };
+}
+
+/** Bound by the page: `deleteDocumentAction.bind(null, documentId)`. Deletes the row, then the file. */
+export async function deleteDocumentAction(documentId: string): Promise<void> {
+  if (!isUuid(documentId)) return;
+  const supabase = await createServerSupabase();
+  await deleteDocument(supabaseDocumentGateway(supabase), supabaseFileStore(supabase), documentId);
+  revalidatePath(DOCUMENTS_PATH);
 }

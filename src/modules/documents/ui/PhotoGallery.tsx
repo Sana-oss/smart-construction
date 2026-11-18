@@ -8,7 +8,7 @@ import { photosCountAr, photosTextAr } from './messages.ar';
 import { DeletePhotoButton } from './DeletePhotoButton';
 import { BackIcon } from './PhotoForm';
 import { PHOTO_NEW_PATH } from './routes';
-import styles from './photos.module.css';
+import styles from './documents.module.css';
 
 const t = photosTextAr.gallery;
 
