@@ -22,6 +22,11 @@ interface Props {
   /** The date in Libya, "YYYY-MM-DD". */
   today: string;
   backHref: string;
+  /**
+   * More rows under «الحالة والتواريخ», from modules this one may not import (for example the phase's documents,
+   * S10.4): the page builds them. Each opens another screen.
+   */
+  links?: { label: string; note: string; href: string }[];
 }
 
 /** "2026-11-09" -> "9 نوفمبر 2026". Noon UTC keeps the day the same in every time zone. */
@@ -30,7 +35,7 @@ const dateAr = (iso: string) =>
     new Date(`${iso}T12:00:00Z`),
   );
 
-export function PhaseDetail({ phase, tasks, today, backHref }: Props) {
+export function PhaseDetail({ phase, tasks, today, backHref, links = [] }: Props) {
   const progress = phaseProgress(tasks);
   const delay = phaseDelay(phase, today);
   const delayText =
@@ -70,6 +75,14 @@ export function PhaseDetail({ phase, tasks, today, backHref }: Props) {
               <small>{[phaseStatusAr[phase.status], delayText].filter(Boolean).join(' · ')}</small>
             </span>
           </Link>
+          {links.map((l) => (
+            <Link key={l.href} href={l.href} className={`${styles.listRow} ${styles.rowLink} ${styles.rowDivider}`}>
+              <span className={styles.rowText}>
+                <strong>{l.label}</strong>
+                <small>{l.note}</small>
+              </span>
+            </Link>
+          ))}
         </div>
 
         <section aria-labelledby="tasks-title">

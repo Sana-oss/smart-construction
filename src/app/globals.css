@@ -85,3 +85,26 @@ textarea {
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
 }
+
+/* Date fields on iPhone (Safari and in-app browsers such as Messenger use the same engine): the built-in look has
+   its own minimum width, so the field ignored "inline-size: 100%" and stuck out of the screen, and the date was
+   centred. Removing the built-in look keeps it inside its column like every other field; tapping it still opens the
+   system date picker. Reported by the owner on 18 Nov 2026 (screenshot of the phase page). */
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  text-align: start;
+}
+
+input[type='date']::-webkit-date-and-time-value {
+  text-align: start;
+}
+
+/* Room for the bottom navigation (src/app/_shell/BottomNav.tsx) on the pages that show it: 52 px items + 4 px top
+   padding + the bottom padding (at least 8 px, or the iPhone home-bar area) + 1 px border. Screens subtract it. */
+body:has([data-bottom-nav]) {
+  --bottom-nav-space: calc(65px + max(8px, env(safe-area-inset-bottom)));
+}

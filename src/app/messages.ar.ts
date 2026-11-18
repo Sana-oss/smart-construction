@@ -14,3 +14,29 @@ export const notFoundTextAr = {
   body: 'الرابط الذي فتحته غير صحيح أو أن الصفحة نُقلت.',
   home: 'العودة إلى الرئيسية',
 };
+
+// Bottom navigation (design: every main screen; brand guideline: from the right «الرئيسية، المصروفات، المراحل،
+// المواد، المزيد»).
+export const bottomNavTextAr = {
+  label: 'التبويبات الرئيسية',
+  home: 'الرئيسية',
+  expenses: 'المصروفات',
+  phases: 'المراحل',
+  materials: 'المواد',
+  soon: 'قريبًا',
+  more: 'المزيد',
+};
+
+// «المزيد»: what has no tab of its own.
+export const morePageTextAr = {
+  pageTitle: 'المزيد',
+  title: 'المزيد',
+  subtitle: 'الوثائق والصور والحساب',
+  photos: 'صور الموقع',
+  photosNote: 'سجل مرئي حسب المرحلة والتاريخ',
+  documents: 'وثائق المشروع',
+  documentsNote: 'المخططات والعقود والفواتير والتصاريح',
+  materials: 'المواد والكميات',
+  materialsNote: 'قريبًا',
+  account: 'الحساب',
+};

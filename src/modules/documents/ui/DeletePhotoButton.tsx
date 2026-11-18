@@ -4,7 +4,7 @@
 
 import { deletePhotoAction } from './actions';
 import { photosTextAr } from './messages.ar';
-import styles from './photos.module.css';
+import styles from './documents.module.css';
 
 export function DeletePhotoButton({ photoId, label }: { photoId: string; label: string }) {
   return (

@@ -58,11 +58,17 @@ export async function savePhoto(
   input: { storagePath?: string | null; phaseId?: string | null; takenOn?: string | null; note?: string | null },
   today: string,
 ): Promise<SavePhotoResult> {
-  const details = validatePhotoDetails(input, today);
-  if (!details.ok) return { ok: false, kind: 'invalid', errors: details.errors };
-
   const path = input.storagePath ?? '';
-  if (!isPhotoPathOf(projectId, path)) return { ok: false, kind: 'failed', reason: 'not_allowed' };
+  const ownPath = isPhotoPathOf(projectId, path);
+
+  const details = validatePhotoDetails(input, today);
+  if (!details.ok) {
+    // The browser uploads BEFORE this check: remove that file, or it stays in storage without a row.
+    // Only a path inside this project's folder is ever removed.
+    if (ownPath) await store.remove([path]);
+    return { ok: false, kind: 'invalid', errors: details.errors };
+  }
+  if (!ownPath) return { ok: false, kind: 'failed', reason: 'not_allowed' };
 
   const file = await store.info(path);
   if (!file) return { ok: false, kind: 'failed', reason: 'upload_missing' };

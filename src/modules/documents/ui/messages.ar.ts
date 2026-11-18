@@ -1,5 +1,7 @@
 import type { PhotoErrorCode } from '../domain/photo';
 import type { PhotoFailure } from '../application/photos';
+import type { DocumentErrorCode, DocumentKind, DocumentType } from '../domain/document';
+import type { DocumentFailure } from '../application/documents';
 
 // Arabic text for the site-photo screens. Wording from the design: S31.1 «صور الموقع», S31.2 «صورة وملاحظة».
 
@@ -82,5 +84,104 @@ export const photoFailedAr: Record<PhotoFailure, string> = {
   unknown_reference: 'هذه المرحلة ليست من مشروعك.',
   upload_missing: 'لم تصل الصورة كاملة. حاول مرة أخرى.',
   rejected: 'رُفضت الصورة. حاول مرة أخرى.',
+  unavailable: 'تعذّر الحفظ. حاول مرة أخرى.',
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+// Documents. Wording from the design: S30.1 «وثائق المشروع», S30.2 «إضافة وثيقة», S10.4 «وثائق المرحلة».
+
+export const documentKindAr: Record<DocumentKind, string> = {
+  plan: 'مخطط',
+  invoice: 'فاتورة',
+  contract: 'عقد',
+  warranty: 'ضمان',
+  permit: 'تصريح',
+  structural_assessment: 'تقييم إنشائي',
+  other: 'أخرى',
+};
+
+export const documentTypeAr: Record<DocumentType, string> = {
+  'application/pdf': 'PDF',
+  'image/jpeg': 'JPEG',
+  'image/png': 'PNG',
+};
+
+/** "3 ملفات", with Arabic number agreement. */
+export function filesCountAr(n: number): string {
+  switch (arPlural.select(n)) {
+    case 'zero':
+      return 'لا ملفات';
+    case 'one':
+      return 'ملف واحد';
+    case 'two':
+      return 'ملفان';
+    case 'few':
+      return `${n} ملفات`;
+    default:
+      return `${n} ملفًا`;
+  }
+}
+
+export const documentsTextAr = {
+  back: 'رجوع',
+  list: {
+    pageTitle: 'وثائق المشروع',
+    title: 'وثائق المشروع',
+    subtitle: 'نسخ معتمدة ومرفقات التنفيذ',
+    phaseTitle: 'وثائق المرحلة',
+    phaseSubtitle: (phase: string, count: string) => `${phase} · ${count}`,
+    allDocuments: 'كل وثائق المشروع',
+    version: (v: string) => `الإصدار ${v}`,
+    open: 'عرض',
+    openLabel: (title: string) => `عرض: ${title}`,
+    noLink: 'غير متاح',
+    delete: 'حذف',
+    deleteLabel: (title: string) => `حذف: ${title}`,
+    deleteConfirm: (title: string) => `حذف الوثيقة «${title}»؟ لا يمكن التراجع.`,
+    photosRow: 'صور الموقع',
+    photosNote: 'سجل الصور حسب المرحلة',
+    emptyTitle: 'لا توجد وثائق بعد',
+    emptyBody: 'احفظ المخططات والعقود والفواتير والتصاريح في مكان واحد. رفع الوثائق ليس شرطًا لاستخدام النظام.',
+    add: 'إضافة وثيقة',
+  },
+  form: {
+    pageTitle: 'إضافة وثيقة',
+    title: 'إضافة وثيقة',
+    subtitle: 'احفظ النسخة ومصدرها في المشروع',
+    name: 'اسم الوثيقة',
+    namePlaceholder: 'مثلًا: مخطط السقف المعتمد',
+    kind: 'نوع الوثيقة',
+    kindPlaceholder: 'اختر نوع الوثيقة',
+    phase: 'المرحلة المرتبطة',
+    noPhase: 'المشروع كله',
+    version: 'رقم الإصدار',
+    versionPlaceholder: 'مثلًا: 03',
+    file: 'الملف',
+    pick: 'اختر ملف PDF أو صورة',
+    change: 'تغيير الملف',
+    fileHelper: 'PDF أو JPEG أو PNG حتى 10 ميغابايت. صور الآيفون (HEIC) تُحوَّل إلى JPEG.',
+    converting: 'جارٍ تحويل الصورة…',
+    uploading: 'جارٍ رفع الملف…',
+    saving: 'جارٍ الحفظ…',
+    save: 'حفظ الوثيقة',
+    needFile: 'اختر ملفًا أولًا.',
+  },
+} as const;
+
+export const documentErrorsAr: Record<DocumentErrorCode, string> = {
+  required: 'هذا الحقل مطلوب.',
+  too_short: 'النص قصير جدًا.',
+  too_long: 'النص طويل جدًا.',
+  unknown_choice: 'اختر من القائمة.',
+  invalid_id: 'اختر مرحلة من القائمة.',
+  wrong_type: 'نوع الملف غير مقبول. اختر PDF أو صورة.',
+  too_large: 'الملف كبير جدًا (10 ميغابايت على الأكثر).',
+};
+
+export const documentFailedAr: Record<DocumentFailure, string> = {
+  not_allowed: 'لا تملك صلاحية إضافة وثائق لهذا المشروع، أو انتهت الجلسة.',
+  unknown_reference: 'هذه المرحلة ليست من مشروعك.',
+  upload_missing: 'لم يصل الملف كاملًا. حاول مرة أخرى.',
+  rejected: 'رُفض الملف. تأكد أنه PDF أو صورة لا تتجاوز 10 ميغابايت.',
   unavailable: 'تعذّر الحفظ. حاول مرة أخرى.',
 };

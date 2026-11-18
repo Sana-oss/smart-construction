@@ -151,3 +151,8 @@ export async function removeProjectFiles(account: TestAccount): Promise<number> 
   await client.auth.signOut();
   return removed;
 }
+
+/** A tab of the bottom navigation (design: every main screen). */
+export function navTab(page: Page, label: 'الرئيسية' | 'المصروفات' | 'المراحل' | 'المواد' | 'المزيد') {
+  return page.getByRole('navigation', { name: 'التبويبات الرئيسية' }).getByRole('link', { name: label, exact: true });
+}

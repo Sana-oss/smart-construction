@@ -6,7 +6,8 @@
 .screen {
   display: flex;
   flex-direction: column;
-  block-size: 100dvh;
+  /* Leaves room for the bottom navigation when the page shows it (globals.css). */
+  block-size: calc(100dvh - var(--bottom-nav-space, 0px));
   max-inline-size: 480px;
   margin-inline: auto;
   background: var(--color-surface);
@@ -460,4 +461,9 @@ ul.list > li + li {
 .taskActions > form,
 .taskActions > form > .taskButton {
   inline-size: 100%;
+}
+
+/* A link row that follows another one inside the same .list box (phase page). */
+.rowDivider {
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
 }

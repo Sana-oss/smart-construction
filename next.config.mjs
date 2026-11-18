@@ -19,6 +19,9 @@ const nextConfig = {
   reactStrictMode: true,
   // Do not tell visitors which framework serves the site.
   poweredByHeader: false,
+  // The development badge sits in the bottom-left corner, on top of the bottom navigation's «المزيد» tab, and
+  // catches its taps. Development only; production never shows it.
+  devIndicators: false,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

@@ -5,9 +5,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
-import { budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
-import { PHOTOS_PATH } from '@/modules/documents';
-import { currentPhaseOf, PHASES_PATH, type MyProject } from '@/modules/projects';
+import { budgetSummary, EXPENSE_NEW_PATH, totalSpent } from '@/modules/finance';
+import { currentPhaseOf, type MyProject } from '@/modules/projects';
 import { summaryTextAr as t } from './messages.ar';
 import { getRecordedExpensesLyd } from './queries';
 import styles from './summary.module.css';
@@ -94,18 +93,9 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
           </div>
         )}
 
-        {/* Design S07.1: the quick-expense button, and the ways to the expenses list (S13.1) and the phases (S09.1). */}
+        {/* Design S07.1: the quick-expense button. The lists are reached from the bottom navigation. */}
         <Link href={EXPENSE_NEW_PATH} className={styles.primary}>
           {t.addExpense}
-        </Link>
-        <Link href={EXPENSES_PATH} className={styles.secondary}>
-          {t.viewExpenses}
-        </Link>
-        <Link href={PHASES_PATH} className={styles.secondary}>
-          {t.viewPhases}
-        </Link>
-        <Link href={PHOTOS_PATH} className={styles.secondary}>
-          {t.viewPhotos}
         </Link>
       </div>
     </main>

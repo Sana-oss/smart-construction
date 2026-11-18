@@ -12,3 +12,11 @@ export { PhotoForm, type PhotoPhaseOption } from './ui/PhotoForm';
 export { getProjectPhotos } from './ui/queries';
 export { PHOTOS_PATH, PHOTO_NEW_PATH } from './ui/routes';
 export { photosTextAr } from './ui/messages.ar';
+
+// Project documents (FR-DOC-01, design S30.1/S30.2/S10.4)
+export type { DocumentWithUrl } from './application/documents';
+export { DocumentList } from './ui/DocumentList';
+export { DocumentForm } from './ui/DocumentForm';
+export { getProjectDocuments } from './ui/queries';
+export { DOCUMENTS_PATH, DOCUMENT_NEW_PATH, documentsOfPhasePath, newDocumentPath } from './ui/routes';
+export { documentsTextAr, filesCountAr } from './ui/messages.ar';
