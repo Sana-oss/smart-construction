@@ -67,7 +67,7 @@ test.describe.serial('owner journey and stranger', () => {
     await expect(page.getByText('الخطوة التالية: سجّل أول مصروف')).toHaveCount(0);
   });
 
-  test('owner plans a phase and sees its delay (FR-PRJ-03)', async ({ page }) => {
+  test('owner plans a phase, sees its delay, and tracks its tasks (FR-PRJ-03, FR-PRJ-04)', async ({ page }) => {
     await signInThroughUi(page, owner);
     await page.getByRole('link', { name: 'مراحل المشروع' }).click();
     await expect(page).toHaveURL(/\/phases$/);
@@ -80,24 +80,61 @@ test.describe.serial('owner journey and stranger', () => {
     await expect(rows.nth(1)).toContainText('قيد التنفيذ · المرحلة الحالية');
     await expect(rows.nth(1)).toContainText('بلا تواريخ مخططة');
 
-    // Plan the current phase to have ended 5 days ago: it is now late by 5 days, still running.
+    // Open the current phase (S10.1/S10.2): no tasks yet, so no progress.
     await rows.nth(1).getByRole('link').click();
     await expect(page).toHaveURL(/\/phases\/[0-9a-f-]{36}$/);
+    await expect(page.getByRole('heading', { name: 'الهيكل الخرساني' })).toBeVisible();
+    await expect(page.getByText('لا مهام بعد', { exact: false })).toBeVisible();
+    await expectNoSidewaysScroll(page);
+    const phaseUrl = page.url();
+
+    // Plan the phase to have ended 5 days ago: it is now late by 5 days, still running.
+    await page.getByRole('link', { name: /الحالة والتواريخ/ }).click();
+    await expect(page).toHaveURL(/\/schedule$/);
     await expectNoSidewaysScroll(page);
     await page.getByLabel('بداية مخططة').fill(tripoliDate(-30));
     await page.getByLabel('نهاية مخططة').fill(tripoliDate(-5));
     await page.getByLabel('بداية فعلية').fill(tripoliDate(-28));
     await page.getByRole('button', { name: 'حفظ' }).click();
-
-    await expect(page).toHaveURL(/\/phases$/);
-    await expect(page.getByRole('listitem').nth(1)).toContainText('متأخرة · 5 أيام');
-    await expect(page.getByText('مرحلة واحدة متأخرة')).toBeVisible();
+    await expect(page).toHaveURL(phaseUrl);
+    await expect(page.getByRole('link', { name: /الحالة والتواريخ/ })).toContainText('متأخرة · 5 أيام');
 
     // An actual date after today is refused with a message, and nothing is saved.
-    await page.getByRole('listitem').nth(1).getByRole('link').click();
+    await page.getByRole('link', { name: /الحالة والتواريخ/ }).click();
     await page.getByLabel('نهاية فعلية').fill(tripoliDate(1));
     await page.getByRole('button', { name: 'حفظ' }).click();
     await expect(page.getByText('التاريخ الفعلي لا يكون بعد اليوم.')).toBeVisible();
+
+    // Tasks (FR-PRJ-04): four tasks, one finished -> 25% (the requirement's example).
+    await page.goto(phaseUrl);
+    for (const title of ['تجهيز الشدة', 'تركيب حديد السقف', 'فحص التسليح', 'صب السقف']) {
+      await page.getByLabel('عنوان المهمة').fill(title);
+      await page.getByRole('button', { name: 'إضافة مهمة' }).click();
+      await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible();
+    }
+    await expect(page.getByText('0 من 4 مهام منجزة')).toBeVisible();
+    await page.getByRole('button', { name: 'بدء: تجهيز الشدة' }).click();
+    await page.getByRole('button', { name: 'إنجاز: تجهيز الشدة' }).click();
+    await expect(page.getByText('1 من 4 مهام منجزة')).toBeVisible();
+    await expect(page.getByText('25%', { exact: true })).toBeVisible();
+    await expectNoSidewaysScroll(page);
+
+    // An empty title is refused with a message.
+    await page.getByRole('button', { name: 'إضافة مهمة' }).click();
+    await expect(page.getByText('اكتب عنوان المهمة.')).toBeVisible();
+
+    // Delete asks first; after deleting, 1 of 3 = 33%.
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: 'حذف: صب السقف' }).click();
+    await expect(page.getByRole('listitem').filter({ hasText: 'صب السقف' })).toHaveCount(0);
+    await expect(page.getByText('33%', { exact: true })).toBeVisible();
+
+    // The phases screen shows the phase's late status and its progress.
+    await page.getByRole('link', { name: 'رجوع' }).click();
+    await expect(page).toHaveURL(/\/phases$/);
+    await expect(page.getByRole('listitem').nth(1)).toContainText('متأخرة · 5 أيام');
+    await expect(page.getByRole('listitem').nth(1)).toContainText('الإنجاز 33% · 1 من 3 مهام');
+    await expect(page.getByText('مرحلة واحدة متأخرة')).toBeVisible();
   });
 
   test('a stranger cannot see or change that project', async ({ page }) => {
@@ -164,6 +201,25 @@ test.describe.serial('owner journey and stranger', () => {
     expect(phaseChange.error?.code, 'stranger could change a phase').toBe('42501');
     const phaseAfter = await asOwner.from('phases').select('status').eq('id', phase.id).single();
     expect(phaseAfter.data?.status).toBe(phase.status);
+
+    // Tasks (0012): the stranger sees none of the owner's tasks, cannot add one, and cannot finish one.
+    const { data: ownerTasks } = await asOwner.from('tasks').select('id, status').eq('project_id', projectId);
+    expect(ownerTasks!.length).toBeGreaterThan(0);
+    const strangerTasks = await asStranger.from('tasks').select('id').eq('project_id', projectId);
+    expect(strangerTasks.data, 'stranger can read tasks').toHaveLength(0);
+    // Refused either by RLS (42501) or, first, by the 0012 guard (23503): BEFORE triggers run before RLS's check,
+    // and the stranger cannot see the phase. Either way no row is added (counted below).
+    const addTask = await asStranger.from('tasks').insert({ project_id: projectId, phase_id: phase.id, title: 'مهمة غريب' });
+    expect(['42501', '23503'], 'stranger could add a task').toContain(addTask.error?.code);
+    const addNoPhase = await asStranger.from('tasks').insert({ project_id: projectId, title: 'مهمة غريب' });
+    expect(addNoPhase.error?.code, 'stranger could add a task without a phase').toBe('42501');
+    const countAfterAdd = await asOwner.from('tasks').select('id').eq('project_id', projectId);
+    expect(countAfterAdd.data).toHaveLength(ownerTasks!.length);
+    const open = ownerTasks!.find((t) => t.status !== 'done')!;
+    const finish = await asStranger.from('tasks').update({ status: 'done' }).eq('id', open.id).select('id');
+    expect(finish.data ?? []).toHaveLength(0);
+    const taskAfter = await asOwner.from('tasks').select('status').eq('id', open.id).single();
+    expect(taskAfter.data?.status).toBe(open.status);
 
     // The owner's data is exactly as before.
     const after = await asOwner.from('projects').select('name').eq('id', projectId).single();

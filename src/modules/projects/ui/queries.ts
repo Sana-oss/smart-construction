@@ -3,6 +3,8 @@
 import { createServerSupabase } from '@/platform/supabase/server';
 import type { MyProject, TemplatePhase } from '../application/project-gateway';
 import { supabaseProjectGateway } from '../infra/supabase-project-gateway';
+import type { PhaseTask } from '../application/tasks';
+import { supabaseTaskGateway } from '../infra/supabase-task-gateway';
 
 export async function getMyProject(): Promise<MyProject | null> {
   return supabaseProjectGateway(await createServerSupabase()).myProject();
@@ -10,4 +12,9 @@ export async function getMyProject(): Promise<MyProject | null> {
 
 export async function getPhaseTemplate(): Promise<TemplatePhase[]> {
   return supabaseProjectGateway(await createServerSupabase()).phaseTemplate();
+}
+
+/** All tasks of the project, oldest first (FR-PRJ-04). */
+export async function getProjectTasks(projectId: string): Promise<PhaseTask[]> {
+  return supabaseTaskGateway(await createServerSupabase()).projectTasks(projectId);
 }

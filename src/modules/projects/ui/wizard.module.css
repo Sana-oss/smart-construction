@@ -435,3 +435,29 @@ ul.list > li + li {
   font-weight: 700;
   color: var(--color-text-muted);
 }
+
+/* Phase page (S10.2): the two small buttons of a task row (start/finish/reopen, delete). 44px tall for thumbs. */
+.taskActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.taskButton {
+  min-inline-size: 72px;
+  min-block-size: 44px;
+  padding-inline: var(--space-3);
+  border: 1px solid rgb(182 186 186 / 0.5);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Both buttons of a task row share one width (the widest label), so they line up. */
+.taskActions > form,
+.taskActions > form > .taskButton {
+  inline-size: 100%;
+}

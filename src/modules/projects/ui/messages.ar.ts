@@ -1,4 +1,6 @@
 import type { SetupErrorCode, SetupField } from '../domain/project-setup';
+import type { NewTaskErrorCode, TaskStatus } from '../domain/tasks';
+import type { TaskFailure } from '../application/tasks';
 import type { PhaseStatus } from '../domain/phase-plan';
 import type { PhaseScheduleErrorCode } from '../domain/phase-schedule';
 
@@ -182,3 +184,71 @@ export const phaseUpdateFailedAr = {
   rejected: 'رُفضت القيم. راجع التواريخ والحالة.',
   unavailable: 'تعذّر الحفظ. حاول مرة أخرى.',
 } as const;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Phase page and its tasks (FR-PRJ-04). Design: S10.1 (phase overview), S10.2 «مهام المرحلة».
+
+export const taskStatusAr: Record<TaskStatus, string> = {
+  todo: 'مجدولة',
+  doing: 'قيد التنفيذ',
+  done: 'منجزة',
+};
+
+/** The button that moves a task on: start it, finish it, reopen it. */
+export const taskActionAr: Record<TaskStatus, string> = {
+  todo: 'بدء',
+  doing: 'إنجاز',
+  done: 'إعادة فتح',
+};
+
+/** "3 مهام", with Arabic number agreement. */
+export function tasksCountAr(n: number): string {
+  switch (arPlural.select(n)) {
+    case 'zero':
+      return 'لا مهام';
+    case 'one':
+      return 'مهمة واحدة';
+    case 'two':
+      return 'مهمتان';
+    case 'few':
+      return `${n} مهام`;
+    case 'many':
+      return `${n} مهمة`;
+    default:
+      return `${n} مهمة`;
+  }
+}
+
+export const phasePageTextAr = {
+  back: 'رجوع',
+  subtitle: 'نظرة عامة',
+  progressCard: 'نسبة إنجاز المرحلة',
+  progressOf: (done: number, total: string) => `${done} من ${total} منجزة`,
+  noTasks: 'لا مهام بعد. أضف مهام المرحلة لتُحسب نسبة إنجازها.',
+  scheduleRow: 'الحالة والتواريخ',
+  tasksTitle: 'مهام المرحلة',
+  due: (date: string) => `الموعد: ${date}`,
+  overdue: 'متأخرة',
+  delete: 'حذف',
+  deleteConfirm: (title: string) => `حذف المهمة «${title}»؟ لا يمكن التراجع.`,
+  addTitle: 'مهمة جديدة',
+  taskTitle: 'عنوان المهمة',
+  dueDate: 'الموعد',
+  add: 'إضافة مهمة',
+  adding: 'جارٍ الإضافة…',
+  progressInList: (pct: number, done: number, total: string) => `الإنجاز ${pct}% · ${done} من ${total}`,
+} as const;
+
+export const newTaskErrorsAr: Record<NewTaskErrorCode, string> = {
+  required: 'اكتب عنوان المهمة.',
+  too_short: 'العنوان قصير جدًا.',
+  too_long: 'العنوان طويل جدًا (120 حرفًا على الأكثر).',
+  invalid_date: 'التاريخ غير صحيح.',
+};
+
+export const taskFailedAr: Record<TaskFailure, string> = {
+  not_allowed: 'لا تملك صلاحية تعديل مهام هذه المرحلة، أو انتهت الجلسة.',
+  unknown_reference: 'هذه المرحلة ليست من مشروعك.',
+  rejected: 'رُفضت القيم. راجع العنوان والتاريخ.',
+  unavailable: 'تعذّر الحفظ. حاول مرة أخرى.',
+};

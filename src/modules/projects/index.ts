@@ -5,13 +5,15 @@
 export { validateProjectDetails, validateBudget, DEFAULT_CONTINGENCY_PCT, type ProjectType } from './domain/project-setup';
 export { planInitialPhases, currentPhaseOf, type PhaseStatus, type PlannedPhase } from './domain/phase-plan';
 export { phaseDelay, phasesOverview, type PhaseDelay, type PhaseSchedule } from './domain/phase-schedule';
+export { phaseProgress, progressByPhase, type PhaseProgress, type TaskStatus } from './domain/tasks';
+export type { PhaseTask } from './application/tasks';
 export { LIBYA_DISTRICTS } from './domain/libya-districts';
 
 // Types for other modules and pages
 export type { MyProject, ProjectPhase, TemplatePhase } from './application/project-gateway';
 
 // Server-side reads for pages
-export { getMyProject, getPhaseTemplate } from './ui/queries';
+export { getMyProject, getPhaseTemplate, getProjectTasks } from './ui/queries';
 
 // First-project wizard (FR-PRJ-01): one component per step + the Server Action of the last step
 export { DetailsStep } from './ui/DetailsStep';
@@ -23,6 +25,7 @@ export { createFirstProjectAction } from './ui/actions';
 // Phases screen (FR-PRJ-03, design S09.1) and one phase's status and dates
 export { PhasesList } from './ui/PhasesList';
 export { PhaseScheduleForm } from './ui/PhaseScheduleForm';
+export { PhaseDetail } from './ui/PhaseDetail';
 export { phasesTextAr } from './ui/messages.ar';
 export {
   SETUP_DETAILS_PATH,
@@ -32,4 +35,5 @@ export {
   PROJECT_HOME_PATH,
   PHASES_PATH,
   phasePath,
+  phaseSchedulePath,
 } from './ui/routes';
