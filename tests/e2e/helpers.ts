@@ -131,3 +131,23 @@ export async function signedInClient(account: TestAccount): Promise<SupabaseClie
   if (error) throw new Error(`could not sign in the test account: ${error.message}`);
   return client;
 }
+
+/**
+ * Removes every stored file of the account's project, through the Storage API as that account. Supabase refuses to
+ * delete storage files with SQL, so scripts/e2e-cleanup.sql (which deletes the accounts) cannot remove them: each
+ * test that stores files calls this before it ends.
+ */
+export async function removeProjectFiles(account: TestAccount): Promise<number> {
+  const client = await signedInClient(account);
+  const { data: projects } = await client.from('projects').select('id');
+  let removed = 0;
+  for (const { id } of projects ?? []) {
+    for (const folder of ['photos', 'documents']) {
+      const { data } = await client.storage.from('project-files').list(`${id}/${folder}`);
+      const paths = (data ?? []).map((f) => `${id}/${folder}/${f.name}`);
+      if (paths.length > 0) removed += (await client.storage.from('project-files').remove(paths)).data?.length ?? 0;
+    }
+  }
+  await client.auth.signOut();
+  return removed;
+}
