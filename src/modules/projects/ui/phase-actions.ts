@@ -11,7 +11,7 @@ import type { PhaseScheduleField } from '../domain/phase-schedule';
 import { updatePhaseSchedule } from '../application/update-phase-schedule';
 import { supabaseProjectGateway } from '../infra/supabase-project-gateway';
 import { phaseScheduleErrorsAr, phaseUpdateFailedAr } from './messages.ar';
-import { PHASES_PATH } from './routes';
+import { phasePath } from './routes';
 
 export interface PhaseFormState {
   formError?: string;
@@ -41,5 +41,5 @@ export async function updatePhaseScheduleAction(phaseId: string, _prev: PhaseFor
   }
 
   revalidatePath('/', 'layout');
-  redirect(PHASES_PATH);
+  redirect(phasePath(phaseId));
 }

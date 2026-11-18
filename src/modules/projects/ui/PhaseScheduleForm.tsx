@@ -1,6 +1,6 @@
 'use client';
 
-// One phase's status and dates (FR-PRJ-03). Opened from the phases screen (S09.1). The design has no screen for
+// One phase's status and dates (FR-PRJ-03). Opened from the phase page («الحالة والتواريخ»). The design has no screen for
 // this yet (its S10.1 phase overview needs checklists and tasks that are not built), so the form uses the same
 // pieces as the other forms: .field, .input, .actions. Saved through updatePhaseScheduleAction (Server Action).
 

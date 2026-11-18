@@ -1,20 +1,24 @@
 // Phases screen (FR-PRJ-03). Design: S09.1 «مراحل المشروع». Server Component.
 // The numbers (delay, counts) come from the domain (phaseDelay, phasesOverview); this file only displays them (R5).
-// Differences from the design (change register, 18 Nov): no "progress %" per phase or overall (needs tasks,
-// FR-PRJ-04, and an agreed formula); each row opens the phase's status and dates instead of the overview S10.1.
+// Differences from the design (change register, 18 Nov): progress % per phase comes from its tasks (FR-PRJ-04) and is
+// shown only for phases that have tasks; no overall «التقدم العام» (needs an agreed formula).
 
 import Link from 'next/link';
 import { currentPhaseOf } from '../domain/phase-plan';
 import { phaseDelay, phasesOverview, type PhaseDelay } from '../domain/phase-schedule';
 import type { ProjectPhase } from '../application/project-gateway';
+import type { PhaseTask } from '../application/tasks';
+import { progressByPhase } from '../domain/tasks';
 import { BackIcon } from './icons';
-import { daysAr, phasesTextAr as t, phaseStatusAr } from './messages.ar';
+import { daysAr, phasePageTextAr, phasesTextAr as t, phaseStatusAr, tasksCountAr } from './messages.ar';
 import { phasePath } from './routes';
 import styles from './wizard.module.css';
 
 interface Props {
   projectName: string;
   phases: ProjectPhase[];
+  /** The project's tasks: each phase's progress is computed from them by the domain. */
+  tasks: PhaseTask[];
   /** The date in Libya, "YYYY-MM-DD". */
   today: string;
   homeHref: string;
@@ -39,8 +43,9 @@ function delayLabel(d: PhaseDelay): string {
   }
 }
 
-export function PhasesList({ projectName, phases, today, homeHref }: Props) {
+export function PhasesList({ projectName, phases, tasks, today, homeHref }: Props) {
   const overview = phasesOverview(phases, today);
+  const progress = progressByPhase(tasks);
   const current = currentPhaseOf(phases);
 
   return (
@@ -73,6 +78,10 @@ export function PhasesList({ projectName, phases, today, homeHref }: Props) {
                     <strong>{p.name}</strong>
                     <small>{status}</small>
                     <small>{t.planned(p.plannedStart && dateAr(p.plannedStart), p.plannedEnd && dateAr(p.plannedEnd))}</small>
+                    {(() => {
+                      const pr = progress.get(p.id);
+                      return pr && pr.percent !== null ? <small>{phasePageTextAr.progressInList(pr.percent, pr.done, tasksCountAr(pr.total))}</small> : null;
+                    })()}
                   </span>
                   <span className={styles.rowValue}>{delayLabel(phaseDelay(p, today))}</span>
                 </Link>

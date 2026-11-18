@@ -8,3 +8,5 @@ export const PROJECT_HOME_PATH = '/';
 /** Phases screen (design S09.1) and one phase's status and dates. */
 export const PHASES_PATH = '/phases';
 export const phasePath = (phaseId: string) => `/phases/${phaseId}`;
+/** One phase's status and dates form (FR-PRJ-03); the phase page itself shows its tasks (FR-PRJ-04). */
+export const phaseSchedulePath = (phaseId: string) => `/phases/${phaseId}/schedule`;
