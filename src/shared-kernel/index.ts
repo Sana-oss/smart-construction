@@ -1,4 +1,5 @@
 export * from './money';
+export * from './money-input';
 export * from './errors';
 export * from './events';
 export * from './digits';

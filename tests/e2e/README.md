@@ -20,6 +20,8 @@ mistake, it fails with "stranger can read projects".
 
 `documents.spec.ts` (FR-DOC-01): PDF and PNG stored as they are; a Word file and a PDF over 10 MB refused in the browser; a form missing a field leaves NO file in storage; the signed link returns the PDF; the phase page lists only that phase's documents; a stranger reaches nothing while the owner can; delete asks first and removes the file.
 
+`prices.spec.ts` (design S24, FR-MAT-08, FR-MAT-10; needs migration 0018): prices and quotes are grouped by material and unit with the latest first; «إضافة تحديث للسعر» starts on the same material; a quote expiring within 7 days and an expired one are marked; an expiry date on a price paid is refused and the form keeps its values; deleting asks first and is audited; a stranger can neither see nor change the prices.
+
 `cashflow.spec.ts` (design S16, FR-FIN-06, FR-FIN-07; needs migration 0017): the current liquidity is the wizard's available figure minus later expenses; obligations and expected income give the 30-day balance; income that arrives after an obligation does not cover it (a shortfall is shown); an overdue obligation is flagged; deleting asks first and is audited; a stranger can neither see nor change the movements.
 
 `expense-filter.spec.ts` (design S13.2, FR-FIN-05): search by name or supplier, period, phase and type narrow the list; the results card totals all matching expenses; no match has its own message; «مسح التصفية» goes back; a hand-made address with odd characters is cleaned, never an error.
