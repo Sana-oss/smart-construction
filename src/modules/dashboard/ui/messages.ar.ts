@@ -1,24 +1,44 @@
-// Arabic text for the project summary (first slice of the dashboard, FR-DSH-01; decision 12 of 14 Nov 2026).
+// Arabic text for the project dashboard (FR-DSH-01, FR-DSH-02; design S07.1 «لوحة المشروع»).
 
 export const summaryTextAr = {
   pageTitle: 'لوحة المشروع',
   heading: 'لوحة المشروع',
-  projectName: 'اسم المشروع',
-  area: (m2: string) => `${m2} م²`,
-  currentPhase: 'المرحلة الحالية',
-  phaseOf: (pos: number, total: number) => `${pos} من ${total}`,
-  noCurrentPhase: 'لم تُحدَّد',
-  totalBudget: 'الميزانية الإجمالية',
-  spent: 'المصروف',
-  spentNote: 'شاملًا المصروف قبل استخدام التطبيق',
-  remaining: 'المتبقي',
-  contingency: (pct: string) => `بند الطوارئ (${pct}%)`,
-  overBudget: 'المصروف تجاوز الميزانية الإجمالية.',
-  available: (date: string) => `المتاح حتى ${date}`,
+  subtitle: (project: string, firstName: string | null) => (firstName ? `${project} · مرحبًا ${firstName}` : project),
   lyd: 'د.ل',
-  nextStep: 'الخطوة التالية: سجّل أول مصروف',
-  // Wording from the design: S13.3 (empty expenses) and the S07.1 action button.
-  nextStepBody: 'سجّل الإنفاق لتتابع تكلفة المشروع وتقارنها بالميزانية.',
+
+  // Summary card (S07.1). The percentage is the domain's overallProgress (decision of 19 Nov 2026).
+  progress: 'التقدم العام',
+  noProgress: '—',
+  currentPhase: (name: string) => `المرحلة الحالية: ${name}`,
+  noCurrentPhase: 'لا مرحلة قيد التنفيذ الآن',
+
+  // «الخطوة التالية» row (FR-DSH-02; order approved 19 Nov 2026).
+  nextStep: 'الخطوة التالية',
+  next: {
+    first_expense: { note: 'سجّل أول مصروف', action: 'إضافة' },
+    daily_expense: { note: 'سجّل مصروفات اليوم', action: 'إضافة' },
+    late_phase: { note: (phase: string) => `راجع تأخر مرحلة «${phase}»`, action: 'مراجعة' },
+    overdue_task: { note: (task: string) => `أنجز المهمة: ${task}`, action: 'فتح' },
+    set_dates: { note: (phase: string) => `حدّد تواريخ مرحلة «${phase}»`, action: 'تحديد' },
+  },
+
+  // Rows (S07.1)
+  expenses: 'المصروفات',
+  expensesNote: (budget: string) => `من ميزانية ${budget} د.ل`,
+  budget: 'المتبقي من الميزانية',
+  budgetNote: (contingency: string, pct: string) => `بند الطوارئ ${contingency} د.ل (${pct}%)`,
+  availableNote: (amount: string, date: string) => `المتاح حتى ${date}: ${amount} د.ل`,
+  phases: 'مراحل المشروع',
+  phasesNote: 'متابعة التنفيذ والفحص',
+  phaseOf: (pos: number, total: number) => `${pos} من ${total}`,
+  materials: 'المواد والكميات',
+  materialsNote: 'مراجعة المطلوب والمتبقي',
+  soon: 'قريبًا',
+  more: 'المزيد',
+  moreNote: 'الوثائق والصور والحساب',
+  open: 'فتح',
+
+  overBudget: 'المصروف تجاوز الميزانية الإجمالية.',
   addExpense: 'إضافة مصروف سريع',
   // FR-PRJ-02. Warning text; to be reviewed by the project's engineer (engineering content).
   addFloorWarning:

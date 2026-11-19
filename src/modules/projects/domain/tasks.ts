@@ -76,3 +76,36 @@ export function progressByPhase(tasks: readonly { phaseId: string | null; status
   }
   return new Map([...groups].map(([id, list]) => [id, phaseProgress(list)]));
 }
+
+/**
+ * «التقدم العام» of the project (design S07.1; owner's decision of 19 Nov 2026): the average of its phases, each with
+ * the same weight. A finished phase counts 100%; a phase with tasks counts its share of done tasks; any other phase
+ * (not started, or in progress with no tasks yet) counts 0%. Rounded DOWN, like phase progress, so the project never
+ * shows 100% before every phase is finished. Null for a project without phases.
+ * Example: 4 phases, one finished, one with half its tasks done -> (100 + 50 + 0 + 0) / 4 = 37.5 -> 37%.
+ */
+export function overallProgress(
+  phases: readonly { id: string; status: string }[],
+  tasks: readonly { phaseId: string | null; status: TaskStatus }[],
+): number | null {
+  if (phases.length === 0) return null;
+  const byPhase = new Map<string, { total: number; done: number }>();
+  for (const t of tasks) {
+    if (t.phaseId === null) continue;
+    const c = byPhase.get(t.phaseId) ?? { total: 0, done: 0 };
+    c.total += 1;
+    if (t.status === 'done') c.done += 1;
+    byPhase.set(t.phaseId, c);
+  }
+  // Sum of each phase's share (0 to 1); rounded once at the end, not phase by phase.
+  let sum = 0;
+  for (const p of phases) {
+    if (p.status === 'done') sum += 1;
+    else {
+      const c = byPhase.get(p.id);
+      if (c && c.total > 0) sum += c.done / c.total;
+    }
+  }
+  // The tiny tolerance stops binary fractions (29% stored as 28.999…) from losing a point when rounded down.
+  return Math.floor((sum * 100) / phases.length + 1e-9);
+}
