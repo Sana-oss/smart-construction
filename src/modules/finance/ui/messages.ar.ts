@@ -193,3 +193,62 @@ export const expenseChangeFailedAr: Record<ExpenseFailure | 'no_project', string
   rejected: 'تعذّر حفظ التعديل. راجع البيانات وحاول مرة أخرى.',
   unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
 };
+
+/**
+ * Obligations and expected income. Wording from the design: S16.1 «الالتزامات والدخل», S16.2 «إضافة حركة متوقعة»,
+ * S18.1 «الرصيد المتوقع بعد 30 يومًا». Slice 1 of 3.7 (19 Nov 2026).
+ */
+export const cashflowTextAr = {
+  pageTitle: 'الالتزامات والدخل',
+  title: 'الالتزامات والدخل',
+  subtitle: 'متابعة السيولة خلال 30 يومًا',
+  liquidity: 'السيولة الحالية',
+  liquidityMissing: 'غير معروفة',
+  liquidityMissingNote: 'لم يُدخل «المتاح الآن» عند إنشاء المشروع، فلا يُحسب رصيد متوقع.',
+  liquidityNote: (date: string) => `المتاح حتى ${date} مطروحًا منه المصروفات المسجلة منذ ذلك اليوم`,
+  windowTotals: (income: string, obligations: string) => `دخل متوقع: ${income} · التزامات: ${obligations}`,
+  balance: 'الرصيد المتوقع بعد 30 يومًا',
+  // Split around the amount, so the screen can keep its minus sign in place (<bdi dir="ltr">).
+  shortfallBefore: (date: string) => `عجز متوقع من ${date}: ينزل الرصيد إلى`,
+  shortfallAfter: 'د.ل. الدخل الذي يصل بعد موعد الالتزام لا يغطيه.',
+  overdue: (n: number) => (n === 1 ? 'التزام واحد فات موعده ولم يُحذف بعد.' : `${n} التزامات فات موعدها ولم تُحذف بعد.`),
+  income: 'دخل متوقع',
+  obligation: 'التزام',
+  expectedOn: (date: string) => `متوقع ${date}`,
+  dueOn: (date: string) => `مستحق ${date}`,
+  overdueTag: 'فات موعده',
+  empty: 'لا التزامات ولا دخل متوقع بعد',
+  emptyNote: 'سجّل ما ستدفعه وما تنتظر وصوله، لترى رصيدك خلال الثلاثين يومًا القادمة.',
+  doneHint: 'حين تدفع التزامًا أو يصل دخل، احذفه من هنا. والدفع نفسه يُسجَّل مصروفًا.',
+  add: 'إضافة التزام أو دخل',
+  added: 'حُفظت الحركة.',
+  deleted: 'حُذفت الحركة، وبقي أثرها في سجل التدقيق.',
+  delete: 'حذف',
+  deleteLabel: (title: string) => `حذف: ${title}`,
+  deleteConfirm: (title: string) => `حذف «${title}»؟ تبقى قيمه في سجل التدقيق.`,
+  // FR-DEC-05 (shown with every result of the outlook)
+  disclaimer: 'الحساب تقديري ويعتمد على البيانات المدخلة، وليس نصيحة مالية.',
+
+  form: {
+    pageTitle: 'إضافة حركة متوقعة',
+    title: 'إضافة حركة متوقعة',
+    subtitle: 'التزامات ودخل · لا تُسجل كمصروف مدفوع',
+    kind: 'نوع الحركة',
+    kindPlaceholder: 'اختر نوع الحركة',
+    kinds: { income: 'دخل متوقع', obligation: 'التزام' },
+    title_: 'الوصف',
+    amount: 'المبلغ · د.ل',
+    date: 'التاريخ المتوقع',
+    party: 'المصدر أو المستفيد',
+    submit: 'حفظ الحركة',
+    submitting: 'جارٍ الحفظ…',
+  },
+} as const;
+
+export const cashflowFailedAr: Record<ExpenseFailure | 'no_project', string> = {
+  ...expenseFailedAr,
+  not_allowed: 'لا تملك صلاحية تعديل التزامات هذا المشروع، أو انتهت الجلسة. سجّل الدخول من جديد.',
+  rejected: 'تعذّر حفظ الحركة. راجع البيانات وحاول مرة أخرى.',
+  not_found: 'لم يُعثر على هذه الحركة. ربما حُذفت من قبل.',
+  unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
+};

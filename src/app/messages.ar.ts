@@ -32,6 +32,8 @@ export const morePageTextAr = {
   pageTitle: 'المزيد',
   title: 'المزيد',
   subtitle: 'الوثائق والصور والحساب',
+  cashflow: 'الالتزامات والدخل',
+  cashflowNote: 'متابعة السيولة خلال 30 يومًا',
   photos: 'صور الموقع',
   photosNote: 'سجل مرئي حسب المرحلة والتاريخ',
   documents: 'وثائق المشروع',

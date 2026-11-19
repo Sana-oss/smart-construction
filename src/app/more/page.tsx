@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { DOCUMENTS_PATH, PHOTOS_PATH } from '@/modules/documents';
+import { CASHFLOW_PATH } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH, SignOutButton } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
 import { BottomNav } from '../_shell/BottomNav';
@@ -31,6 +32,7 @@ export default async function MorePage() {
         </header>
         <div className={styles.content}>
           <div className={styles.list}>
+            {row(CASHFLOW_PATH, t.cashflow, t.cashflowNote)}
             {row(DOCUMENTS_PATH, t.documents, t.documentsNote)}
             {row(PHOTOS_PATH, t.photos, t.photosNote)}
             <div className={`${styles.row} ${styles.disabled}`} aria-disabled="true">
