@@ -102,6 +102,18 @@ export function ExpenseList({ projectName, list, phases, homeHref }: Props) {
                   </span>
                   <span className={styles.rowValue}>
                     <Lyd value={e.amountLyd} />
+                    {e.receiptUrl && (
+                      // Receipt photo (UC-07), through a short-lived signed link (NFR-SEC-03).
+                      <a
+                        href={e.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.receiptLink}
+                        aria-label={t.receiptLabel(e.title || t.noTitle)}
+                      >
+                        {t.receipt}
+                      </a>
+                    )}
                   </span>
                 </li>
               ))}

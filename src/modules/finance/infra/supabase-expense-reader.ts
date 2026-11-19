@@ -14,6 +14,7 @@ interface ExpenseRow {
   phase_id: string | null;
   payee: string | null;
   paid_on: string;
+  receipt_path: string | null;
 }
 
 const isExpenseType = (v: unknown): v is ExpenseType => (EXPENSE_TYPES as readonly unknown[]).includes(v);
@@ -31,6 +32,7 @@ export function toListItem(row: ExpenseRow): ExpenseListItem {
     phaseId: row.phase_id,
     payee: row.payee,
     paidOn: row.paid_on,
+    receiptPath: row.receipt_path ?? null,
   };
 }
 
@@ -40,7 +42,7 @@ export function supabaseExpenseReader(supabase: SupabaseClient): ExpenseReader {
       // "amount_lyd::text": the amount arrives as text, so it never passes through a JS number (data rules).
       const { data, error, count } = await supabase
         .from('expenses')
-        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on', { count: 'exact' })
+        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path', { count: 'exact' })
         .eq('project_id', projectId)
         .order('paid_on', { ascending: false })
         .order('created_at', { ascending: false })

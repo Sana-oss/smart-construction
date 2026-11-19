@@ -15,6 +15,7 @@ export function mapExpenseError(error: { code?: string }): ExpenseFailure {
       return 'not_allowed';
     case '23503':
       return 'unknown_reference';
+    case '23505': // the same receipt file on two expenses (0015)
     case '23514':
     case '22003':
       return 'rejected';
@@ -37,6 +38,7 @@ export function supabaseExpenseGateway(supabase: SupabaseClient): ExpenseGateway
         p_phase_id: e.phaseId,
         p_payee: e.payee,
         p_paid_on: e.paidOn,
+        p_receipt_path: e.receiptPath,
       });
       if (error) return { status: 'failed', reason: mapExpenseError(error) };
 

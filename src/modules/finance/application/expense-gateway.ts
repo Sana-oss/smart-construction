@@ -14,12 +14,15 @@ export interface NewExpenseRecord {
   /** "YYYY-MM-DD", or null to let the database use today's date in Libya. */
   paidOn: string | null;
   clientOpId: string;
+  /** "<project id>/receipts/<id>.jpg", already uploaded and checked, or null (no receipt photo). */
+  receiptPath: string | null;
 }
 
 export type ExpenseFailure =
   | 'not_allowed' // not signed in, or no write access to this project
   | 'unknown_reference' // the phase does not belong to this project
   | 'rejected' // the database refused the values (its own double-check of the domain rules)
+  | 'receipt_missing' // the receipt photo did not arrive in storage, or is not a JPEG within the size limit
   | 'unavailable';
 
 export type CreateExpenseOutcome =

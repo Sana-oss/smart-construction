@@ -287,3 +287,70 @@ ul.list {
   line-height: 24px;
   color: var(--color-text-muted);
 }
+
+/* Receipt photo field (UC-07): a picker like the site-photo one, a preview, and a "remove" text button. */
+.optional {
+  font-weight: 300;
+  color: var(--color-text-muted);
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 72px;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+
+.picker:focus-within {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.pickerCompact {
+  min-block-size: 48px;
+  margin-block-start: var(--space-3);
+}
+
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.receiptPreview {
+  display: block;
+  inline-size: 100%;
+  max-block-size: 240px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--color-card);
+}
+
+.linkButton {
+  margin-block-start: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* «الفاتورة» link under an expense's amount in the list (S13.1). */
+.receiptLink {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-accent);
+}

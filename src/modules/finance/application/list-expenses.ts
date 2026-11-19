@@ -1,3 +1,4 @@
+import type { FileStore } from '@/platform/supabase/storage';
 import type { ExpenseType } from '../domain/expense';
 import { monthOf, monthSummary, type MonthRange, type MonthSummary } from '../domain/expense-list';
 
@@ -16,7 +17,14 @@ export interface ExpenseListItem {
   payee: string | null;
   /** "YYYY-MM-DD" */
   paidOn: string;
+  /** Stored receipt photo (UC-07), or null. */
+  receiptPath: string | null;
+  /** Short-lived link to the receipt photo (NFR-SEC-03), set by listExpenses; null without a receipt. */
+  receiptUrl?: string | null;
 }
+
+/** How long a link to a receipt photo works (same as site photos). */
+export const RECEIPT_URL_TTL_SECONDS = 10 * 60;
 
 /** Port: what this use case needs from storage. The Supabase adapter is infra/supabase-expense-reader.ts. */
 export interface ExpenseReader {
@@ -42,11 +50,15 @@ export interface ExpenseList {
   month: MonthRange & MonthSummary;
 }
 
-export async function listExpenses(reader: ExpenseReader, projectId: string, today: string): Promise<ExpenseList> {
+/** @param store when given, each shown expense with a receipt photo gets a short-lived link to it. */
+export async function listExpenses(reader: ExpenseReader, projectId: string, today: string, store?: FileStore): Promise<ExpenseList> {
   const range = monthOf(today);
   const [recent, monthAmounts] = await Promise.all([
     reader.recentExpenses(projectId, EXPENSE_LIST_LIMIT),
     reader.amountsPaidBetween(projectId, range),
   ]);
-  return { items: recent.items, totalCount: recent.totalCount, month: { ...range, ...monthSummary(monthAmounts) } };
+  const paths = recent.items.map((i) => i.receiptPath).filter((p): p is string => p !== null);
+  const urls = store && paths.length > 0 ? await store.signedUrls(paths, RECEIPT_URL_TTL_SECONDS) : new Map<string, string>();
+  const items = recent.items.map((i) => ({ ...i, receiptUrl: i.receiptPath ? (urls.get(i.receiptPath) ?? null) : null }));
+  return { items, totalCount: recent.totalCount, month: { ...range, ...monthSummary(monthAmounts) } };
 }

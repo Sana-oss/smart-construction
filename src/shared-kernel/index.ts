@@ -5,3 +5,4 @@ export * from './digits';
 export * from './format';
 export * from './ids';
 export * from './dates';
+export * from './images';
