@@ -30,7 +30,8 @@ export { SignInForm } from './ui/SignInForm';
 export { SignUpForm } from './ui/SignUpForm';
 export { WelcomeScreen } from './ui/WelcomeScreen';
 export { SignOutButton } from './ui/SignOutButton';
-export { getSignedInUserId } from './ui/session';
+export { getSignedInUserId, getMyFirstName } from './ui/session';
+export { firstName } from './domain/display-name';
 
 // Server Actions for the auth pages (FR-ID-01). Use with React's useActionState.
 export { signUpAction, signInAction, verifyPhoneAction, signOutAction, type AuthFormState } from './ui/actions';

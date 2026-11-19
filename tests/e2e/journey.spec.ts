@@ -26,8 +26,13 @@ test.describe.serial('owner journey and stranger', () => {
   test('owner signs up, creates the first project and records an expense', async ({ page }) => {
     await signUpThroughUi(page, owner);
     await createFirstProjectThroughUi(page, projectName);
-    await expect(page.getByText(projectName)).toBeVisible();
-    await expect(page.getByText('الخطوة التالية: سجّل أول مصروف')).toBeVisible();
+    // Dashboard S07.1: greeting, overall progress (4 phases, the first finished = 25%), and the next step.
+    await expect(page.getByText(`${projectName} · مرحبًا حساب`)).toBeVisible();
+    await expect(page.getByText('25%', { exact: true })).toBeVisible();
+    await expect(page.getByText('المرحلة الحالية: الهيكل الخرساني')).toBeVisible();
+    const dashboard = page.getByRole('navigation', { name: 'لوحة المشروع' });
+    await expect(dashboard.getByRole('link', { name: /الخطوة التالية/ })).toContainText('سجّل أول مصروف');
+    await expect(dashboard.getByRole('link', { name: /مراحل المشروع/ })).toContainText('2 من 4');
     await expectNoSidewaysScroll(page);
 
     // Bottom navigation: on the dashboard with «الرئيسية» current; «المواد» shown but not active yet.
@@ -71,10 +76,13 @@ test.describe.serial('owner journey and stranger', () => {
     await expectNoSidewaysScroll(page);
     await page.getByRole('link', { name: 'رجوع' }).click();
 
-    // Spent = 5,000 before the app + 1,250.5 recorded = 6,250.5; the first-expense prompt is gone.
+    // Spent = 5,000 before the app + 1,250.5 recorded = 6,250.5 (FR-DSH-01: the dashboard matches the source modules).
     await expect(page.getByRole('heading', { name: 'لوحة المشروع' })).toBeVisible();
-    await expect(page.getByText('6,250.5', { exact: true })).toBeVisible();
-    await expect(page.getByText('الخطوة التالية: سجّل أول مصروف')).toHaveCount(0);
+    const afterExpense = page.getByRole('navigation', { name: 'لوحة المشروع' });
+    await expect(afterExpense.getByRole('link', { name: /المصروفات/ })).toContainText('6,250.5');
+    await expect(afterExpense.getByText('المتبقي من الميزانية')).toBeVisible();
+    // Next step moves on (rule 4): the current phase has no dates yet.
+    await expect(afterExpense.getByRole('link', { name: /الخطوة التالية/ })).toContainText('حدّد تواريخ مرحلة «الهيكل الخرساني»');
   });
 
   test('owner plans a phase, sees its delay, and tracks its tasks (FR-PRJ-03, FR-PRJ-04)', async ({ page }) => {
@@ -145,6 +153,13 @@ test.describe.serial('owner journey and stranger', () => {
     await expect(page.getByRole('listitem').nth(1)).toContainText('متأخرة · 5 أيام');
     await expect(page.getByRole('listitem').nth(1)).toContainText('الإنجاز 33% · 1 من 3 مهام');
     await expect(page.getByText('مرحلة واحدة متأخرة')).toBeVisible();
+
+    // Back on the dashboard: the next step points at the late phase (rule 2), and the overall progress counts the
+    // phase's tasks: (100 + 33 + 0 + 0) / 4 -> 33%.
+    await navTab(page, 'الرئيسية').click();
+    const board = page.getByRole('navigation', { name: 'لوحة المشروع' });
+    await expect(board.getByRole('link', { name: /الخطوة التالية/ })).toContainText('راجع تأخر مرحلة «الهيكل الخرساني»');
+    await expect(page.getByText('33%', { exact: true })).toBeVisible();
   });
 
   test('a stranger cannot see or change that project', async ({ page }) => {

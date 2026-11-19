@@ -1,79 +1,155 @@
-// Project summary shown after the wizard (FR-PRJ-01 "ينقل إلى اللوحة مع خطوة سجّل أول مصروف"; first slice of
-// FR-DSH-01, decision 12 of 14 Nov 2026). Server Component: reads under RLS; all money math is done by the finance
-// domain (budgetSummary, Decimal) — this file only displays numbers (rule R5).
+// Project dashboard (FR-DSH-01, FR-DSH-02). Design: S07.1 «لوحة المشروع». Server Component: reads under RLS; every
+// number comes from a domain (finance: budgetSummary/totalSpent; projects: overallProgress; dashboard: nextStep);
+// this file only displays them (rule R5).
+// Differences from the design (change register, 19 Nov): a «المتبقي من الميزانية» row is added, because FR-DSH-01
+// asks for the remaining budget and the contingency on the dashboard; «المواد والكميات» shows «قريبًا» until the
+// materials feature exists; «المزيد» lists documents, photos and the account (team and reports are not built).
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
-import { budgetSummary, EXPENSE_NEW_PATH, totalSpent } from '@/modules/finance';
-import { currentPhaseOf, type MyProject } from '@/modules/projects';
+import { budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
+import {
+  currentPhaseOf,
+  overallProgress,
+  phasePath,
+  phaseSchedulePath,
+  PHASES_PATH,
+  type MyProject,
+  type PhaseTask,
+} from '@/modules/projects';
+import { nextStep, type NextStep } from '../domain/next-step';
 import { summaryTextAr as t } from './messages.ar';
 import { getRecordedExpensesLyd } from './queries';
 import styles from './summary.module.css';
-
-function Row({ title, note, value }: { title: string; note?: string; value: ReactNode }) {
-  return (
-    <div className={styles.row}>
-      <span className={styles.rowText}>
-        <strong>{title}</strong>
-        {note && <small>{note}</small>}
-      </span>
-      <span className={styles.rowValue}>{value}</span>
-    </div>
-  );
-}
 
 const dateAr = (iso: string) =>
   new Intl.DateTimeFormat('ar-LY', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Tripoli' }).format(
     new Date(`${iso}T12:00:00Z`),
   );
 
-export async function ProjectSummary({ project, actions }: { project: MyProject; actions?: ReactNode }) {
+/** <bdi dir="ltr"> keeps the number (and a minus sign such as "-10,000") in the right order inside Arabic text. */
+const Amount = ({ value }: { value: Parameters<typeof formatAmount>[0] }) => <bdi dir="ltr">{formatAmount(value)}</bdi>;
+
+function Row({ href, title, note, value }: { href?: string; title: string; note?: ReactNode; value: ReactNode }) {
+  const body = (
+    <>
+      <span className={styles.rowText}>
+        <strong>{title}</strong>
+        {note && <small>{note}</small>}
+      </span>
+      <span className={styles.rowValue}>{value}</span>
+    </>
+  );
+  return href ? (
+    <Link href={href} className={`${styles.row} ${styles.rowLink}`}>
+      {body}
+    </Link>
+  ) : (
+    <div className={styles.row}>{body}</div>
+  );
+}
+
+function nextStepRow(step: NextStep): { note: string; action: string; href: string } {
+  switch (step.kind) {
+    case 'first_expense':
+      return { ...t.next.first_expense, href: EXPENSE_NEW_PATH };
+    case 'daily_expense':
+      return { ...t.next.daily_expense, href: EXPENSE_NEW_PATH };
+    case 'late_phase':
+      return { note: t.next.late_phase.note(step.phaseName), action: t.next.late_phase.action, href: phasePath(step.phaseId) };
+    case 'overdue_task':
+      return {
+        note: t.next.overdue_task.note(step.taskTitle),
+        action: t.next.overdue_task.action,
+        href: step.phaseId ? phasePath(step.phaseId) : PHASES_PATH,
+      };
+    case 'set_dates':
+      return { note: t.next.set_dates.note(step.phaseName), action: t.next.set_dates.action, href: phaseSchedulePath(step.phaseId) };
+  }
+}
+
+interface Props {
+  project: MyProject;
+  tasks: PhaseTask[];
+  /** The date in Libya, "YYYY-MM-DD". */
+  today: string;
+  firstName: string | null;
+  /** «المزيد» lives in the app layer (it gathers several modules), so the page passes its address. */
+  moreHref: string;
+}
+
+export async function ProjectSummary({ project, tasks, today, firstName, moreHref }: Props) {
   const expenses = await getRecordedExpensesLyd(project.id);
   // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
-  // The furthest phase in progress: an earlier phase may also be in progress (not finished yet).
   const current = currentPhaseOf(project.phases);
-  // The "record your first expense" prompt is for a project with no expense recorded in the app yet. Money spent
-  // before the app does not count: it was never recorded here. A comparison, not a calculation (rule R5).
-  const firstExpenseRecorded = money(expenses).gt(0);
-  // <bdi dir="ltr"> keeps the number (and a minus sign such as "-10,000") in the right order inside Arabic text.
-  const lyd = (v: Parameters<typeof formatAmount>[0]) => (
-    <>
-      <bdi dir="ltr">{formatAmount(v)}</bdi> {t.lyd}
-    </>
-  );
+  const progress = overallProgress(project.phases, tasks);
+  // A comparison, not a calculation (R5): money spent before the app was never recorded here.
+  const step = nextStepRow(nextStep({ expensesRecorded: money(expenses).gt(0), phases: project.phases, tasks, today }));
 
   return (
     <main className={styles.screen}>
       <header className={styles.header}>
-        <h1 className={styles.title}>{t.heading}</h1>
-        {actions}
+        <div>
+          <h1 className={styles.title}>{t.heading}</h1>
+          <p className={styles.subtitle}>{t.subtitle(project.name, firstName)}</p>
+        </div>
       </header>
 
       <div className={styles.content}>
         <div className={styles.summaryCard}>
-          <small>{t.projectName}</small>
-          <strong>{project.name}</strong>
-          <p>
-            {[project.city, project.buildingAreaM2 ? t.area(formatAmount(project.buildingAreaM2)) : null].filter(Boolean).join(' · ')}
-          </p>
+          <small>{t.progress}</small>
+          <strong>{progress === null ? t.noProgress : `${progress}%`}</strong>
+          <p>{current ? t.currentPhase(current.name) : t.noCurrentPhase}</p>
         </div>
 
-        <div className={styles.list}>
+        <nav className={styles.list} aria-label={t.heading}>
+          <Row href={step.href} title={t.nextStep} note={step.note} value={step.action} />
           <Row
-            title={t.currentPhase}
-            note={current?.name ?? t.noCurrentPhase}
+            href={EXPENSES_PATH}
+            title={t.expenses}
+            note={t.expensesNote(formatAmount(summary.total))}
+            value={
+              <>
+                <Amount value={summary.spent} /> {t.lyd}
+              </>
+            }
+          />
+          <Row
+            title={t.budget}
+            note={
+              <>
+                {t.budgetNote(formatAmount(summary.contingency), formatAmount(project.contingencyPct))}
+                {project.availableNowLyd !== null && project.availableAsOf && (
+                  <>
+                    <br />
+                    {t.availableNote(formatAmount(project.availableNowLyd), dateAr(project.availableAsOf))}
+                  </>
+                )}
+              </>
+            }
+            value={
+              <>
+                <Amount value={summary.remaining} /> {t.lyd}
+              </>
+            }
+          />
+          <Row
+            href={PHASES_PATH}
+            title={t.phases}
+            note={t.phasesNote}
             value={current ? t.phaseOf(current.position, project.phases.length) : '—'}
           />
-          <Row title={t.totalBudget} value={lyd(summary.total)} />
-          <Row title={t.spent} note={t.spentNote} value={lyd(summary.spent)} />
-          <Row title={t.remaining} value={lyd(summary.remaining)} />
-          <Row title={t.contingency(formatAmount(project.contingencyPct))} value={lyd(summary.contingency)} />
-          {project.availableNowLyd !== null && project.availableAsOf && (
-            <Row title={t.available(dateAr(project.availableAsOf))} value={lyd(project.availableNowLyd)} />
-          )}
-        </div>
+          <div className={`${styles.row} ${styles.disabled}`} aria-disabled="true">
+            <span className={styles.rowText}>
+              <strong>{t.materials}</strong>
+              <small>{t.materialsNote}</small>
+            </span>
+            <span className={styles.rowValue}>{t.soon}</span>
+          </div>
+          <Row href={moreHref} title={t.more} note={t.moreNote} value={t.open} />
+        </nav>
 
         {summary.overBudget && (
           <p role="status" className={styles.warning}>
@@ -86,14 +162,7 @@ export async function ProjectSummary({ project, actions }: { project: MyProject;
           </p>
         )}
 
-        {!firstExpenseRecorded && (
-          <div className={styles.info}>
-            <strong>{t.nextStep}</strong>
-            {t.nextStepBody}
-          </div>
-        )}
-
-        {/* Design S07.1: the quick-expense button. The lists are reached from the bottom navigation. */}
+        {/* Design S07.1: the quick-expense button. */}
         <Link href={EXPENSE_NEW_PATH} className={styles.primary}>
           {t.addExpense}
         </Link>
