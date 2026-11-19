@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { EXPENSE_PAYEE_MAX, EXPENSE_TITLE_MAX, validateNewExpense, type NewExpenseInput } from './expense';
+import {
+  EXPENSE_PAYEE_MAX,
+  EXPENSE_TITLE_MAX,
+  validateExpenseEdit,
+  validateNewExpense,
+  type NewExpenseInput,
+} from './expense';
 
 const TODAY = '2026-11-16';
 const OP = '33333333-3333-4333-8333-333333333333';
@@ -110,5 +116,33 @@ describe('validateNewExpense: client_op_id (NFR-REL-01)', () => {
   it('is required and must be a UUID', () => {
     expect(errorsOf({ clientOpId: '' })).toEqual([{ field: 'clientOpId', code: 'required' }]);
     expect(errorsOf({ clientOpId: 'again' })).toEqual([{ field: 'clientOpId', code: 'invalid_id' }]);
+  });
+});
+
+describe('validateExpenseEdit (decision of 19 Nov 2026)', () => {
+  const edit = { title: 'حديد تسليح', amount: '12,500.5', expenseType: 'labor', paidOn: '2026-11-10' };
+
+  it('accepts the same fields as a new expense, without a client_op_id', () => {
+    const r = validateExpenseEdit({ ...edit, phaseId: PHASE.toUpperCase(), payee: '  مصنع   الحديد ' }, TODAY);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.amountLyd.toFixed(3)).toBe('12500.500');
+    expect(r.value).toMatchObject({ title: 'حديد تسليح', expenseType: 'labor', phaseId: PHASE, payee: 'مصنع الحديد', paidOn: '2026-11-10' });
+    expect(r.value).not.toHaveProperty('clientOpId');
+  });
+
+  it('requires the date (an empty date must not move the expense to today)', () => {
+    const r = validateExpenseEdit({ ...edit, paidOn: '  ' }, TODAY);
+    expect(r).toEqual({ ok: false, errors: [{ field: 'paidOn', code: 'required' }] });
+  });
+
+  it('applies the rules of a new expense', () => {
+    const r = validateExpenseEdit({ title: 'x', amount: '0', expenseType: 'food', paidOn: '2026-11-17' }, TODAY);
+    expect(r.ok ? [] : r.errors).toEqual([
+      { field: 'title', code: 'too_short' },
+      { field: 'amount', code: 'must_be_positive' },
+      { field: 'expenseType', code: 'unknown_choice' },
+      { field: 'paidOn', code: 'date_in_future' },
+    ]);
   });
 });

@@ -1,5 +1,12 @@
-import { expect, test, type Page } from '@playwright/test';
-import { createFirstProjectThroughUi, newTestAccount, removeProjectFiles, signedInClient, signUpThroughUi } from './helpers';
+import { expect, test } from '@playwright/test';
+import {
+  createFirstProjectThroughUi,
+  newTestAccount,
+  phoneReceiptJpeg,
+  removeProjectFiles,
+  signedInClient,
+  signUpThroughUi,
+} from './helpers';
 
 // Receipt photo on a quick expense (UC-07, FR-DOC-02, NFR-SEC-03). Runs against the staging project, at phone size.
 // - The photo is optional: with it, the expense stores a compressed JPEG in the project's receipts folder, the saved
@@ -10,31 +17,6 @@ import { createFirstProjectThroughUi, newTestAccount, removeProjectFiles, signed
 const owner = newTestAccount();
 const stranger = newTestAccount();
 const BUCKET = 'project-files';
-
-/** A 3024x4032 photo-like JPEG (a phone photo of a receipt), made in the browser. */
-async function receiptPhoto(page: Page): Promise<Buffer> {
-  const b64 = await page.evaluate(async () => {
-    const c = document.createElement('canvas');
-    c.width = 3024;
-    c.height = 4032;
-    const x = c.getContext('2d')!;
-    const img = x.createImageData(c.width, c.height);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const v = 180 + ((Math.random() * 60) | 0);
-      img.data[i] = v;
-      img.data[i + 1] = v;
-      img.data[i + 2] = v - 10;
-      img.data[i + 3] = 255;
-    }
-    x.putImageData(img, 0, 0);
-    const blob: Blob = await new Promise((r) => c.toBlob((b) => r(b!), 'image/jpeg', 0.95));
-    const u = new Uint8Array(await blob.arrayBuffer());
-    let s = '';
-    for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
-    return btoa(s);
-  });
-  return Buffer.from(b64, 'base64');
-}
 
 async function receiptFiles(projectId: string) {
   const asOwner = await signedInClient(owner);
@@ -58,7 +40,7 @@ test.describe.serial('receipt photo on a quick expense', () => {
 
     await page.getByRole('link', { name: 'إضافة مصروف سريع' }).click();
     await expect(page).toHaveURL(/\/expenses\/new$/);
-    const photo = await receiptPhoto(page);
+    const photo = await phoneReceiptJpeg(page);
 
     // A form the server would refuse (no amount): nothing is uploaded.
     await page.getByLabel('اسم المصروف').fill('فاتورة الإسمنت');

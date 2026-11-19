@@ -3,3 +3,5 @@
 export const EXPENSE_NEW_PATH = '/expenses/new';
 /** Expenses list (design S13.1, empty state S13.3). */
 export const EXPENSES_PATH = '/expenses';
+/** One expense: edit and delete it (decision of 19 Nov 2026). */
+export const expensePath = (id: string) => `/expenses/${id}`;

@@ -2,6 +2,8 @@
 // Consumers MUST be idempotent: the same event may be delivered more than once.
 export const EVENT_TYPES = [
   'expense.created',
+  'expense.updated', // 0016: payload has amount_lyd and previous_amount_lyd (text)
+  'expense.deleted', // 0016: the audit log keeps the deleted values
   'purchase.recorded',
   'phase.status_changed',
   'phase.closing_requested',

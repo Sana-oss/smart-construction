@@ -1,14 +1,14 @@
 // Expenses list (FR-FIN-05 groundwork). Design: S13.1 «المصروفات», empty state S13.3.
 // Server Component: the numbers come from the finance domain (monthSummary); this file only displays them (R5).
-// Not built yet (recorded in the change register): the filter screen S13.2 and «عرض الميزانية» quick links,
-// the bottom navigation bar, and opening one expense.
+// Not built yet (recorded in the change register): the filter screen S13.2 and «عرض الميزانية» quick links.
+// Each row opens its expense for editing or deleting (decision of 19 Nov 2026).
 
 import Link from 'next/link';
 import { formatAmount, type Money } from '@/shared-kernel';
 import type { ExpenseList as ExpenseListData } from '../application/list-expenses';
 import { BackIcon } from './icons';
 import { expenseCountAr, expenseTextAr, expenseTypeAr } from './messages.ar';
-import { EXPENSE_NEW_PATH } from './routes';
+import { EXPENSE_NEW_PATH, expensePath } from './routes';
 import styles from './expense.module.css';
 
 const t = expenseTextAr.list;
@@ -25,6 +25,8 @@ interface Props {
   phases: ExpenseListPhase[];
   /** Where the back button goes (the dashboard). */
   homeHref: string;
+  /** Set after an edit or a deletion (the page reads it from the address): a short confirmation. */
+  notice?: 'updated' | 'deleted' | null;
 }
 
 /** "2026-11-09" -> "9 نوفمبر". Noon UTC keeps the day the same in every time zone. */
@@ -46,7 +48,7 @@ const Lyd = ({ value }: { value: Money | string }) => (
   </>
 );
 
-export function ExpenseList({ projectName, list, phases, homeHref }: Props) {
+export function ExpenseList({ projectName, list, phases, homeHref, notice = null }: Props) {
   const empty = list.totalCount === 0;
   const phaseName = (id: string | null) => (id ? phases.find((p) => p.id === id)?.name : undefined);
 
@@ -63,6 +65,11 @@ export function ExpenseList({ projectName, list, phases, homeHref }: Props) {
       </header>
 
       <div className={styles.scroll}>
+        {notice && (
+          <p role="status" className={styles.info}>
+            {notice === 'updated' ? t.updated : t.deleted}
+          </p>
+        )}
         {empty ? (
           <>
             {/* Design S13.3 */}
@@ -92,14 +99,18 @@ export function ExpenseList({ projectName, list, phases, homeHref }: Props) {
             <ul className={styles.list} aria-label={t.title}>
               {list.items.map((e) => (
                 <li key={e.id} className={styles.listRow}>
-                  <span className={styles.rowText}>
+                  <Link
+                    href={expensePath(e.id)}
+                    className={`${styles.rowText} ${styles.rowLink}`}
+                    aria-label={t.openLabel(e.title || t.noTitle)}
+                  >
                     <strong>{e.title || t.noTitle}</strong>
                     <small>
                       {[e.expenseType ? expenseTypeAr[e.expenseType] : null, phaseName(e.phaseId), dayMonthAr(e.paidOn)]
                         .filter(Boolean)
                         .join(' · ')}
                     </small>
-                  </span>
+                  </Link>
                   <span className={styles.rowValue}>
                     <Lyd value={e.amountLyd} />
                     {e.receiptUrl && (

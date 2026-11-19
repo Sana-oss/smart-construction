@@ -1,3 +1,4 @@
+import { isUuid } from '@/shared-kernel';
 import type { FileStore } from '@/platform/supabase/storage';
 import type { ExpenseType } from '../domain/expense';
 import { monthOf, monthSummary, type MonthRange, type MonthSummary } from '../domain/expense-list';
@@ -30,6 +31,8 @@ export const RECEIPT_URL_TTL_SECONDS = 10 * 60;
 export interface ExpenseReader {
   /** Newest first (date paid, then time recorded). `totalCount` = all the project's expenses, not only these. */
   recentExpenses(projectId: string, limit: number): Promise<{ items: ExpenseListItem[]; totalCount: number }>;
+  /** One expense of the project, or null when it is not there (or not visible to this user). */
+  expenseById(projectId: string, expenseId: string): Promise<ExpenseListItem | null>;
   /**
    * Amounts of the expenses paid in [from, to). Must return ALL of them, or throw: a partial list would give a
    * wrong total without any sign of it.
@@ -61,4 +64,21 @@ export async function listExpenses(reader: ExpenseReader, projectId: string, tod
   const urls = store && paths.length > 0 ? await store.signedUrls(paths, RECEIPT_URL_TTL_SECONDS) : new Map<string, string>();
   const items = recent.items.map((i) => ({ ...i, receiptUrl: i.receiptPath ? (urls.get(i.receiptPath) ?? null) : null }));
   return { items, totalCount: recent.totalCount, month: { ...range, ...monthSummary(monthAmounts) } };
+}
+
+/**
+ * One expense, for its edit screen (decision of 19 Nov 2026). Null for an id that is not an id, or an expense that
+ * is not in this project or not visible to this user: the page then answers "not found" in every case.
+ */
+export async function findExpense(
+  reader: ExpenseReader,
+  projectId: string,
+  expenseId: string,
+  store?: FileStore,
+): Promise<ExpenseListItem | null> {
+  if (!isUuid(projectId) || !isUuid(expenseId)) return null;
+  const item = await reader.expenseById(projectId.toLowerCase(), expenseId.toLowerCase());
+  if (!item) return null;
+  const urls = store && item.receiptPath ? await store.signedUrls([item.receiptPath], RECEIPT_URL_TTL_SECONDS) : new Map<string, string>();
+  return { ...item, receiptUrl: item.receiptPath ? (urls.get(item.receiptPath) ?? null) : null };
 }

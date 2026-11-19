@@ -156,3 +156,28 @@ export async function removeProjectFiles(account: TestAccount): Promise<number> 
 export function navTab(page: Page, label: 'الرئيسية' | 'المصروفات' | 'المراحل' | 'المواد' | 'المزيد') {
   return page.getByRole('navigation', { name: 'التبويبات الرئيسية' }).getByRole('link', { name: label, exact: true });
 }
+
+/** A 3024x4032 photo-like JPEG (a phone photo of a receipt), made in the browser. */
+export async function phoneReceiptJpeg(page: Page): Promise<Buffer> {
+  const b64 = await page.evaluate(async () => {
+    const c = document.createElement('canvas');
+    c.width = 3024;
+    c.height = 4032;
+    const x = c.getContext('2d')!;
+    const img = x.createImageData(c.width, c.height);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = 180 + ((Math.random() * 60) | 0);
+      img.data[i] = v;
+      img.data[i + 1] = v;
+      img.data[i + 2] = v - 10;
+      img.data[i + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+    const blob: Blob = await new Promise((r) => c.toBlob((b) => r(b!), 'image/jpeg', 0.95));
+    const u = new Uint8Array(await blob.arrayBuffer());
+    let s = '';
+    for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
+    return btoa(s);
+  });
+  return Buffer.from(b64, 'base64');
+}

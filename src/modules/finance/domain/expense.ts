@@ -73,6 +73,16 @@ export interface NewExpense {
 
 export type ExpenseValidation = { ok: true; value: NewExpense } | { ok: false; errors: ExpenseError[] };
 
+/** What the edit form sends (no clientOpId: an edit changes an expense that already exists). */
+export type ExpenseEditInput = Omit<NewExpenseInput, 'clientOpId'>;
+
+/** A validated edit. Unlike a new expense, the date is always given: the edit form shows the stored date. */
+export interface ExpenseEdit extends Omit<NewExpense, 'clientOpId' | 'paidOn'> {
+  paidOn: string;
+}
+
+export type ExpenseEditValidation = { ok: true; value: ExpenseEdit } | { ok: false; errors: ExpenseError[] };
+
 const blank = (s: string | null | undefined) => (s ?? '').trim() === '';
 /** Trim and turn any run of spaces into one space. */
 const clean = (s: string | null | undefined) => (s ?? '').trim().replace(/\s+/g, ' ');
@@ -94,13 +104,8 @@ function readAmount(raw: string | null | undefined, errors: ExpenseError[]): Mon
   return amount.lte(0) ? fail('must_be_positive') : amount;
 }
 
-/**
- * @param today Today's date in Libya, "YYYY-MM-DD" (todayInTripoli() from the shared kernel). Passed in so this
- *   function stays pure and testable. An expense is money already paid, so its date cannot be after today.
- */
-export function validateNewExpense(input: NewExpenseInput, today: string): ExpenseValidation {
-  const errors: ExpenseError[] = [];
-
+/** The rules shared by a new expense and an edit: one place, so both screens accept exactly the same values. */
+function readFields(input: ExpenseEditInput, today: string, errors: ExpenseError[]): Omit<NewExpense, 'clientOpId'> | null {
   const title = clean(input.title);
   if (title === '') errors.push({ field: 'title', code: 'required' });
   else if (length(title) < EXPENSE_TITLE_MIN) errors.push({ field: 'title', code: 'too_short' });
@@ -131,11 +136,36 @@ export function validateNewExpense(input: NewExpenseInput, today: string): Expen
     else paidOn = date;
   }
 
+  if (errors.length > 0 || amountLyd === null) return null;
+  return { title, amountLyd, expenseType: type as ExpenseType, phaseId, payee, paidOn };
+}
+
+/**
+ * @param today Today's date in Libya, "YYYY-MM-DD" (todayInTripoli() from the shared kernel). Passed in so this
+ *   function stays pure and testable. An expense is money already paid, so its date cannot be after today.
+ */
+export function validateNewExpense(input: NewExpenseInput, today: string): ExpenseValidation {
+  const errors: ExpenseError[] = [];
+  const fields = readFields(input, today, errors);
+
   let clientOpId = '';
   if (blank(input.clientOpId)) errors.push({ field: 'clientOpId', code: 'required' });
   else if (!isUuid((input.clientOpId as string).trim())) errors.push({ field: 'clientOpId', code: 'invalid_id' });
   else clientOpId = (input.clientOpId as string).trim().toLowerCase();
 
-  if (errors.length > 0 || amountLyd === null) return { ok: false, errors };
-  return { ok: true, value: { title, amountLyd, expenseType: type as ExpenseType, phaseId, payee, paidOn, clientOpId } };
+  if (errors.length > 0 || fields === null) return { ok: false, errors };
+  return { ok: true, value: { ...fields, clientOpId } };
+}
+
+/**
+ * Editing an expense (decision of 19 Nov 2026, change register): the same six fields and the same rules as a new
+ * expense, except that the date is required (an empty date on an edit would silently move the expense to today).
+ * @param today Today's date in Libya, "YYYY-MM-DD".
+ */
+export function validateExpenseEdit(input: ExpenseEditInput, today: string): ExpenseEditValidation {
+  const errors: ExpenseError[] = [];
+  const fields = readFields(input, today, errors);
+  if (blank(input.paidOn)) errors.push({ field: 'paidOn', code: 'required' });
+  if (errors.length > 0 || fields === null || fields.paidOn === null) return { ok: false, errors };
+  return { ok: true, value: { ...fields, paidOn: fields.paidOn } };
 }

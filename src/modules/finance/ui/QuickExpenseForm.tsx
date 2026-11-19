@@ -10,14 +10,15 @@
 // The form posts to createExpenseAction (a Server Action); all rules are checked again on the server.
 
 import Link from 'next/link';
-import { useActionState, useEffect, useState } from 'react';
+import { startTransition, useActionState, useEffect, useState } from 'react';
 import { checkPickedImage, formatAmount } from '@/shared-kernel';
 import { compressImage } from '@/platform/images/compress-image';
 import { createBrowserSupabase } from '@/platform/supabase/browser';
 import { PROJECT_FILES_BUCKET } from '@/platform/supabase/storage';
 import type { SavedExpense } from '../application/create-expense';
-import { EXPENSE_TYPES, validateNewExpense, type ExpenseField } from '../domain/expense';
+import { validateNewExpense } from '../domain/expense';
 import { createExpenseAction, prepareReceiptUploadAction, type ExpenseFormState } from './actions';
+import { ExpenseFields } from './ExpenseFields';
 import { BackIcon } from './icons';
 import { expenseTextAr as t, expenseTypeAr } from './messages.ar';
 import { EXPENSES_PATH } from './routes';
@@ -128,7 +129,8 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
       }
       form.set('receiptPath', ticket.path);
     }
-    formAction(form);
+    // After an await this is no longer inside the form's transition: start one, so `pending` stays true while saving.
+    startTransition(() => formAction(form));
   }
   const busy = pending || receiptStep !== 'idle';
 
@@ -136,17 +138,6 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
 
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? {};
-  const invalid = (name: ExpenseField) => ({
-    'aria-invalid': errors[name] ? (true as const) : undefined,
-    'aria-describedby': errors[name] ? `${name}-error` : undefined,
-  });
-  const errorOf = (name: ExpenseField) =>
-    errors[name] && (
-      <p id={`${name}-error`} className={styles.fieldError}>
-        {errors[name]}
-      </p>
-    );
-  const star = <span aria-hidden="true">*</span>;
 
   return (
     <main className={styles.screen}>
@@ -172,118 +163,12 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
           <p className={styles.hint}>{t.requiredHint}</p>
           <input type="hidden" name="clientOpId" value={clientOpId} />
 
-          <div className={styles.field}>
-            <label htmlFor="title" className={styles.label}>
-              {t.form.name} {star}
-            </label>
-            <input
-              id="title"
-              name="title"
-              type="text"
-              autoComplete="off"
-              required
-              className={styles.input}
-              defaultValue={values.title ?? ''}
-              {...invalid('title')}
-            />
-            {errorOf('title')}
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="amount" className={styles.label}>
-              {t.form.amount} {star}
-            </label>
-            <input
-              id="amount"
-              name="amount"
-              type="text"
-              inputMode="decimal"
-              dir="ltr"
-              autoComplete="off"
-              required
-              className={styles.input}
-              defaultValue={values.amount ?? ''}
-              {...invalid('amount')}
-            />
-            {errorOf('amount')}
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="expenseType" className={styles.label}>
-              {t.form.type} {star}
-            </label>
-            <select
-              id="expenseType"
-              name="expenseType"
-              required
-              className={styles.input}
-              defaultValue={values.expenseType ?? ''}
-              {...invalid('expenseType')}
-            >
-              <option value="" disabled>
-                {t.form.typePlaceholder}
-              </option>
-              {EXPENSE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {expenseTypeAr[type]}
-                </option>
-              ))}
-            </select>
-            {errorOf('expenseType')}
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="phaseId" className={styles.label}>
-              {t.form.phase}
-            </label>
-            <select
-              id="phaseId"
-              name="phaseId"
-              className={styles.input}
-              defaultValue={values.phaseId ?? phases.find((p) => p.current)?.id ?? ''}
-              {...invalid('phaseId')}
-            >
-              <option value="">{t.form.noPhase}</option>
-              {phases.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            {errorOf('phaseId')}
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="payee" className={styles.label}>
-              {t.form.payee}
-            </label>
-            <input
-              id="payee"
-              name="payee"
-              type="text"
-              autoComplete="off"
-              className={styles.input}
-              defaultValue={values.payee ?? ''}
-              {...invalid('payee')}
-            />
-            {errorOf('payee')}
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="paidOn" className={styles.label}>
-              {t.form.date}
-            </label>
-            <input
-              id="paidOn"
-              name="paidOn"
-              type="date"
-              max={today}
-              className={styles.input}
-              defaultValue={values.paidOn ?? today}
-              {...invalid('paidOn')}
-            />
-            {errorOf('paidOn')}
-          </div>
+          <ExpenseFields
+            phases={phases}
+            today={today}
+            errors={errors}
+            values={{ phaseId: phases.find((p) => p.current)?.id ?? '', paidOn: today, ...values }}
+          />
 
           <div className={styles.field}>
             <span className={styles.label} id="receipt-label">
