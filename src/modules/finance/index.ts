@@ -5,6 +5,7 @@
 export { budgetSummary, totalSpent, type BudgetSummary } from './domain/budget';
 export {
   validateNewExpense,
+  validateExpenseEdit,
   EXPENSE_TYPES,
   type ExpenseType,
   type NewExpenseInput,
@@ -20,10 +21,14 @@ export type { ExpenseFailure } from './application/expense-gateway';
 // Expenses list (design S13.1, S13.3): the use case, the screen and its read
 export { listExpenses, EXPENSE_LIST_LIMIT, type ExpenseList as ExpenseListData, type ExpenseListItem } from './application/list-expenses';
 export { ExpenseList, type ExpenseListPhase } from './ui/ExpenseList';
-export { getExpenseList } from './ui/queries';
+export { getExpense, getExpenseList } from './ui/queries';
 
 // Quick-expense screen (design S14.1, S14.2), its Server Action, route and text
 export { QuickExpenseForm, type ExpensePhaseOption } from './ui/QuickExpenseForm';
 export { createExpenseAction, type ExpenseFormState } from './ui/actions';
-export { EXPENSE_NEW_PATH, EXPENSES_PATH } from './ui/routes';
+export { EXPENSE_NEW_PATH, EXPENSES_PATH, expensePath } from './ui/routes';
+
+// Edit and delete one expense (decision of 19 Nov 2026; the database audits every change, migration 0016)
+export { EditExpenseForm } from './ui/EditExpenseForm';
+export { updateExpense, deleteExpense, type UpdateExpenseCommand } from './application/change-expense';
 export { expenseTextAr } from './ui/messages.ar';

@@ -134,7 +134,7 @@
 
 **لماذا هذا مهم:** يحمي من فقدان الأحداث عند الأعطال، ويجعل الوحدات منفصلة زمنيًا. والتنفيذ الأبسط الآن: مسار مجدول يستعلم دوريًا. لا نحتاج Kafka ولا غيره.
 
-**أحداث الإصدار الأول:** `expense.created`، `purchase.recorded`، `phase.status_changed`، `quote.expiring`، `checklist.completed`، `issue.opened`، `phase.closing_requested`، `stock.counted`.
+**أحداث الإصدار الأول:** `expense.created`، `expense.updated`، `expense.deleted` (ترحيل 0016)، `purchase.recorded`، `phase.status_changed`، `quote.expiring`، `checklist.completed`، `issue.opened`، `phase.closing_requested`، `stock.counted`.
 
 **مثال تدفق إغلاق المرحلة (3.23):** لا تستطيع `projects` (L1) أن تعتمد على
 `quality` أو `materials` (L2)، لذلك يتم الأمر بالأحداث:

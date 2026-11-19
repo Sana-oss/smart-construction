@@ -354,3 +354,40 @@ ul.list {
   font-weight: 300;
   color: var(--color-accent);
 }
+
+/* Each row of the list opens its expense (decision of 19 Nov 2026). The text is the link; the receipt keeps its own. */
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rowLink:hover strong,
+.rowLink:focus-visible strong {
+  text-decoration: underline;
+}
+
+/* Delete confirmation (no design screen yet; built from the design's tokens, no new colours). */
+.confirmBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: 16px;
+  background: var(--color-bg);
+  line-height: 24px;
+}
+
+.confirmBox p {
+  font-size: 14px;
+}
+
+.danger {
+  border: 2px solid var(--color-accent);
+  font-weight: 700;
+}
+
+.danger:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}

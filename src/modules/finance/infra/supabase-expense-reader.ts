@@ -53,6 +53,18 @@ export function supabaseExpenseReader(supabase: SupabaseClient): ExpenseReader {
       return { items, totalCount: count ?? items.length };
     },
 
+    async expenseById(projectId, expenseId) {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path')
+        .eq('project_id', projectId)
+        .eq('id', expenseId)
+        .returns<ExpenseRow[]>()
+        .maybeSingle();
+      if (error) throw new Error(`expense unavailable: ${error.message}`);
+      return data ? toListItem(data as ExpenseRow) : null;
+    },
+
     async amountsPaidBetween(projectId, range) {
       const { data, error, count } = await supabase
         .from('expenses')

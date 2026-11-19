@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NewExpenseRecord } from '../application/expense-gateway';
-import { mapExpenseError, supabaseExpenseGateway } from './supabase-expense-gateway';
+import { mapExpenseError, supabaseExpenseEditor, supabaseExpenseGateway } from './supabase-expense-gateway';
 
 const expense: NewExpenseRecord = {
   projectId: '11111111-1111-4111-8111-111111111111',
@@ -63,5 +63,63 @@ describe('supabaseExpenseGateway.createExpense', () => {
   it('never invents a success from an empty answer', async () => {
     const { client } = fakeSupabase({ data: [], error: null });
     expect(await supabaseExpenseGateway(client).createExpense(expense)).toEqual({ status: 'failed', reason: 'unavailable' });
+  });
+});
+
+/** A stand-in for supabase.from('expenses').update(...)/.delete() ... .select(): records the calls, gives `result`. */
+function fakeTable(result: { data: unknown; error: { code?: string } | null }) {
+  const calls: { method: string; args: unknown[] }[] = [];
+  const chain: Record<string, unknown> = {};
+  for (const m of ['update', 'delete', 'eq', 'select', 'returns']) {
+    chain[m] = (...args: unknown[]) => {
+      calls.push({ method: m, args });
+      return chain;
+    };
+  }
+  chain.then = (resolve: (v: unknown) => unknown) => resolve(result);
+  const from = vi.fn(() => chain);
+  return { client: { from } as unknown as SupabaseClient, calls, from };
+}
+
+describe('supabaseExpenseEditor', () => {
+  const PROJECT = '11111111-1111-4111-8111-111111111111';
+  const change = {
+    projectId: PROJECT,
+    expenseId: 'e1',
+    title: 'رمل',
+    amountLyd: '650.250',
+    expenseType: 'services' as const,
+    phaseId: null,
+    payee: null,
+    paidOn: '2026-11-10',
+  };
+
+  it('updates only the editable fields of the expense of this project, with the amount as a string', async () => {
+    const { client, calls, from } = fakeTable({ data: [{ id: 'e1' }], error: null });
+    expect(await supabaseExpenseEditor(client).updateExpense(change)).toEqual({ status: 'done' });
+    expect(from).toHaveBeenCalledWith('expenses');
+    expect(calls).toContainEqual({
+      method: 'update',
+      args: [{ title: 'رمل', amount_lyd: '650.250', expense_type: 'services', phase_id: null, payee: null, paid_on: '2026-11-10' }],
+    });
+    expect(calls).toContainEqual({ method: 'eq', args: ['id', 'e1'] });
+    expect(calls).toContainEqual({ method: 'eq', args: ['project_id', PROJECT] });
+  });
+
+  it('reports "not found" when no row was changed (RLS hides it, or it is gone)', async () => {
+    const { client } = fakeTable({ data: [], error: null });
+    expect(await supabaseExpenseEditor(client).updateExpense(change)).toEqual({ status: 'failed', reason: 'not_found' });
+    expect(await supabaseExpenseEditor(client).deleteExpense(PROJECT, 'e1')).toEqual({ status: 'failed', reason: 'not_found' });
+  });
+
+  it('translates a refusal of the edit guard', async () => {
+    const { client } = fakeTable({ data: null, error: { code: '23503' } });
+    expect(await supabaseExpenseEditor(client).updateExpense(change)).toEqual({ status: 'failed', reason: 'unknown_reference' });
+  });
+
+  it('deletes and gives back the receipt path for the app to remove', async () => {
+    const { client, calls } = fakeTable({ data: [{ receipt_path: `${PROJECT}/receipts/r.jpg` }], error: null });
+    expect(await supabaseExpenseEditor(client).deleteExpense(PROJECT, 'e1')).toEqual({ status: 'done', receiptPath: `${PROJECT}/receipts/r.jpg` });
+    expect(calls.map((c) => c.method)).toContain('delete');
   });
 });

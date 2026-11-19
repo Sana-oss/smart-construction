@@ -23,6 +23,7 @@ export type ExpenseFailure =
   | 'unknown_reference' // the phase does not belong to this project
   | 'rejected' // the database refused the values (its own double-check of the domain rules)
   | 'receipt_missing' // the receipt photo did not arrive in storage, or is not a JPEG within the size limit
+  | 'not_found' // the expense does not exist in this project, or this user may not change it (RLS hides both)
   | 'unavailable';
 
 export type CreateExpenseOutcome =
@@ -34,4 +35,33 @@ export type CreateExpenseOutcome =
 export interface ExpenseGateway {
   /** Stores the expense and its expense.created event in one transaction. */
   createExpense(expense: NewExpenseRecord): Promise<CreateExpenseOutcome>;
+}
+
+/** An edit of an existing expense, already validated (decision of 19 Nov 2026). */
+export interface ExpenseChangeRecord {
+  projectId: string;
+  expenseId: string;
+  title: string;
+  /** Canonical decimal string ("12000.750"), never a JS number. */
+  amountLyd: string;
+  expenseType: ExpenseType;
+  phaseId: string | null;
+  payee: string | null;
+  /** "YYYY-MM-DD" */
+  paidOn: string;
+}
+
+export type ChangeExpenseOutcome = { status: 'done' } | { status: 'failed'; reason: ExpenseFailure };
+export type DeleteExpenseOutcome =
+  /** receiptPath: the receipt photo the deleted expense had, for the app to remove from storage. */
+  | { status: 'done'; receiptPath: string | null }
+  | { status: 'failed'; reason: ExpenseFailure };
+
+/**
+ * Port for editing and deleting. Separate from ExpenseGateway so recording an expense does not depend on it.
+ * The database writes the audit row (with the old values) and the event in the same transaction (migration 0016).
+ */
+export interface ExpenseEditor {
+  updateExpense(change: ExpenseChangeRecord): Promise<ChangeExpenseOutcome>;
+  deleteExpense(projectId: string, expenseId: string): Promise<DeleteExpenseOutcome>;
 }

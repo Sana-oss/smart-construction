@@ -70,8 +70,33 @@ export const expenseTextAr = {
     noTitle: 'مصروف بلا اسم',
     receipt: 'الفاتورة',
     receiptLabel: (title: string) => `صورة فاتورة: ${title}`,
+    /** Each row opens its expense (decision of 19 Nov 2026). */
+    openLabel: (title: string) => `فتح المصروف: ${title}`,
+    updated: 'حُفظ التعديل، وسُجّل في سجل التدقيق.',
+    deleted: 'حُذف المصروف، وبقي أثره في سجل التدقيق.',
     /** Shown when the project has more expenses than the list shows (EXPENSE_LIST_LIMIT). */
     olderHidden: (shown: number, total: number) => `يُعرض آخر ${shown} مصروفًا من ${total}. عرض الأقدم يأتي مع التصفية.`,
+  },
+
+  // Edit and delete one expense (decision of 19 Nov 2026). No design screen yet: built from S14.1's fields.
+  edit: {
+    pageTitle: 'تعديل المصروف',
+    title: 'تعديل المصروف',
+    subtitle: 'كل تعديل يُحفظ في سجل التدقيق مع القيم السابقة',
+    submit: 'حفظ التعديل',
+    submitting: 'جارٍ الحفظ…',
+    receipt: 'صورة الفاتورة',
+    receiptOpen: 'عرض صورة الفاتورة',
+    receiptNone: 'لا توجد صورة فاتورة لهذا المصروف.',
+    receiptFixed: 'لا تتغيّر الصورة من هنا.',
+  },
+  remove: {
+    start: 'حذف المصروف',
+    title: 'حذف هذا المصروف؟',
+    body: 'سيُحذف المصروف من القائمة والمجاميع، وتُحذف صورة فاتورته إن وُجدت. تبقى قيمه في سجل التدقيق. لا يمكن التراجع عن الحذف.',
+    confirm: 'نعم، احذف المصروف',
+    deleting: 'جارٍ الحذف…',
+    cancel: 'إلغاء',
   },
 } as const;
 
@@ -122,8 +147,17 @@ export const expenseFailedAr: Record<ExpenseFailure | 'no_project', string> = {
   unknown_reference: 'المرحلة المختارة لا تخص هذا المشروع. اختر مرحلة أخرى.',
   rejected: 'تعذّر حفظ المصروف. راجع البيانات وحاول مرة أخرى.',
   receipt_missing: 'لم تصل صورة الفاتورة كاملة. اضغط «حفظ المصروف» مرة أخرى، أو احذف الصورة واحفظ دونها.',
+  not_found: 'لم يُعثر على هذا المصروف. ربما حُذف من قبل.',
   unavailable: 'تعذّر حفظ المصروف الآن. تحقق من الاتصال ثم اضغط «حفظ المصروف» مرة أخرى: لن يُسجَّل مرتين.',
   no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 };
 
 export type ExpenseFieldErrors = Partial<Record<ExpenseField, string>>;
+
+/** Failures while editing or deleting: the same reasons, with words that fit (no «لن يُسجَّل مرتين» here). */
+export const expenseChangeFailedAr: Record<ExpenseFailure | 'no_project', string> = {
+  ...expenseFailedAr,
+  not_allowed: 'لا تملك صلاحية تعديل مصروفات هذا المشروع، أو انتهت الجلسة. سجّل الدخول من جديد.',
+  rejected: 'تعذّر حفظ التعديل. راجع البيانات وحاول مرة أخرى.',
+  unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
+};
