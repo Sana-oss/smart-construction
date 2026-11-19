@@ -1,4 +1,4 @@
-import { isIsoDate, isUuid, money, parseDecimalInput, type Money } from '@/shared-kernel';
+import { isIsoDate, isUuid, readMoneyInput, type Money } from '@/shared-kernel';
 
 // Rules for recording an expense (FR-FIN-02, UC-07; design screen S14.1 "مصروف سريع").
 // Pure: no React, Next or Supabase (rule R4). Money stays Decimal, never a JS number.
@@ -94,18 +94,11 @@ const length = (s: string) => [...s].length;
  * finance module (expenses, obligations, expected income), so they all accept and refuse exactly the same text.
  */
 export function readAmountLyd(raw: string | null | undefined, onError: (code: ExpenseErrorCode) => void): Money | null {
-  const fail = (code: ExpenseErrorCode) => {
-    onError(code);
-    return null;
-  };
-  if (blank(raw)) return fail('required');
-  const parsed = parseDecimalInput(raw);
-  // The dinar has 1,000 dirhams: at most 3 decimals. More is refused, not silently rounded.
-  if (parsed === null || !/^\d+(\.\d{1,3})?$/.test(parsed)) return fail('invalid_number');
-  // The database stores money as numeric(14,3): at most 11 digits before the decimal point.
-  if (parsed.split('.')[0].length > 11) return fail('too_large');
-  const amount = money(parsed);
-  return amount.lte(0) ? fail('must_be_positive') : amount;
+  // The rules live in the shared kernel (readMoneyInput) so prices (materials module) read money the same way.
+  const r = readMoneyInput(raw);
+  if (r.ok) return r.value;
+  onError(r.code);
+  return null;
 }
 
 /** The rules shared by a new expense and an edit: one place, so both screens accept exactly the same values. */
