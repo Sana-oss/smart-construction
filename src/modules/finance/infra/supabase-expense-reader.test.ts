@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toListItem } from './supabase-expense-reader';
+import { applyCriteria, toListItem } from './supabase-expense-reader';
 
 const row = {
   id: 'e1',
@@ -38,5 +38,36 @@ describe('toListItem', () => {
 
   it('does not trust an unknown type from the database', () => {
     expect(toListItem({ ...row, expense_type: 'other' }).expenseType).toBeNull();
+  });
+});
+
+describe('applyCriteria (design S13.2)', () => {
+  function recorder() {
+    const calls: [string, ...string[]][] = [];
+    const q = {
+      gte: (...a: string[]) => (calls.push(['gte', ...a]), q),
+      lt: (...a: string[]) => (calls.push(['lt', ...a]), q),
+      eq: (...a: string[]) => (calls.push(['eq', ...a]), q),
+      or: (...a: string[]) => (calls.push(['or', ...a]), q),
+    };
+    return { q, calls };
+  }
+
+  it('adds nothing without criteria', () => {
+    const { q, calls } = recorder();
+    applyCriteria(q, { range: null, phaseId: null, expenseType: null, search: '' });
+    expect(calls).toEqual([]);
+  });
+
+  it('adds the period, phase, type and a search on the name or the supplier', () => {
+    const { q, calls } = recorder();
+    applyCriteria(q, { range: { from: '2026-11-01', to: '2026-12-01' }, phaseId: 'ph1', expenseType: 'materials', search: 'حديد تسليح' });
+    expect(calls).toEqual([
+      ['gte', 'paid_on', '2026-11-01'],
+      ['lt', 'paid_on', '2026-12-01'],
+      ['eq', 'phase_id', 'ph1'],
+      ['eq', 'expense_type', 'materials'],
+      ['or', 'title.ilike.*حديد*تسليح*,payee.ilike.*حديد*تسليح*'],
+    ]);
   });
 });

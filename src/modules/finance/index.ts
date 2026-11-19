@@ -26,7 +26,11 @@ export { getExpense, getExpenseList } from './ui/queries';
 // Quick-expense screen (design S14.1, S14.2), its Server Action, route and text
 export { QuickExpenseForm, type ExpensePhaseOption } from './ui/QuickExpenseForm';
 export { createExpenseAction, type ExpenseFormState } from './ui/actions';
-export { EXPENSE_NEW_PATH, EXPENSES_PATH, expensePath } from './ui/routes';
+export { EXPENSE_NEW_PATH, EXPENSES_FILTER_PATH, EXPENSES_PATH, expensePath } from './ui/routes';
+
+// Filter the expenses list (design S13.2)
+export { filterQuery, parseExpenseFilter, type ExpenseFilter, type ExpenseFilterParams } from './domain/expense-filter';
+export { ExpenseFilterForm } from './ui/ExpenseFilterForm';
 
 // Edit and delete one expense (decision of 19 Nov 2026; the database audits every change, migration 0016)
 export { EditExpenseForm } from './ui/EditExpenseForm';
