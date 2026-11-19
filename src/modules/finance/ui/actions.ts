@@ -8,6 +8,8 @@
 import { revalidatePath } from 'next/cache';
 import { getMyProject } from '@/modules/projects';
 import { createServerSupabase } from '@/platform/supabase/server';
+import { supabaseFileStore } from '@/platform/supabase/storage';
+import { receiptStoragePath } from '../domain/receipt';
 import { createExpense, type SavedExpense } from '../application/create-expense';
 import { supabaseExpenseGateway } from '../infra/supabase-expense-gateway';
 import { expenseErrorsAr, expenseFailedAr, type ExpenseFieldErrors } from './messages.ar';
@@ -38,8 +40,13 @@ export async function createExpenseAction(_prev: ExpenseFormState, form: FormDat
   const project = await getMyProject();
   if (!project) return { formError: expenseFailedAr.no_project, values };
 
-  const gateway = supabaseExpenseGateway(await createServerSupabase());
-  const result = await createExpense(gateway, { ...values, projectId: project.id, clientOpId: text(form, 'clientOpId') });
+  const supabase = await createServerSupabase();
+  const result = await createExpense(
+    supabaseExpenseGateway(supabase),
+    { ...values, projectId: project.id, clientOpId: text(form, 'clientOpId'), receiptPath: text(form, 'receiptPath') || null },
+    new Date(),
+    supabaseFileStore(supabase),
+  );
 
   if (!result.ok) {
     if (result.kind === 'failed') return { formError: expenseFailedAr[result.reason], values };
@@ -52,4 +59,19 @@ export async function createExpenseAction(_prev: ExpenseFormState, form: FormDat
   // The dashboard total changed: render it again on the next visit.
   revalidatePath('/', 'layout');
   return { saved: { ...result.saved, duplicate: result.duplicate } };
+}
+
+export type ReceiptTicket = { ok: true; path: string; token: string } | { ok: false; message: string };
+
+/**
+ * Receipt photo, step 1 (UC-07): a fresh path in the owner's receipts folder and a one-time upload token. The storage
+ * policies of 0013 refuse the token to anyone who may not write to the project. The browser then uploads, and
+ * createExpenseAction checks the file and records it with the expense.
+ */
+export async function prepareReceiptUploadAction(): Promise<ReceiptTicket> {
+  const project = await getMyProject();
+  if (!project) return { ok: false, message: expenseFailedAr.no_project };
+  const path = receiptStoragePath(project.id, crypto.randomUUID());
+  const ticket = await supabaseFileStore(await createServerSupabase()).uploadTicket(path);
+  return ticket ? { ok: true, path, token: ticket.token } : { ok: false, message: expenseFailedAr.not_allowed };
 }

@@ -12,6 +12,7 @@ const expense: NewExpenseRecord = {
   payee: 'مورد الحديد',
   paidOn: null,
   clientOpId: '33333333-3333-4333-8333-333333333333',
+  receiptPath: null,
 };
 
 function fakeSupabase(result: { data: unknown; error: { code?: string; message?: string } | null }) {
@@ -45,6 +46,7 @@ describe('supabaseExpenseGateway.createExpense', () => {
       p_phase_id: null,
       p_payee: 'مورد الحديد',
       p_paid_on: null,
+      p_receipt_path: null,
     });
   });
 

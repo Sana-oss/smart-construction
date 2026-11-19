@@ -23,6 +23,20 @@ export const expenseTextAr = {
     date: 'التاريخ',
     submit: 'حفظ المصروف',
     submitting: 'جارٍ الحفظ…',
+    // Receipt photo (UC-07): optional, after the six fields, so the three required answers stay at the top.
+    receipt: 'صورة الفاتورة',
+    receiptOptional: 'اختياري',
+    receiptPick: 'التقط صورة الفاتورة أو اخترها',
+    receiptChange: 'تغيير الصورة',
+    receiptRemove: 'إزالة الصورة',
+    receiptPreparing: 'جارٍ تجهيز الصورة…',
+    receiptConverting: 'جارٍ تحويل صورة الآيفون (HEIC)…',
+    receiptUploading: 'جارٍ رفع صورة الفاتورة…',
+    receiptNotImage: 'هذا الملف ليس صورة.',
+    receiptTooLarge: 'الصورة كبيرة جدًا (30 ميغابايت على الأكثر).',
+    receiptUnreadable: 'تعذّرت قراءة الصورة. جرّب صورة أخرى.',
+    receiptHeicFailed: 'تعذّر تحويل صورة HEIC في هذا المتصفح. أرسلها بصيغة JPEG أو جرّب متصفحًا آخر.',
+    receiptUploadFailed: 'تعذّر رفع صورة الفاتورة. تحقق من الاتصال وحاول مرة أخرى، أو أزل الصورة واحفظ دونها.',
   },
 
   saved: {
@@ -33,6 +47,9 @@ export const expenseTextAr = {
     noPayee: 'غير محدد',
     status: 'حالة التسجيل',
     statusValue: 'محفوظ',
+    receipt: 'صورة الفاتورة',
+    receiptAttached: 'مرفقة',
+    receiptNone: 'بلا صورة',
     statusNote: 'مضاف إلى مصروفات المشروع',
     toList: 'عرض المصروفات',
     another: 'إضافة مصروف آخر',
@@ -51,6 +68,8 @@ export const expenseTextAr = {
     addFirst: 'إضافة أول مصروف',
     add: 'مصروف سريع',
     noTitle: 'مصروف بلا اسم',
+    receipt: 'الفاتورة',
+    receiptLabel: (title: string) => `صورة فاتورة: ${title}`,
     /** Shown when the project has more expenses than the list shows (EXPENSE_LIST_LIMIT). */
     olderHidden: (shown: number, total: number) => `يُعرض آخر ${shown} مصروفًا من ${total}. عرض الأقدم يأتي مع التصفية.`,
   },
@@ -102,6 +121,7 @@ export const expenseFailedAr: Record<ExpenseFailure | 'no_project', string> = {
   not_allowed: 'لا تملك صلاحية تسجيل مصروف في هذا المشروع، أو انتهت الجلسة. سجّل الدخول من جديد.',
   unknown_reference: 'المرحلة المختارة لا تخص هذا المشروع. اختر مرحلة أخرى.',
   rejected: 'تعذّر حفظ المصروف. راجع البيانات وحاول مرة أخرى.',
+  receipt_missing: 'لم تصل صورة الفاتورة كاملة. اضغط «حفظ المصروف» مرة أخرى، أو احذف الصورة واحفظ دونها.',
   unavailable: 'تعذّر حفظ المصروف الآن. تحقق من الاتصال ثم اضغط «حفظ المصروف» مرة أخرى: لن يُسجَّل مرتين.',
   no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 };

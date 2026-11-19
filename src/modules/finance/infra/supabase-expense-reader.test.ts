@@ -9,6 +9,7 @@ const row = {
   phase_id: 'ph1',
   payee: 'مورد الحديد',
   paid_on: '2026-11-09',
+  receipt_path: null as string | null,
 };
 
 describe('toListItem', () => {
@@ -21,7 +22,12 @@ describe('toListItem', () => {
       phaseId: 'ph1',
       payee: 'مورد الحديد',
       paidOn: '2026-11-09',
+      receiptPath: null,
     });
+  });
+
+  it('keeps the receipt photo path', () => {
+    expect(toListItem({ ...row, receipt_path: 'p/receipts/r.jpg' }).receiptPath).toBe('p/receipts/r.jpg');
   });
 
   it('shows an older expense without a name or type instead of hiding it (the list must match the totals)', () => {

@@ -20,6 +20,8 @@ mistake, it fails with "stranger can read projects".
 
 `documents.spec.ts` (FR-DOC-01): PDF and PNG stored as they are; a Word file and a PDF over 10 MB refused in the browser; a form missing a field leaves NO file in storage; the signed link returns the PDF; the phase page lists only that phase's documents; a stranger reaches nothing while the owner can; delete asks first and removes the file.
 
+`receipt.spec.ts` (UC-07, FR-DOC-02): a quick expense with a receipt photo stores a compressed JPEG in the project's receipts folder and the list opens it through a signed link; a refused form uploads nothing and keeps the chosen type; an expense without a receipt is unchanged; a stranger cannot download the receipt.
+
 `quick-expense-timing.spec.ts` (task 16, NFR-USE-03): checks that the quick expense asks for **at most three required
 answers**, then records several quick expenses in a row and measures how long the **app** makes the owner wait:
 

@@ -9,6 +9,7 @@ const item = (n: number): ExpenseListItem => ({
   phaseId: null,
   payee: null,
   paidOn: '2026-11-10',
+  receiptPath: null,
 });
 
 function fakeReader(items: ExpenseListItem[], totalCount: number, monthAmounts: string[]) {
@@ -57,5 +58,25 @@ describe('listExpenses', () => {
       },
     };
     await expect(listExpenses(reader, 'p1', '2026-11-18')).rejects.toThrow('incomplete');
+  });
+
+  it('adds a 10-minute link to each shown expense that has a receipt photo, and none to the others', async () => {
+    const withReceipt = { ...item(1), receiptPath: 'p1/receipts/r1.jpg' };
+    const { reader } = fakeReader([withReceipt, item(2)], 2, []);
+    const asked: { paths?: string[]; ttl?: number } = {};
+    const store = {
+      uploadTicket: async () => null,
+      info: async () => null,
+      remove: async () => {},
+      signedUrls: async (paths: string[], ttl: number) => {
+        asked.paths = paths;
+        asked.ttl = ttl;
+        return new Map(paths.map((x) => [x, `https://signed/${x}`]));
+      },
+    };
+    const list = await listExpenses(reader, 'p1', '2026-11-18', store);
+    expect(asked).toEqual({ paths: ['p1/receipts/r1.jpg'], ttl: 600 });
+    expect(list.items[0].receiptUrl).toBe('https://signed/p1/receipts/r1.jpg');
+    expect(list.items[1].receiptUrl).toBeNull();
   });
 });

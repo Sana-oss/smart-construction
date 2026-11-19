@@ -3,16 +3,21 @@
 // Quick expense (FR-FIN-02, UC-07). Design: S14.1 «مصروف سريع» and S14.2 «تم حفظ المصروف».
 // Six fields, as in the design: name, amount, type, phase, supplier or beneficiary, date. The owner types
 // three (name, amount, type); the phase starts on the current phase, the date on today, the supplier is optional.
-// The saved screen's main button opens the expenses list (S13.1), as in the design. Not built yet: the bottom
-// navigation bar.
+// The saved screen's main button opens the expenses list (S13.1), as in the design.
+// Optional receipt photo (UC-07; not in the design's S14.1, change register 18 Nov): after the six fields, so the
+// three required answers stay first. It is compressed in the browser, uploaded with a one-time token
+// (prepareReceiptUploadAction), and checked by the server with the expense; with no photo, nothing changes.
 // The form posts to createExpenseAction (a Server Action); all rules are checked again on the server.
 
 import Link from 'next/link';
 import { useActionState, useEffect, useState } from 'react';
-import { formatAmount } from '@/shared-kernel';
+import { checkPickedImage, formatAmount } from '@/shared-kernel';
+import { compressImage } from '@/platform/images/compress-image';
+import { createBrowserSupabase } from '@/platform/supabase/browser';
+import { PROJECT_FILES_BUCKET } from '@/platform/supabase/storage';
 import type { SavedExpense } from '../application/create-expense';
-import { EXPENSE_TYPES, type ExpenseField } from '../domain/expense';
-import { createExpenseAction, type ExpenseFormState } from './actions';
+import { EXPENSE_TYPES, validateNewExpense, type ExpenseField } from '../domain/expense';
+import { createExpenseAction, prepareReceiptUploadAction, type ExpenseFormState } from './actions';
 import { BackIcon } from './icons';
 import { expenseTextAr as t, expenseTypeAr } from './messages.ar';
 import { EXPENSES_PATH } from './routes';
@@ -62,6 +67,71 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
     setClientOpId(crypto.randomUUID());
   }, []);
 
+  // Receipt photo (optional): compressed when picked, uploaded only when the expense is sent.
+  const [receipt, setReceipt] = useState<{ blob: Blob; url: string } | null>(null);
+  const [receiptStep, setReceiptStep] = useState<'idle' | 'preparing' | 'converting' | 'uploading'>('idle');
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  useEffect(() => () => void (receipt && URL.revokeObjectURL(receipt.url)), [receipt]);
+
+  async function pickReceipt(file: File | undefined) {
+    setReceiptError(null);
+    if (!file) return;
+    const problem = checkPickedImage(file);
+    if (problem) {
+      setReceiptError(problem === 'too_large' ? t.form.receiptTooLarge : t.form.receiptNotImage);
+      return;
+    }
+    setReceiptStep('preparing');
+    const result = await compressImage(file, () => setReceiptStep('converting'));
+    setReceiptStep('idle');
+    if (!result.ok) {
+      setReceiptError(result.reason === 'heicFailed' ? t.form.receiptHeicFailed : t.form.receiptUnreadable);
+      return;
+    }
+    setReceipt({ blob: result.photo.blob, url: URL.createObjectURL(result.photo.blob) });
+  }
+
+  /**
+   * With a receipt: check the expense in the browser first (nothing is uploaded for a form the server will refuse),
+   * then upload the photo and send its path with the expense. Without one: exactly as before.
+   */
+  async function send(form: FormData) {
+    setReceiptError(null);
+    const read = (k: string) => String(form.get(k) ?? '');
+    const checked = validateNewExpense(
+      {
+        title: read('title'),
+        amount: read('amount'),
+        expenseType: read('expenseType'),
+        phaseId: read('phaseId'),
+        payee: read('payee'),
+        paidOn: read('paidOn'),
+        clientOpId: read('clientOpId'),
+      },
+      today,
+    );
+    if (receipt && checked.ok) {
+      setReceiptStep('uploading');
+      const ticket = await prepareReceiptUploadAction();
+      if (!ticket.ok) {
+        setReceiptStep('idle');
+        setReceiptError(ticket.message);
+        return;
+      }
+      const upload = await createBrowserSupabase()
+        .storage.from(PROJECT_FILES_BUCKET)
+        .uploadToSignedUrl(ticket.path, ticket.token, receipt.blob, { contentType: 'image/jpeg' });
+      setReceiptStep('idle');
+      if (upload.error) {
+        setReceiptError(t.form.receiptUploadFailed);
+        return;
+      }
+      form.set('receiptPath', ticket.path);
+    }
+    formAction(form);
+  }
+  const busy = pending || receiptStep !== 'idle';
+
   if (state.saved) return <Saved expense={state.saved} phases={phases} onAnother={onAnother} />;
 
   const errors = state.fieldErrors ?? {};
@@ -91,7 +161,9 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
       </header>
 
       <div className={styles.scroll}>
-        <form id={FORM_ID} action={formAction} noValidate>
+        {/* key: after a refused submission React resets the form, and a <select> does not take its new default value
+            (the type went back to «اختر نوع المصروف»). Rebuilding the form with the values sent back keeps every field. */}
+        <form id={FORM_ID} action={send} noValidate key={JSON.stringify(state.values ?? {})}>
           {state.formError && (
             <p role="alert" className={styles.errorSummary}>
               {state.formError}
@@ -212,14 +284,53 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
             />
             {errorOf('paidOn')}
           </div>
+
+          <div className={styles.field}>
+            <span className={styles.label} id="receipt-label">
+              {t.form.receipt} <small className={styles.optional}>({t.form.receiptOptional})</small>
+            </span>
+            {receipt && <img src={receipt.url} alt="" className={styles.receiptPreview} />}
+            <label className={receipt ? `${styles.picker} ${styles.pickerCompact}` : styles.picker}>
+              <input
+                type="file"
+                accept="image/*,.heic,.heif"
+                className={styles.visuallyHidden}
+                aria-labelledby="receipt-label"
+                aria-invalid={receiptError ? true : undefined}
+                aria-describedby={receiptError ? 'receipt-error' : undefined}
+                disabled={busy}
+                onChange={(e) => void pickReceipt(e.target.files?.[0])}
+              />
+              {receipt ? t.form.receiptChange : t.form.receiptPick}
+            </label>
+            {receipt && (
+              <button type="button" className={styles.linkButton} onClick={() => setReceipt(null)} disabled={busy}>
+                {t.form.receiptRemove}
+              </button>
+            )}
+            {receiptStep !== 'idle' && (
+              <p role="status" className={styles.hint}>
+                {receiptStep === 'converting'
+                  ? t.form.receiptConverting
+                  : receiptStep === 'uploading'
+                    ? t.form.receiptUploading
+                    : t.form.receiptPreparing}
+              </p>
+            )}
+            {receiptError && (
+              <p id="receipt-error" role="alert" className={styles.fieldError}>
+                {receiptError}
+              </p>
+            )}
+          </div>
         </form>
       </div>
 
       {/* The button sits at the bottom of the screen (thumb reach); `form` links it to the form above.
           Disabled until the client_op_id exists, so an expense is never sent without it. */}
       <div className={styles.actions}>
-        <button type="submit" form={FORM_ID} className={styles.primary} disabled={pending || clientOpId === ''}>
-          {pending ? t.form.submitting : t.form.submit}
+        <button type="submit" form={FORM_ID} className={styles.primary} disabled={busy || clientOpId === ''}>
+          {busy ? t.form.submitting : t.form.submit}
         </button>
       </div>
     </main>
@@ -274,6 +385,12 @@ function Saved({
               <small>{t.saved.statusNote}</small>
             </span>
             <span className={styles.rowValue}>{t.saved.statusValue}</span>
+          </div>
+          <div className={styles.listRow}>
+            <span className={styles.rowText}>
+              <strong>{t.saved.receipt}</strong>
+            </span>
+            <span className={styles.rowValue}>{expense.hasReceipt ? t.saved.receiptAttached : t.saved.receiptNone}</span>
           </div>
         </div>
       </div>

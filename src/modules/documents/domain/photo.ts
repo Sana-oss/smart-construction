@@ -1,32 +1,20 @@
-import { isIsoDate, isUuid } from '@/shared-kernel';
+import { checkPickedImage, isIsoDate, isUuid } from '@/shared-kernel';
 
 // Site photos (FR-DOC-02, design S31.1/S31.2; plan approved 18 Nov 2026). Pure: no React, no database, no browser.
 // The numbers below are PRODUCT choices (how big a stored photo is), not engineering values; recorded in the change
 // register and easy to change.
 
-/** Longest side of a stored photo, in pixels. Sharp on a phone and a laptop, a few hundred KB as JPEG. */
-export const PHOTO_MAX_EDGE = 1600;
-/** JPEG quality used when re-encoding (0–1). */
-export const PHOTO_JPEG_QUALITY = 0.8;
-/** Largest file the owner may pick before compression (a phone's original photo). */
-export const PHOTO_MAX_INPUT_BYTES = 30 * 1024 * 1024;
-/** Largest stored photo after compression. The storage bucket refuses anything bigger (0013). */
-export const PHOTO_MAX_STORED_BYTES = 5 * 1024 * 1024;
-/** Every stored photo is a JPEG, whatever was picked (HEIC, PNG, WebP are converted in the browser). */
-export const PHOTO_STORED_TYPE = 'image/jpeg';
+// Stored-image rules shared with other modules (shared-kernel/images.ts), under this module's names.
+export {
+  IMAGE_MAX_EDGE as PHOTO_MAX_EDGE,
+  IMAGE_JPEG_QUALITY as PHOTO_JPEG_QUALITY,
+  IMAGE_MAX_INPUT_BYTES as PHOTO_MAX_INPUT_BYTES,
+  IMAGE_MAX_STORED_BYTES as PHOTO_MAX_STORED_BYTES,
+  IMAGE_STORED_TYPE as PHOTO_STORED_TYPE,
+  fitWithin,
+  isHeicFile,
+} from '@/shared-kernel';
 export const PHOTO_NOTE_MAX = 500;
-
-/**
- * The size to draw the photo at: scaled down so its longest side is at most `maxEdge`, keeping its proportions.
- * Never scaled UP (a small photo stays as it is).
- */
-export function fitWithin(width: number, height: number, maxEdge: number = PHOTO_MAX_EDGE): { width: number; height: number } {
-  if (!(width > 0 && height > 0)) throw new Error('fitWithin needs a positive width and height');
-  const longest = Math.max(width, height);
-  if (longest <= maxEdge) return { width, height };
-  const scale = maxEdge / longest;
-  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
-}
 
 /**
  * Where a project's photo is stored in the bucket. The first folder is the project id: the storage policies of
@@ -83,15 +71,8 @@ export function validatePhotoDetails(
 
 /** The picked file, before compression: an image, not bigger than PHOTO_MAX_INPUT_BYTES. */
 export function checkPickedFile(file: { size: number; type: string; name: string }): PhotoError | null {
-  const looksLikeImage = file.type.startsWith('image/') || /\.(heic|heif)$/i.test(file.name);
-  if (!looksLikeImage) return { field: 'file', code: 'not_an_image' };
-  if (file.size > PHOTO_MAX_INPUT_BYTES) return { field: 'file', code: 'too_large' };
-  return null;
-}
-
-/** HEIC/HEIF (iPhone photos). Some browsers report an empty type for them, so the name is checked too. */
-export function isHeicFile(file: { type: string; name: string }): boolean {
-  return /^image\/hei[cf](-sequence)?$/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+  const problem = checkPickedImage(file);
+  return problem ? { field: 'file', code: problem } : null;
 }
 
 /** How long a link to view a photo works (NFR-SEC-03: short-lived; an old link stops working). */
