@@ -1,5 +1,6 @@
 import type { ExpenseFailure } from '../application/expense-gateway';
 import type { ExpenseErrorCode, ExpenseField, ExpenseType } from '../domain/expense';
+import type { ExpensePeriod } from '../domain/expense-filter';
 
 // Arabic text for the quick-expense screens. Wording from the design file (Design/Screens, outline):
 // S14.1 «مصروف سريع», S14.2 «تم حفظ المصروف», S13.1 (expense types), S07.4 (back to the dashboard).
@@ -75,7 +76,29 @@ export const expenseTextAr = {
     updated: 'حُفظ التعديل، وسُجّل في سجل التدقيق.',
     deleted: 'حُذف المصروف، وبقي أثره في سجل التدقيق.',
     /** Shown when the project has more expenses than the list shows (EXPENSE_LIST_LIMIT). */
-    olderHidden: (shown: number, total: number) => `يُعرض آخر ${shown} مصروفًا من ${total}. عرض الأقدم يأتي مع التصفية.`,
+    olderHidden: (shown: number, total: number) => `يُعرض آخر ${shown} مصروفًا من ${total}. استخدم «التصفية والبحث» للوصول إلى الأقدم.`,
+  },
+
+  // Filter (design S13.2 «تصفية المصروفات») and the list's quick link «التصفية والبحث» (S13.1).
+  filter: {
+    pageTitle: 'تصفية المصروفات',
+    title: 'تصفية المصروفات',
+    subtitle: 'حدد النطاق المطلوب عرضه',
+    search: 'بحث باسم المصروف أو المورد',
+    period: 'الفترة',
+    phase: 'المرحلة',
+    allPhases: 'كل المراحل',
+    type: 'نوع المصروف',
+    allTypes: 'كل الأنواع',
+    apply: 'تطبيق التصفية',
+    clear: 'مسح التصفية',
+    open: 'التصفية والبحث',
+    openNote: 'بالاسم أو المورد أو الفترة أو المرحلة أو النوع',
+    resultsTotal: 'مجموع النتائج',
+    resultsSubtitle: (project: string) => `${project} · نتائج التصفية`,
+    noResults: 'لا توجد مصروفات تطابق التصفية',
+    noResultsHint: 'غيّر شروط التصفية أو امسحها لعرض كل المصروفات.',
+    searchFor: (text: string) => `«${text}»`,
   },
 
   // Edit and delete one expense (decision of 19 Nov 2026). No design screen yet: built from S14.1's fields.
@@ -99,6 +122,15 @@ export const expenseTextAr = {
     cancel: 'إلغاء',
   },
 } as const;
+
+/** «الفترة» choices (design S13.2; list decided 19 Nov 2026). */
+export const expensePeriodAr: Record<ExpensePeriod, string> = {
+  all: 'كل الفترات',
+  this_month: 'هذا الشهر',
+  last_month: 'الشهر الماضي',
+  last_3_months: 'آخر 3 أشهر',
+  this_year: 'هذه السنة',
+};
 
 /** The three expense types of the design (S13.1). Keys are stored; these labels are shown. */
 export const expenseTypeAr: Record<ExpenseType, string> = {

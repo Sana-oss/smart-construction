@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ExpenseListItem, ExpenseReader } from '../application/list-expenses';
+import type { ExpenseCriteria, ExpenseListItem, ExpenseReader } from '../application/list-expenses';
 import { EXPENSE_TYPES, type ExpenseType } from '../domain/expense';
 
 // Supabase adapter for the expenses list. Always used with the signed-in user's client, so RLS decides what is
@@ -36,14 +36,39 @@ export function toListItem(row: ExpenseRow): ExpenseListItem {
   };
 }
 
+/** The few query methods the criteria need (Supabase's filter builder has them all). */
+interface Filterable {
+  gte(column: string, value: string): this;
+  lt(column: string, value: string): this;
+  eq(column: string, value: string): this;
+  or(filters: string): this;
+}
+
+/**
+ * Adds the criteria (design S13.2) to a query. The search was cleaned by the domain (letters, digits, spaces only), so
+ * it cannot break the filter text; its spaces become "*" (any text), so «حديد تسليح» also finds «حديد 12 تسليح».
+ */
+export function applyCriteria<Q extends Filterable>(query: Q, c: ExpenseCriteria): Q {
+  let q = query;
+  if (c.range) q = q.gte('paid_on', c.range.from).lt('paid_on', c.range.to);
+  if (c.phaseId) q = q.eq('phase_id', c.phaseId);
+  if (c.expenseType) q = q.eq('expense_type', c.expenseType);
+  if (c.search) {
+    const pattern = `*${c.search.split(' ').join('*')}*`;
+    q = q.or(`title.ilike.${pattern},payee.ilike.${pattern}`);
+  }
+  return q;
+}
+
 export function supabaseExpenseReader(supabase: SupabaseClient): ExpenseReader {
   return {
-    async recentExpenses(projectId, limit) {
+    async recentExpenses(projectId, limit, criteria) {
       // "amount_lyd::text": the amount arrives as text, so it never passes through a JS number (data rules).
-      const { data, error, count } = await supabase
+      const query = supabase
         .from('expenses')
         .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path', { count: 'exact' })
-        .eq('project_id', projectId)
+        .eq('project_id', projectId);
+      const { data, error, count } = await applyCriteria(query, criteria)
         .order('paid_on', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(limit)
@@ -65,19 +90,14 @@ export function supabaseExpenseReader(supabase: SupabaseClient): ExpenseReader {
       return data ? toListItem(data as ExpenseRow) : null;
     },
 
-    async amountsPaidBetween(projectId, range) {
-      const { data, error, count } = await supabase
-        .from('expenses')
-        .select('amount_lyd::text', { count: 'exact' })
-        .eq('project_id', projectId)
-        .gte('paid_on', range.from)
-        .lt('paid_on', range.to)
-        .returns<{ amount_lyd: string }[]>();
-      if (error) throw new Error(`month expenses unavailable: ${error.message}`);
+    async amountsMatching(projectId, criteria) {
+      const query = supabase.from('expenses').select('amount_lyd::text', { count: 'exact' }).eq('project_id', projectId);
+      const { data, error, count } = await applyCriteria(query, criteria).returns<{ amount_lyd: string }[]>();
+      if (error) throw new Error(`expense amounts unavailable: ${error.message}`);
       const amounts = (data ?? []).map((r) => r.amount_lyd);
       // Supabase caps a response at 1,000 rows. Fewer rows than the count = an incomplete list: refuse it.
       if (count !== null && amounts.length < count) {
-        throw new Error(`month expenses incomplete: got ${amounts.length} of ${count}`);
+        throw new Error(`expense amounts incomplete: got ${amounts.length} of ${count}`);
       }
       return amounts;
     },

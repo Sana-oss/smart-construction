@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { EXPENSE_LIST_LIMIT, findExpense, listExpenses, type ExpenseListItem, type ExpenseReader } from './list-expenses';
+import { NO_FILTER } from '../domain/expense-filter';
+import {
+  EXPENSE_LIST_LIMIT,
+  findExpense,
+  listExpenses,
+  type ExpenseCriteria,
+  type ExpenseListItem,
+  type ExpenseReader,
+} from './list-expenses';
 
 const item = (n: number): ExpenseListItem => ({
   id: `id-${n}`,
@@ -13,17 +21,20 @@ const item = (n: number): ExpenseListItem => ({
 });
 
 function fakeReader(items: ExpenseListItem[], totalCount: number, monthAmounts: string[]) {
-  const calls: { limit?: number; range?: { from: string; to: string } } = {};
+  const calls: { limit?: number; range?: { from: string; to: string } | null; criteria: ExpenseCriteria[] } = { criteria: [] };
   const reader: ExpenseReader = {
-    async recentExpenses(_projectId, limit) {
+    async recentExpenses(_projectId, limit, criteria) {
       calls.limit = limit;
+      calls.criteria.push(criteria);
       return { items, totalCount };
     },
     async expenseById(_projectId, expenseId) {
       return items.find((i) => i.id === expenseId) ?? null;
     },
-    async amountsPaidBetween(_projectId, range) {
-      calls.range = range;
+    async amountsMatching(_projectId, criteria) {
+      // The month card asks for a date range only; a filter asks for its own criteria.
+      if (criteria.phaseId === null && criteria.expenseType === null && criteria.search === '' && criteria.range) calls.range = criteria.range;
+      else calls.criteria.push(criteria);
       return monthAmounts;
     },
   };
@@ -57,7 +68,7 @@ describe('listExpenses', () => {
     const reader: ExpenseReader = {
       recentExpenses: async () => ({ items: [], totalCount: 0 }),
       expenseById: async () => null,
-      amountsPaidBetween: async () => {
+      amountsMatching: async () => {
         throw new Error('incomplete');
       },
     };
@@ -107,5 +118,26 @@ describe('findExpense (edit screen, decision of 19 Nov 2026)', () => {
     expect(await findExpense(reader, PROJECT, '22222222-2222-4222-8222-222222222222', store)).toBeNull();
     expect(await findExpense(reader, PROJECT, 'id-1', store)).toBeNull();
     expect((await findExpense(reader, PROJECT, ID))?.receiptUrl).toBeNull();
+  });
+});
+
+describe('listExpenses with a filter (design S13.2)', () => {
+  it('reads only matching expenses, and totals ALL of them, not only those shown', async () => {
+    const { reader, calls } = fakeReader([item(1)], 60, ['100', '250.5']);
+    const filter = { ...NO_FILTER, search: 'حديد', period: 'last_month' as const, expenseType: 'materials' as const };
+    const list = await listExpenses(reader, 'p1', '2026-11-18', undefined, filter);
+    const expected = { range: { from: '2026-10-01', to: '2026-11-01' }, phaseId: null, expenseType: 'materials', search: 'حديد' };
+    expect(calls.criteria).toEqual([expected, expected]); // the rows, then the amounts
+    expect(list.results?.total.toFixed(3)).toBe('350.500');
+    expect(list.results?.count).toBe(2);
+    expect(list.totalCount).toBe(60);
+    expect(list.filter).toEqual(filter);
+  });
+
+  it('has no results summary without a filter, and reads every expense', async () => {
+    const { reader, calls } = fakeReader([], 0, []);
+    const list = await listExpenses(reader, 'p1', '2026-11-18');
+    expect(list.results).toBeNull();
+    expect(calls.criteria).toEqual([{ range: null, phaseId: null, expenseType: null, search: '' }]);
   });
 });

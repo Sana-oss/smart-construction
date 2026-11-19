@@ -20,6 +20,8 @@ mistake, it fails with "stranger can read projects".
 
 `documents.spec.ts` (FR-DOC-01): PDF and PNG stored as they are; a Word file and a PDF over 10 MB refused in the browser; a form missing a field leaves NO file in storage; the signed link returns the PDF; the phase page lists only that phase's documents; a stranger reaches nothing while the owner can; delete asks first and removes the file.
 
+`expense-filter.spec.ts` (design S13.2, FR-FIN-05): search by name or supplier, period, phase and type narrow the list; the results card totals all matching expenses; no match has its own message; «مسح التصفية» goes back; a hand-made address with odd characters is cleaned, never an error.
+
 `expense-edit.spec.ts` (decision of 19 Nov 2026, FR-SYS-03; needs migration 0016): the owner opens an expense from the list and edits it, and the audit log keeps the old and the new values; a refused edit keeps the typed values; deleting asks twice, then removes the expense and its receipt photo, and the audit log keeps the old values; a stranger can neither open, edit nor delete it.
 
 `receipt.spec.ts` (UC-07, FR-DOC-02): a quick expense with a receipt photo stores a compressed JPEG in the project's receipts folder and the list opens it through a signed link; a refused form uploads nothing and keeps the chosen type; an expense without a receipt is unchanged; a stranger cannot download the receipt.
