@@ -89,9 +89,13 @@ const clean = (s: string | null | undefined) => (s ?? '').trim().replace(/\s+/g,
 /** Length in characters as a person counts them (an Arabic letter is one, whatever its bytes). */
 const length = (s: string) => [...s].length;
 
-function readAmount(raw: string | null | undefined, errors: ExpenseError[]): Money | null {
+/**
+ * An amount in LYD as the owner typed it -> Money, or null after reporting why. Shared by every money field of the
+ * finance module (expenses, obligations, expected income), so they all accept and refuse exactly the same text.
+ */
+export function readAmountLyd(raw: string | null | undefined, onError: (code: ExpenseErrorCode) => void): Money | null {
   const fail = (code: ExpenseErrorCode) => {
-    errors.push({ field: 'amount', code });
+    onError(code);
     return null;
   };
   if (blank(raw)) return fail('required');
@@ -111,7 +115,7 @@ function readFields(input: ExpenseEditInput, today: string, errors: ExpenseError
   else if (length(title) < EXPENSE_TITLE_MIN) errors.push({ field: 'title', code: 'too_short' });
   else if (length(title) > EXPENSE_TITLE_MAX) errors.push({ field: 'title', code: 'too_long' });
 
-  const amountLyd = readAmount(input.amount, errors);
+  const amountLyd = readAmountLyd(input.amount, (code) => errors.push({ field: 'amount', code }));
 
   const type = clean(input.expenseType);
   if (type === '') errors.push({ field: 'expenseType', code: 'required' });

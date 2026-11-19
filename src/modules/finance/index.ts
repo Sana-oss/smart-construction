@@ -36,3 +36,11 @@ export { ExpenseFilterForm } from './ui/ExpenseFilterForm';
 export { EditExpenseForm } from './ui/EditExpenseForm';
 export { updateExpense, deleteExpense, type UpdateExpenseCommand } from './application/change-expense';
 export { expenseTextAr } from './ui/messages.ar';
+
+// Obligations and expected income (design S16.1, S16.2; slice 1 of 3.7): screens, routes, and the outlook for 3.7
+export { CashflowList } from './ui/CashflowList';
+export { MovementForm } from './ui/MovementForm';
+export { getCashflowView } from './ui/queries';
+export { CASHFLOW_NEW_PATH, CASHFLOW_PATH } from './ui/routes';
+export { cashflowTextAr } from './ui/messages.ar';
+export { cashflowOutlook, currentLiquidity, CASHFLOW_HORIZON_DAYS, type CashflowOutlook } from './domain/cashflow';
