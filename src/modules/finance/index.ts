@@ -66,3 +66,6 @@ export { ExtraForm } from './ui/ExtraForm';
 export { getExtrasView } from './ui/queries';
 export { EXTRA_NEW_PATH, EXTRAS_PATH } from './ui/routes';
 export { extrasTextAr } from './ui/messages.ar';
+
+// Event handler: purchase.recorded -> one expense (FR-FIN-03). Called by the app right after a purchase is saved.
+export { recordPurchaseExpense } from './ui/purchase-expense';

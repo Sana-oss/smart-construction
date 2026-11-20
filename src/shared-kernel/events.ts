@@ -24,3 +24,21 @@ export interface DomainEvent<P = Record<string, unknown>> {
   payload: P;
   createdAt: string; // ISO timestamp
 }
+
+/**
+ * purchase.recorded (0024): written by materials with the purchase, in one transaction. Finance turns it into ONE
+ * expense of qty × unit price (FR-FIN-03). Numbers are canonical decimal strings, never JS numbers.
+ */
+export interface PurchaseRecordedPayload {
+  purchaseId: string;
+  material: string;
+  unit: string;
+  phaseId: string | null;
+  /** "3", "12.5" */
+  qty: string;
+  /** "4000.000" */
+  unitPriceLyd: string;
+  supplier: string | null;
+  /** "YYYY-MM-DD" */
+  purchasedOn: string;
+}

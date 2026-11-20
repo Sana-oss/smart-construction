@@ -19,3 +19,10 @@ export const REBAR_PATH = '/materials/rebar';
 export const CALCULATORS_PATH = '/materials/calculators';
 /** One geometric calculator (design S23.2 and its siblings). */
 export const calculatorPath = (kind: 'concrete' | 'area' | 'tiles') => `${CALCULATORS_PATH}/${kind}`;
+
+/** Add a line to the quantity table (FR-MAT-01). */
+export const ITEM_NEW_PATH = '/materials/items/new';
+/** One line (design S20.2 «تفاصيل بند»). */
+export const itemPath = (id: string) => `/materials/items/${id}`;
+/** Record a purchase for one line (design S21.1 «تسجيل شراء»). */
+export const purchasePath = (itemId: string) => `/materials/items/${itemId}/purchase`;

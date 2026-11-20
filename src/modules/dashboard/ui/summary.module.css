@@ -173,7 +173,3 @@
 .rowLink .rowValue {
   color: var(--color-accent);
 }
-
-.disabled {
-  opacity: 0.5;
-}

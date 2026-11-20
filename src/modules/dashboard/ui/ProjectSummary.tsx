@@ -9,6 +9,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
 import { BUDGET_PATH, budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
+import { getQuantityTableView, MATERIALS_PATH } from '@/modules/materials';
 import {
   currentPhaseOf,
   overallProgress,
@@ -80,7 +81,7 @@ interface Props {
 }
 
 export async function ProjectSummary({ project, tasks, today, firstName, moreHref }: Props) {
-  const expenses = await getRecordedExpensesLyd(project.id);
+  const [expenses, quantities] = await Promise.all([getRecordedExpensesLyd(project.id), getQuantityTableView(project.id)]);
   // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
   const current = currentPhaseOf(project.phases);
@@ -142,13 +143,12 @@ export async function ProjectSummary({ project, tasks, today, firstName, moreHre
             note={t.phasesNote}
             value={current ? t.phaseOf(current.position, project.phases.length) : '—'}
           />
-          <div className={`${styles.row} ${styles.disabled}`} aria-disabled="true">
-            <span className={styles.rowText}>
-              <strong>{t.materials}</strong>
-              <small>{t.materialsNote}</small>
-            </span>
-            <span className={styles.rowValue}>{t.soon}</span>
-          </div>
+          <Row
+            href={MATERIALS_PATH}
+            title={t.materials}
+            note={quantities.overCount > 0 ? t.materialsOver(quantities.overCount) : t.materialsNote}
+            value={t.items(quantities.items.length)}
+          />
           <Row href={moreHref} title={t.more} note={t.moreNote} value={t.open} />
         </nav>
 

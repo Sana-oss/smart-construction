@@ -23,3 +23,12 @@ export { GeometricCalculator } from './ui/GeometricCalculator';
 export { getRebarCalculatorView } from './ui/queries';
 export { calcTextAr } from './ui/messages.ar';
 export { CALCULATORS_PATH, calculatorPath, MATERIALS_PATH, REBAR_PATH } from './ui/routes';
+
+// Quantity table and purchases (S20.1 «بنود المواد», S20.2 «تفاصيل بند», S21.1 «تسجيل شراء»; FR-MAT-01..03, 3.3 slice 2)
+export { getItemDetailView, getQuantityTableView } from './ui/queries';
+export { ItemForm } from './ui/ItemForm';
+export { ItemDetailScreen, type ItemNotice } from './ui/ItemDetailScreen';
+export { PurchaseForm, type PurchaseFormState } from './ui/PurchaseForm';
+export { getPendingPurchaseEvent, linkPurchaseExpense, recordProjectPurchase } from './ui/purchase-service';
+export { qtyErrorsAr, qtyFailedAr, qtyTextAr } from './ui/messages.ar';
+export { ITEM_NEW_PATH, itemPath, purchasePath } from './ui/routes';
