@@ -1,16 +1,22 @@
 'use client';
 
-// Recording the check of one item (design S26.2 «تفاصيل بند الفحص»; FR-QLT-01): the result, a note, who fixes it and
-// when it is checked again. Who checked and when are set by the database (0025). The design's «تسجيل عيب مرتبط» waits
-// for the defects list (3.17); the photo comes in slice 2.
+// Recording the check of one item (design S26.2 «تفاصيل بند الفحص»; FR-QLT-01): the result, a note, who fixes it, when it
+// is checked again, and one photo (slice 2). Who checked and when are set by the database (0025, 0026). The photo is
+// compressed when picked and uploaded only when the check is sent, with a one-time token (prepareCheckPhotoUploadAction),
+// like the receipt photo. An item that requires a photo is not «سليم» without one (checked here first, then by the
+// server and the database). The design's «تسجيل عيب مرتبط» waits for the defects list (3.17).
 
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { startTransition, useActionState, useEffect, useState, type FormEvent } from 'react';
+import { checkPickedImage } from '@/shared-kernel';
+import { compressImage } from '@/platform/images/compress-image';
+import { createBrowserSupabase } from '@/platform/supabase/browser';
+import { PROJECT_FILES_BUCKET } from '@/platform/supabase/storage';
 import type { ChecklistItemRecord } from '../application/checklists';
-import { CHECK_RESULTS, type CheckField } from '../domain/checklist';
-import type { CheckState } from './checklist-actions';
+import { CHECK_RESULTS, photoRequirement, validateCheck, type CheckField } from '../domain/checklist';
+import { prepareCheckPhotoUploadAction, type CheckState } from './checklist-actions';
 import { BackIcon } from './icons';
-import { checklistTextAr } from './messages.ar';
+import { checklistErrorsAr, checklistTextAr } from './messages.ar';
 import styles from './quality.module.css';
 
 const t = checklistTextAr.item;
@@ -19,12 +25,19 @@ const FORM_ID = 'check-form';
 interface Props {
   action: (prev: CheckState, form: FormData) => Promise<CheckState>;
   item: ChecklistItemRecord;
+  /** A short-lived link to the stored photo, or null. */
+  photoUrl: string | null;
   checklistTitle: string;
   backHref: string;
 }
 
-export function CheckItemForm({ action, item, checklistTitle, backHref }: Props) {
+export function CheckItemForm({ action, item, photoUrl, checklistTitle, backHref }: Props) {
   const [state, formAction, pending] = useActionState(action, {} as CheckState);
+  const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
+  const [photoStep, setPhotoStep] = useState<'idle' | 'preparing' | 'converting' | 'uploading'>('idle');
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  useEffect(() => () => void (photo && URL.revokeObjectURL(photo.url)), [photo]);
+
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? {
     result: item.result ?? '',
@@ -32,7 +45,65 @@ export function CheckItemForm({ action, item, checklistTitle, backHref }: Props)
     responsible: item.responsible ?? '',
     recheckOn: item.recheckOn ?? '',
   };
+  const shownPhotoError = photoError ?? errors.photo ?? null;
   const optional = <small className={styles.optional}>({checklistTextAr.optional})</small>;
+
+  async function pickPhoto(file: File | undefined) {
+    setPhotoError(null);
+    if (!file) return;
+    const problem = checkPickedImage(file);
+    if (problem) {
+      setPhotoError(problem === 'too_large' ? t.photoTooLarge : t.photoNotImage);
+      return;
+    }
+    setPhotoStep('preparing');
+    const result = await compressImage(file, () => setPhotoStep('converting'));
+    setPhotoStep('idle');
+    if (!result.ok) {
+      setPhotoError(result.reason === 'heicFailed' ? t.photoHeicFailed : t.photoUnreadable);
+      return;
+    }
+    setPhoto({ blob: result.photo.blob, url: URL.createObjectURL(result.photo.blob) });
+  }
+
+  /**
+   * With a new photo: check the form here first (nothing is uploaded for a check the server will refuse), then upload.
+   * Runs on submit, before the form action: React resets a form once its action returns, so a refusal here must not
+   * go through the action, or the owner's answers would be wiped.
+   */
+  async function send(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setPhotoError(null);
+    const read = (k: string) => String(form.get(k) ?? '');
+    const checked = validateCheck({ result: read('result'), note: read('note'), responsible: read('responsible'), recheckOn: read('recheckOn') });
+    if (checked.ok && photoRequirement(checked.value.result, item.requiresPhoto, photo !== null || item.photoPath !== null)) {
+      setPhotoError(checklistErrorsAr.photo_required);
+      return;
+    }
+    if (photo && checked.ok) {
+      setPhotoStep('uploading');
+      const ticket = await prepareCheckPhotoUploadAction();
+      if (!ticket.ok) {
+        setPhotoStep('idle');
+        setPhotoError(ticket.message);
+        return;
+      }
+      const upload = await createBrowserSupabase()
+        .storage.from(PROJECT_FILES_BUCKET)
+        .uploadToSignedUrl(ticket.path, ticket.token, photo.blob, { contentType: 'image/jpeg' });
+      setPhotoStep('idle');
+      if (upload.error) {
+        setPhotoError(t.photoUploadFailed);
+        return;
+      }
+      form.set('photoPath', ticket.path);
+    }
+    // After an await this is no longer inside the form's transition: start one, so `pending` stays true while saving.
+    startTransition(() => formAction(form));
+  }
+  const busy = pending || photoStep !== 'idle';
+
   const errorOf = (name: CheckField) =>
     errors[name] && (
       <p id={`${name}-error`} className={styles.fieldError}>
@@ -78,7 +149,7 @@ export function CheckItemForm({ action, item, checklistTitle, backHref }: Props)
       </header>
 
       <div className={styles.scroll}>
-        <form id={FORM_ID} action={formAction} noValidate key={JSON.stringify(state.values ?? {})}>
+        <form id={FORM_ID} onSubmit={(e) => void send(e)} noValidate key={JSON.stringify(state.values ?? {})}>
           {state.formError && (
             <p role="alert" className={styles.errorSummary}>
               {state.formError}
@@ -96,6 +167,46 @@ export function CheckItemForm({ action, item, checklistTitle, backHref }: Props)
             ))}
             {errorOf('result')}
           </fieldset>
+
+          <div className={styles.field}>
+            <span className={styles.label} id="photo-label">
+              {t.photo} {item.requiresPhoto ? <span className={styles.tag}>{t.photoRequired}</span> : optional}
+            </span>
+            {photo ? (
+              <img src={photo.url} alt="" className={styles.receiptPreview} />
+            ) : (
+              photoUrl && <img src={photoUrl} alt={t.photoCurrent} className={styles.receiptPreview} />
+            )}
+            <label className={photo || photoUrl ? `${styles.picker} ${styles.pickerCompact}` : styles.picker}>
+              <input
+                type="file"
+                accept="image/*,.heic,.heif"
+                className={styles.visuallyHidden}
+                aria-labelledby="photo-label"
+                aria-invalid={shownPhotoError ? true : undefined}
+                aria-describedby={shownPhotoError ? 'photo-error' : undefined}
+                disabled={busy}
+                onChange={(e) => void pickPhoto(e.target.files?.[0])}
+              />
+              {photo || photoUrl ? t.photoChange : t.photoPick}
+            </label>
+            {photo && (
+              <button type="button" className={styles.linkButton} onClick={() => setPhoto(null)} disabled={busy}>
+                {t.photoRemove}
+              </button>
+            )}
+            {photoStep !== 'idle' && (
+              <p role="status" className={styles.hint}>
+                {photoStep === 'converting' ? t.photoConverting : photoStep === 'uploading' ? t.photoUploading : t.photoPreparing}
+              </p>
+            )}
+            {shownPhotoError && (
+              <p id="photo-error" role="alert" className={styles.fieldError}>
+                {shownPhotoError}
+              </p>
+            )}
+          </div>
+
           {text('note', t.note)}
           {text('responsible', t.responsible, t.responsibleHint)}
           <div className={styles.field}>
@@ -118,8 +229,8 @@ export function CheckItemForm({ action, item, checklistTitle, backHref }: Props)
       </div>
 
       <div className={styles.actions}>
-        <button type="submit" form={FORM_ID} className={styles.primary} disabled={pending}>
-          {pending ? t.submitting : t.submit}
+        <button type="submit" form={FORM_ID} className={styles.primary} disabled={busy}>
+          {busy ? t.submitting : t.submit}
         </button>
       </div>
     </main>

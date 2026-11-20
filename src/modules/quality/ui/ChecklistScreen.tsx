@@ -63,7 +63,14 @@ export function ChecklistScreen({ detail, phaseName, backHref, notice = null }: 
                     .join(' · ') || ' '}
                 </small>
               </Link>
-              <span className={styles.rowValue}>{checklistTextAr.result[item.result ?? 'none']}</span>
+              <span className={styles.rowValue}>
+                {checklistTextAr.result[item.result ?? 'none']}
+                {item.photoPath ? (
+                  <small className={styles.hint}>{t.hasPhoto}</small>
+                ) : (
+                  item.requiresPhoto && <span className={styles.tag}>{t.needsPhoto}</span>
+                )}
+              </span>
             </li>
           ))}
         </ul>

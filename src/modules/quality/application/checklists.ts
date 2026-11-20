@@ -1,6 +1,9 @@
-import { isUuid } from '@/shared-kernel';
+import { IMAGE_MAX_STORED_BYTES, IMAGE_STORED_TYPE, isUuid } from '@/shared-kernel';
+import type { FileStore } from '@/platform/supabase/storage';
 import {
   checklistProgress,
+  isCheckPhotoPathOf,
+  photoRequirement,
   validateCheck,
   validateNewChecklist,
   type CheckErrorCode,
@@ -47,9 +50,18 @@ export interface ChecklistItemRecord {
   recheckOn: string | null;
   /** When it was checked (ISO timestamp), or null. */
   checkedAt: string | null;
+  /** "<project id>/checklists/<id>.jpg" (slice 2), or null. */
+  photoPath: string | null;
 }
 
-export type ChecklistFailure = 'not_allowed' | 'unknown_reference' | 'rejected' | 'not_found' | 'unavailable';
+export type ChecklistFailure =
+  | 'not_allowed'
+  | 'unknown_reference'
+  | 'rejected'
+  | 'not_found'
+  /** The photo did not arrive in storage, or is not a JPEG within the size limit. */
+  | 'photo_missing'
+  | 'unavailable';
 
 /** Port. The Supabase adapter is infra/supabase-checklist-store.ts; tests use a fake. */
 export interface ChecklistStore {
@@ -58,7 +70,8 @@ export interface ChecklistStore {
   listItems(projectId: string): Promise<ChecklistItemRecord[]>;
   /** create_checklist (0025): the checklist and a copy of the template's items, in one transaction. */
   createChecklist(c: { projectId: string; phaseId: string; title: string; templateId: string }): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ChecklistFailure }>;
-  recordCheck(itemId: string, check: CheckValue): Promise<{ status: 'done' } | { status: 'failed'; reason: ChecklistFailure }>;
+  /** photoPath: the item's photo after this save (the new one, the one it had, or null). */
+  recordCheck(itemId: string, check: CheckValue & { photoPath: string | null }): Promise<{ status: 'done' } | { status: 'failed'; reason: ChecklistFailure }>;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -133,14 +146,66 @@ export type RecordCheckResult =
   | { ok: false; kind: 'invalid'; errors: { field: CheckField; code: CheckErrorCode }[] }
   | { ok: false; kind: 'failed'; reason: ChecklistFailure };
 
-/** FR-QLT-01 (design S26.2). The item must belong to this checklist of this project. */
-export async function recordCheck(store: ChecklistStore, projectId: string, checklistId: string, itemId: string, input: CheckInput): Promise<RecordCheckResult> {
-  const v = validateCheck(input);
-  if (!v.ok) return { ok: false, kind: 'invalid', errors: v.errors };
+export interface RecordCheckCommand extends CheckInput {
+  /** A photo the browser has just uploaded for this item (slice 2), or empty to keep the item's photo. */
+  photoPath?: string | null;
+}
+
+/**
+ * FR-QLT-01 (design S26.2). The item must belong to this checklist of this project. With a new photo, the file is checked
+ * in storage first; every way this ends without saving it removes it again (no file without an item), and a saved new
+ * photo removes the one it replaces. The rule «سليم needs a photo» uses the photo the item will have after this save.
+ * @param files Private file storage; needed only when the command brings a new photo.
+ */
+export async function recordCheck(
+  store: ChecklistStore,
+  projectId: string,
+  checklistId: string,
+  itemId: string,
+  command: RecordCheckCommand,
+  files?: FileStore,
+): Promise<RecordCheckResult> {
+  const newPhoto = command.photoPath?.trim() || null;
+  // Only a path inside this project's checklists folder is ever looked at or removed (a browser could send any path).
+  if (newPhoto !== null && (!files || !isCheckPhotoPathOf(projectId, newPhoto))) {
+    return { ok: false, kind: 'failed', reason: 'not_allowed' };
+  }
+  const dropNewPhoto = async () => {
+    if (newPhoto !== null) await files!.remove([newPhoto]);
+  };
+
+  const v = validateCheck(command);
+  if (!v.ok) {
+    await dropNewPhoto();
+    return { ok: false, kind: 'invalid', errors: v.errors };
+  }
   const detail = await getChecklistDetail(store, projectId, checklistId);
-  if (!detail || !isUuid(itemId) || !detail.items.some((i) => i.id === itemId.toLowerCase())) {
+  const item = detail && isUuid(itemId) ? detail.items.find((i) => i.id === itemId.toLowerCase()) : undefined;
+  if (!item) {
+    await dropNewPhoto();
     return { ok: false, kind: 'failed', reason: 'not_found' };
   }
-  const r = await store.recordCheck(itemId.toLowerCase(), v.value);
-  return r.status === 'done' ? { ok: true } : { ok: false, kind: 'failed', reason: r.reason };
+
+  if (newPhoto !== null) {
+    const file = await files!.info(newPhoto);
+    if (!file || file.contentType !== IMAGE_STORED_TYPE || file.sizeBytes > IMAGE_MAX_STORED_BYTES) {
+      if (file) await dropNewPhoto();
+      return { ok: false, kind: 'failed', reason: 'photo_missing' };
+    }
+  }
+
+  const photoPath = newPhoto ?? item.photoPath;
+  if (photoRequirement(v.value.result, item.requiresPhoto, photoPath !== null)) {
+    await dropNewPhoto();
+    return { ok: false, kind: 'invalid', errors: [{ field: 'photo', code: 'photo_required' }] };
+  }
+
+  const r = await store.recordCheck(item.id, { ...v.value, photoPath });
+  if (r.status === 'failed') {
+    await dropNewPhoto();
+    return { ok: false, kind: 'failed', reason: r.reason };
+  }
+  // The new photo replaced an older one: the old file goes (the audit log keeps its path, 0025).
+  if (newPhoto !== null && item.photoPath !== null && item.photoPath !== newPhoto) await files!.remove([item.photoPath]);
+  return { ok: true };
 }

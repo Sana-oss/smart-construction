@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { checklistProgress, validateCheck, validateNewChecklist } from './checklist';
+import {
+  checklistProgress,
+  checkPhotoStoragePath,
+  isCheckPhotoPathOf,
+  photoRequirement,
+  validateCheck,
+  validateNewChecklist,
+} from './checklist';
 
 const PHASE = '7f1c0d2e-5b8a-4c3d-9e6f-1a2b3c4d5e6f';
 const TEMPLATE = '3c2b1a09-8f7e-4d6c-9b5a-0f1e2d3c4b5a';
@@ -57,5 +64,28 @@ describe('checklistProgress (design S26.1: «8 من 12 بندًا»)', () => {
 
   it('an empty list is not complete', () => {
     expect(checklistProgress([]).complete).toBe(false);
+  });
+});
+
+describe('the item photo (FR-QLT-01, slice 2)', () => {
+  const PROJECT = '0b9d3c1a-2e4f-4a6b-8c7d-9e0f1a2b3c4d';
+  const PHOTO = '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d';
+
+  it("stores the photo in the project's checklists folder, and recognises only that", () => {
+    const path = checkPhotoStoragePath(PROJECT, PHOTO);
+    expect(path).toBe(`${PROJECT}/checklists/${PHOTO}.jpg`);
+    expect(isCheckPhotoPathOf(PROJECT, path)).toBe(true);
+    expect(isCheckPhotoPathOf(PHOTO, path)).toBe(false); // another project's folder
+    expect(isCheckPhotoPathOf(PROJECT, `${PROJECT}/receipts/${PHOTO}.jpg`)).toBe(false);
+    expect(isCheckPhotoPathOf(PROJECT, `${PROJECT}/checklists/../x.jpg`)).toBe(false);
+    expect(() => checkPhotoStoragePath('x', PHOTO)).toThrow();
+  });
+
+  it('an item that requires a photo is not «سليم» without one; a problem or «لا ينطبق» is recorded as it is', () => {
+    expect(photoRequirement('ok', true, false)).toBe('photo_required');
+    expect(photoRequirement('ok', true, true)).toBeNull();
+    expect(photoRequirement('ok', false, false)).toBeNull();
+    expect(photoRequirement('issue', true, false)).toBeNull();
+    expect(photoRequirement('na', true, false)).toBeNull();
   });
 });

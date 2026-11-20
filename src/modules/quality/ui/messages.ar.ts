@@ -64,6 +64,8 @@ export const checklistTextAr = {
     saved: 'حُفظت نتيجة البند.',
     backToPhase: 'العودة إلى المرحلة',
     recheck: (date: string) => `إعادة الفحص ${date}`,
+    needsPhoto: 'يتطلب صورة',
+    hasPhoto: 'صورة مرفقة',
   },
 
   item: {
@@ -75,6 +77,20 @@ export const checklistTextAr = {
     responsibleHint: 'مثل: مقاول الهيكل',
     recheckOn: 'موعد إعادة الفحص',
     lastChecked: (date: string) => `آخر تسجيل: ${date}`,
+    photo: 'صورة البند',
+    photoRequired: 'مطلوبة لتسجيل «سليم»',
+    photoCurrent: 'الصورة المحفوظة',
+    photoPick: 'التقط صورة أو اخترها',
+    photoChange: 'استبدال الصورة',
+    photoRemove: 'إلغاء الصورة الجديدة',
+    photoPreparing: 'جارٍ تجهيز الصورة…',
+    photoConverting: 'جارٍ تحويل صورة الآيفون (HEIC)…',
+    photoUploading: 'جارٍ رفع الصورة…',
+    photoNotImage: 'هذا الملف ليس صورة.',
+    photoTooLarge: 'الصورة كبيرة جدًا (30 ميغابايت على الأكثر).',
+    photoUnreadable: 'تعذّرت قراءة الصورة. جرّب صورة أخرى.',
+    photoHeicFailed: 'تعذّر تحويل صورة HEIC في هذا المتصفح. أرسلها بصيغة JPEG أو جرّب متصفحًا آخر.',
+    photoUploadFailed: 'تعذّر رفع الصورة. تحقق من الاتصال وحاول مرة أخرى.',
     submit: 'حفظ والعودة للقائمة',
     submitting: 'جارٍ الحفظ…',
   },
@@ -87,6 +103,7 @@ export const checklistErrorsAr: Record<CheckErrorCode, string> = {
   unknown_choice: 'اختر من القائمة.',
   invalid_date: 'التاريخ غير صحيح.',
   invalid_reference: 'اختر من القائمة.',
+  photo_required: 'هذا البند يتطلب صورة ليُسجَّل «سليم». أرفق صورة، أو سجّل «توجد ملاحظة».',
 };
 
 export const checklistFailedAr: Record<ChecklistFailure | 'no_project', string> = {
@@ -94,6 +111,7 @@ export const checklistFailedAr: Record<ChecklistFailure | 'no_project', string> 
   unknown_reference: 'لم يُعثر على المرحلة أو القالب في هذا المشروع.',
   rejected: 'تعذّر الحفظ. راجع البيانات وحاول مرة أخرى.',
   not_found: 'لم يُعثر على هذا البند. ربما حُذف من قبل.',
+  photo_missing: 'لم تصل الصورة. حاول مرة أخرى.',
   unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
   no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 };

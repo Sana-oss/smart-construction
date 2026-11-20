@@ -8,8 +8,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getMyProject } from '@/modules/projects';
 import { createServerSupabase } from '@/platform/supabase/server';
+import { supabaseFileStore } from '@/platform/supabase/storage';
 import { createChecklist, recordCheck } from '../application/checklists';
-import type { CheckField, NewChecklistField } from '../domain/checklist';
+import { checkPhotoStoragePath, type CheckField, type NewChecklistField } from '../domain/checklist';
 import { supabaseChecklistStore } from '../infra/supabase-checklist-store';
 import { checklistErrorsAr, checklistFailedAr } from './messages.ar';
 import { checklistPath } from './routes';
@@ -55,7 +56,9 @@ export async function recordCheckAction(checklistId: string, itemId: string, _pr
   const values = Object.fromEntries(CHECK_FIELDS.map((k) => [k, String(form.get(k) ?? '')])) as Record<CheckField, string>;
   const project = await getMyProject();
   if (!project) return { formError: checklistFailedAr.no_project, values };
-  const result = await recordCheck(supabaseChecklistStore(await createServerSupabase()), project.id, checklistId, itemId, values);
+  const supabase = await createServerSupabase();
+  const photoPath = String(form.get('photoPath') ?? '');
+  const result = await recordCheck(supabaseChecklistStore(supabase), project.id, checklistId, itemId, { ...values, photoPath }, supabaseFileStore(supabase));
   if (!result.ok) {
     if (result.kind === 'failed') return { formError: checklistFailedAr[result.reason], values };
     const fieldErrors: CheckState['fieldErrors'] = {};
@@ -64,4 +67,19 @@ export async function recordCheckAction(checklistId: string, itemId: string, _pr
   }
   revalidatePath('/', 'layout');
   redirect(`${checklistPath(checklistId)}?done=saved`);
+}
+
+export type CheckPhotoTicket = { ok: true; path: string; token: string } | { ok: false; message: string };
+
+/**
+ * Item photo, step 1 (slice 2): a fresh path in the project's checklists folder and a one-time upload token. The storage
+ * policies of 0013 refuse the token to anyone who may not write to the project. The browser then uploads, and
+ * recordCheckAction checks the file and stores it with the check.
+ */
+export async function prepareCheckPhotoUploadAction(): Promise<CheckPhotoTicket> {
+  const project = await getMyProject();
+  if (!project) return { ok: false, message: checklistFailedAr.no_project };
+  const path = checkPhotoStoragePath(project.id, crypto.randomUUID());
+  const ticket = await supabaseFileStore(await createServerSupabase()).uploadTicket(path);
+  return ticket ? { ok: true, path, token: ticket.token } : { ok: false, message: checklistFailedAr.not_allowed };
 }
