@@ -1,0 +1,490 @@
+/* Decisions module screens: continue or pause (S18.1, S18.2) and the scenario figures. Same pieces and values as the finance
+   screens (.app-header, .icon-btn, .field, .list, .summary-card, .app-actions, .primary/.secondary), copied here because
+   modules do not share UI files. Logical properties only (RTL). */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  /* Leaves room for the bottom navigation when the page shows it (globals.css). */
+  block-size: calc(100dvh - var(--bottom-nav-space, 0px));
+  max-inline-size: 480px;
+  margin-inline: auto;
+  background: var(--color-surface);
+}
+
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: max(var(--space-3), env(safe-area-inset-top)) var(--space-3);
+  padding-inline: var(--space-5);
+  background: var(--color-bg);
+  border-block-end: 1px solid rgb(255 255 255 / 0.05);
+}
+
+.headerText {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  inline-size: 44px;
+  block-size: 44px;
+  border: 1px solid rgb(255 255 255 / 0.125);
+  border-radius: 12px;
+  background: rgb(82 84 84 / 0.314);
+  color: var(--color-text);
+}
+
+.iconButton svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.scroll {
+  flex: 1 1 0%;
+  min-block-size: 0;
+  overflow: hidden auto;
+  padding: var(--space-5);
+}
+
+.scroll > * + * {
+  margin-block-start: var(--space-5);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Form fields (design .field) */
+.field {
+  margin-block-end: var(--space-5);
+}
+
+.label {
+  display: block;
+  margin-block-end: var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input {
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 16px; /* 16px stops iOS from zooming into the field */
+}
+
+.input[aria-invalid='true'] {
+  border: 2px solid var(--color-accent);
+}
+
+.fieldError {
+  margin-block-start: var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.errorSummary {
+  padding: var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  font-weight: 700;
+}
+
+.info {
+  padding: var(--space-4);
+  border: 1px solid rgb(182 186 186 / 0.333);
+  border-radius: 16px;
+  background: var(--color-bg);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+/* Summary card (design .summary-card) */
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid rgb(144 170 252 / 0.333);
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+}
+
+.summaryCard small {
+  font-size: 13px;
+}
+
+.summaryCard strong {
+  font-size: 28px;
+  line-height: 36px;
+}
+
+.summaryCard p {
+  font-size: 14px;
+}
+
+/* List of rows (design .list / .list-row) */
+.list {
+  border: 1px solid rgb(255 255 255 / 0.094);
+  border-radius: 16px;
+  background: var(--color-card);
+  overflow: hidden;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: 72px;
+  padding: var(--space-3);
+  line-height: 24px;
+}
+
+.listRow + .listRow {
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
+}
+
+.rowText {
+  flex: 1 1 0%;
+  min-inline-size: 0;
+}
+
+.rowText strong {
+  display: block;
+  font-size: 16px;
+}
+
+.rowText small {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.rowValue {
+  min-inline-size: 64px;
+  max-inline-size: 140px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* Bottom actions (design .app-actions) */
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-3) max(var(--space-6), env(safe-area-inset-bottom));
+  padding-inline: var(--space-5);
+  background: var(--color-surface);
+  border-block-start: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgb(144 170 252 / 0.4);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.secondary {
+  background: transparent;
+  border-color: rgb(182 186 186 / 0.5);
+  font-weight: 300;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Responsive rules copied from the design's CSS. */
+@media (max-width: 700px) {
+  .title {
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .scroll {
+    padding: var(--space-4);
+  }
+  .scroll > * + * {
+    margin-block-start: var(--space-4);
+  }
+  .header,
+  .actions {
+    padding-inline: var(--space-4);
+  }
+}
+
+@media (max-width: 375px) {
+  .title {
+    font-size: 19px;
+  }
+}
+
+/* Expenses list (S13.1): the list is a <ul>, so its bullets and padding are removed. */
+ul.list {
+  list-style: none;
+  padding: 0;
+}
+
+/* Empty state (S13.3) */
+.empty {
+  padding-block: var(--space-6);
+  text-align: center;
+}
+
+.empty strong {
+  display: block;
+  font-size: 18px;
+}
+
+.empty p {
+  margin-block-start: var(--space-2);
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--color-text-muted);
+}
+
+/* Receipt photo field (UC-07): a picker like the site-photo one, a preview, and a "remove" text button. */
+.optional {
+  font-weight: 300;
+  color: var(--color-text-muted);
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 72px;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+
+.picker:focus-within {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.pickerCompact {
+  min-block-size: 48px;
+  margin-block-start: var(--space-3);
+}
+
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.receiptPreview {
+  display: block;
+  inline-size: 100%;
+  max-block-size: 240px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--color-card);
+}
+
+.linkButton {
+  margin-block-start: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* «الفاتورة» link under an expense's amount in the list (S13.1). */
+.receiptLink {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-accent);
+}
+
+/* Each row of the list opens its expense (decision of 19 Nov 2026). The text is the link; the receipt keeps its own. */
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rowLink:hover strong,
+.rowLink:focus-visible strong {
+  text-decoration: underline;
+}
+
+/* Delete confirmation (no design screen yet; built from the design's tokens, no new colours). */
+.confirmBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: 16px;
+  background: var(--color-bg);
+  line-height: 24px;
+}
+
+.confirmBox p {
+  font-size: 14px;
+}
+
+.danger {
+  border: 2px solid var(--color-accent);
+  font-weight: 700;
+}
+
+.danger:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Quick links under the expenses list (design S13.1: «التصفية والبحث»). */
+.quickLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quickLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: 56px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgb(255 255 255 / 0.094);
+  border-radius: 16px;
+  background: var(--color-card);
+  color: inherit;
+  text-decoration: none;
+}
+
+.quickLink:hover strong,
+.quickLink:focus-visible strong {
+  text-decoration: underline;
+}
+
+/* The filter in use, above the results (design S13.2), with «مسح التصفية». */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.filterBar a {
+  color: var(--color-accent);
+}
+
+/* A quote's state next to its price (FR-MAT-10, FR-DEC-03). */
+.tag {
+  display: inline-block;
+  margin-inline-start: var(--space-1);
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+/* S18.2: a checklist row (checkbox, step, who does it). */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-block-size: 56px;
+  padding: var(--space-3);
+  line-height: 24px;
+  cursor: pointer;
+}
+
+.check + .check {
+  border-block-start: 1px solid rgb(255 255 255 / 0.125);
+}
+
+.check input {
+  inline-size: 22px;
+  block-size: 22px;
+  margin-block-start: 2px;
+  accent-color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+.textarea {
+  min-block-size: 96px;
+  resize: vertical;
+}
+
+/* S18.1: «التكلفة حتى الإكمال» under a scenario's total, on its own line. */
+.rowValue small {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-text-muted);
+}
+
+/* S18.2: the checklist is a <fieldset> for screen readers, without the browser's frame. */
+.fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

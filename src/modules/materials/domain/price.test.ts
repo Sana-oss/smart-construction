@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { latestPrices, materialKey, priceHistory, quoteStatus, validatePrice, type PriceRecord } from './price';
+import { latestPrices, materialKey, priceHistory, priceWarnings, quoteStatus, validatePrice, type PriceRecord } from './price';
 
 const TODAY = '2026-11-19';
 
@@ -98,5 +98,20 @@ describe('latestPrices and priceHistory (S24.1, S24.2)', () => {
 
   it('lists the history of one material, newest first', () => {
     expect(priceHistory(records, 'حديد التسليح', 'طن').map((r) => r.id)).toEqual(['3', '4', '1']);
+  });
+});
+
+describe('priceWarnings (FR-DEC-03; 30 days, decision of 20 Nov 2026)', () => {
+  it('lists materials whose latest price is older than 30 days, and every expired quote', () => {
+    const records = [
+      rec('1', 'حديد التسليح', 'طن', '3850', '2026-10-01'),
+      rec('2', 'حديد التسليح', 'طن', '4000', '2026-10-20'), // latest: 30 days old -> not stale
+      rec('3', 'رمل', 'م3', '90', '2026-10-19'), // 31 days -> stale
+      { ...rec('4', 'أسمنت', 'كيس', '40', '2026-11-01'), kind: 'quote' as const, expiresOn: '2026-11-10' },
+    ];
+    expect(priceWarnings(records, TODAY)).toEqual({
+      stale: [{ material: 'رمل', unit: 'م3', recordedOn: '2026-10-19' }],
+      expired: [{ material: 'أسمنت', unit: 'كيس', expiresOn: '2026-11-10' }],
+    });
   });
 });

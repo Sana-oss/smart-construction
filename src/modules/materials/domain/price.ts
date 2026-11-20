@@ -202,3 +202,26 @@ export function priceHistory(records: readonly PriceRecord[], material: string, 
   const key = materialKey(material, unit);
   return records.filter((r) => materialKey(r.material, r.unit) === key).sort(newestFirst);
 }
+
+/** FR-DEC-03: a material whose latest price is older than this is «قديم» (owner's decision of 20 Nov 2026). */
+export const STALE_PRICE_DAYS = 30;
+
+export interface PriceWarnings {
+  /** Materials whose latest price is older than STALE_PRICE_DAYS. */
+  stale: { material: string; unit: string; recordedOn: string }[];
+  /** Expired quotes (any, not only the latest): never used silently. */
+  expired: { material: string; unit: string; expiresOn: string }[];
+}
+
+/** For the continue-or-pause comparison (3.7): what in the price log should not be trusted as it is. */
+export function priceWarnings(records: readonly PriceRecord[], today: string): PriceWarnings {
+  return {
+    stale: latestPrices(records)
+      .filter((g) => days(g.latest.recordedOn, today) > STALE_PRICE_DAYS)
+      .map((g) => ({ material: g.material, unit: g.unit, recordedOn: g.latest.recordedOn })),
+    expired: records
+      .filter((r) => quoteStatus(r, today).kind === 'expired')
+      .sort(newestFirst)
+      .map((r) => ({ material: r.material, unit: r.unit, expiresOn: r.expiresOn! })),
+  };
+}

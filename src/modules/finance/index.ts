@@ -43,4 +43,4 @@ export { MovementForm } from './ui/MovementForm';
 export { getCashflowView } from './ui/queries';
 export { CASHFLOW_NEW_PATH, CASHFLOW_PATH } from './ui/routes';
 export { cashflowTextAr } from './ui/messages.ar';
-export { cashflowOutlook, currentLiquidity, CASHFLOW_HORIZON_DAYS, type CashflowOutlook } from './domain/cashflow';
+export { cashflowOutlook, currentLiquidity, CASHFLOW_HORIZON_DAYS, type CashflowOutlook, type Movement } from './domain/cashflow';
