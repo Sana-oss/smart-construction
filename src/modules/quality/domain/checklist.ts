@@ -1,4 +1,4 @@
-import { isIsoDate, isUuid } from '@/shared-kernel';
+import { addMoney, isIsoDate, isUuid, money, readMoneyInput, type Money, type MoneyInputError } from '@/shared-kernel';
 
 // Pre-pour and pre-cover checkpoints (3.12; FR-QLT-01, FR-QLT-02; design S26.1 «قائمة الفحص», S26.2 «تفاصيل بند الفحص»).
 // Pure: no React, no database.
@@ -25,7 +25,9 @@ export type CheckErrorCode =
   | 'invalid_date'
   | 'invalid_reference'
   /** FR-QLT-01: an item that requires a photo is not «سليم» without one. */
-  | 'photo_required';
+  | 'photo_required'
+  /** A cost typed on a stop-plan protection measure (3.14). */
+  | MoneyInputError;
 
 const clean = (s: string | null | undefined) => (s ?? '').trim().replace(/\s+/g, ' ');
 const length = (s: string) => [...s].length;
@@ -64,7 +66,7 @@ export function validateNewChecklist(
 // ---------------------------------------------------------------------------------------------------------------
 // Recording the check of one item (S26.2).
 
-export type CheckField = 'result' | 'note' | 'responsible' | 'recheckOn' | 'photo';
+export type CheckField = 'result' | 'note' | 'responsible' | 'recheckOn' | 'photo' | 'cost';
 export interface CheckInput {
   result?: string | null;
   note?: string | null;
@@ -72,12 +74,18 @@ export interface CheckInput {
   responsible?: string | null;
   /** «موعد إعادة الفحص»: when the item is checked again. */
   recheckOn?: string | null;
+  /**
+   * 3.14: the owner's estimate for a stop-plan protection measure (a quote, or the contractor's figure), in LYD. Empty =
+   * none. The app never suggests a cost.
+   */
+  cost?: string | null;
 }
 export interface CheckValue {
   result: CheckResult;
   note: string | null;
   responsible: string | null;
   recheckOn: string | null;
+  costLyd: Money | null;
 }
 
 export function validateCheck(input: CheckInput): { ok: true; value: CheckValue } | { ok: false; errors: { field: CheckField; code: CheckErrorCode }[] } {
@@ -95,7 +103,15 @@ export function validateCheck(input: CheckInput): { ok: true; value: CheckValue 
   const recheckOn = (input.recheckOn ?? '').trim() || null;
   if (recheckOn !== null && !isIsoDate(recheckOn)) errors.push({ field: 'recheckOn', code: 'invalid_date' });
 
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, value: { result: result as CheckResult, note, responsible, recheckOn } };
+  // A cost may be 0 (a measure the owner does himself), never negative.
+  let costLyd: Money | null = null;
+  if ((input.cost ?? '').trim() !== '') {
+    const c = readMoneyInput(input.cost, { allowZero: true });
+    if (c.ok) costLyd = c.value;
+    else errors.push({ field: 'cost', code: c.code });
+  }
+
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, value: { result: result as CheckResult, note, responsible, recheckOn, costLyd } };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -166,4 +182,17 @@ export function readinessGaps(items: { text: string; result: CheckResult | null;
     .sort((a, b) => a.position - b.position)
     .filter((i) => i.result === null || i.result === 'issue')
     .map((i) => ({ text: i.text, state: i.result === 'issue' ? 'missing' : 'unchecked' }));
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// A phase's stop plan (3.14; FR-DEC-04). Same engine, its own template; its protection measures take a cost.
+
+/**
+ * What the protection measures of a stop plan cost, from the owner's estimates: the sum of the costed items, except
+ * those marked «لا ينطبق». It fills the stop scenario's protection cost (3.7), where the owner can still change it.
+ * null = no cost typed yet (so the scenario is not given a 0 that nobody estimated).
+ */
+export function planProtectionCost(items: { takesCost: boolean; costLyd: string | null; result: CheckResult | null }[]): Money | null {
+  const costed = items.filter((i) => i.takesCost && i.costLyd !== null && i.result !== 'na');
+  return costed.length === 0 ? null : addMoney(...costed.map((i) => money(i.costLyd!)));
 }

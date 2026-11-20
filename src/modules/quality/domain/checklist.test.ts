@@ -4,6 +4,7 @@ import {
   checkPhotoStoragePath,
   isCheckPhotoPathOf,
   photoRequirement,
+  planProtectionCost,
   readinessGaps,
   validateCheck,
   validateNewChecklist,
@@ -32,11 +33,11 @@ describe('validateNewChecklist (FR-QLT-02)', () => {
 describe('validateCheck (FR-QLT-01, design S26.2)', () => {
   it('accepts a problem with its note, who fixes it and when it is checked again', () => {
     const r = validateCheck({ result: 'issue', note: ' تباعد  الكانات ', responsible: 'مقاول الهيكل', recheckOn: '2026-11-25' });
-    expect(r).toEqual({ ok: true, value: { result: 'issue', note: 'تباعد الكانات', responsible: 'مقاول الهيكل', recheckOn: '2026-11-25' } });
+    expect(r).toEqual({ ok: true, value: { result: 'issue', note: 'تباعد الكانات', responsible: 'مقاول الهيكل', recheckOn: '2026-11-25', costLyd: null } });
   });
 
   it('a sound or not-applicable item needs nothing more', () => {
-    expect(validateCheck({ result: 'ok' })).toEqual({ ok: true, value: { result: 'ok', note: null, responsible: null, recheckOn: null } });
+    expect(validateCheck({ result: 'ok' })).toEqual({ ok: true, value: { result: 'ok', note: null, responsible: null, recheckOn: null, costLyd: null } });
     expect(validateCheck({ result: 'na' }).ok).toBe(true);
   });
 
@@ -104,5 +105,28 @@ describe('readinessGaps (FR-PRJ-05)', () => {
       { text: 'فحص التربة', state: 'unchecked' },
       { text: 'ترخيص البناء', state: 'missing' },
     ]);
+  });
+});
+
+describe('the stop plan (3.14, FR-DEC-04)', () => {
+  it('takes the owner cost estimate: 0 is fine, a negative or a word is not', () => {
+    const ok = validateCheck({ result: 'ok', cost: '١٬٢٠٠' });
+    expect(ok.ok && ok.value.costLyd!.toFixed(3)).toBe('1200.000');
+    expect(validateCheck({ result: 'ok', cost: '0' }).ok).toBe(true);
+    const bad = validateCheck({ result: 'ok', cost: '-5' });
+    expect(bad.ok ? [] : bad.errors).toEqual([{ field: 'cost', code: 'invalid_number' }]);
+  });
+
+  it('sums the costed protection measures, without those marked «لا ينطبق»; nothing typed = no figure', () => {
+    expect(
+      planProtectionCost([
+        { takesCost: true, costLyd: '1200.000', result: 'ok' },
+        { takesCost: true, costLyd: '800.500', result: null },
+        { takesCost: true, costLyd: '5000.000', result: 'na' },
+        { takesCost: false, costLyd: null, result: 'ok' },
+        { takesCost: true, costLyd: null, result: 'issue' },
+      ])!.toFixed(3),
+    ).toBe('2000.500');
+    expect(planProtectionCost([{ takesCost: true, costLyd: null, result: null }])).toBeNull();
   });
 });

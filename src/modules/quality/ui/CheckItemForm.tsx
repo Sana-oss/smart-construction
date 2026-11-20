@@ -29,12 +29,13 @@ interface Props {
   photoUrl: string | null;
   checklistTitle: string;
   /** Readiness items are «متوفر / ناقص», not «سليم / توجد ملاحظة». */
-  kind?: 'hold_point' | 'readiness';
+  kind?: 'hold_point' | 'readiness' | 'safe_stop';
   backHref: string;
 }
 
 export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = 'hold_point', backHref }: Props) {
-  const resultLabels = kind === 'readiness' ? checklistTextAr.readinessResult : checklistTextAr.result;
+  const resultLabels =
+    kind === 'readiness' ? checklistTextAr.readinessResult : kind === 'safe_stop' ? checklistTextAr.stopPlanResult : checklistTextAr.result;
   const [state, formAction, pending] = useActionState(action, {} as CheckState);
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [photoStep, setPhotoStep] = useState<'idle' | 'preparing' | 'converting' | 'uploading'>('idle');
@@ -46,6 +47,7 @@ export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = '
     result: item.result ?? '',
     note: item.note ?? '',
     responsible: item.responsible ?? '',
+    cost: item.costLyd ? item.costLyd.replace(/\.?0+$/, '') : '',
     recheckOn: item.recheckOn ?? '',
   };
   const shownPhotoError = photoError ?? errors.photo ?? null;
@@ -79,7 +81,13 @@ export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = '
     const form = new FormData(event.currentTarget);
     setPhotoError(null);
     const read = (k: string) => String(form.get(k) ?? '');
-    const checked = validateCheck({ result: read('result'), note: read('note'), responsible: read('responsible'), recheckOn: read('recheckOn') });
+    const checked = validateCheck({
+      result: read('result'),
+      note: read('note'),
+      responsible: read('responsible'),
+      recheckOn: read('recheckOn'),
+      cost: read('cost'),
+    });
     if (checked.ok && photoRequirement(checked.value.result, item.requiresPhoto, photo !== null || item.photoPath !== null)) {
       setPhotoError(checklistErrorsAr.photo_required);
       return;
@@ -211,6 +219,29 @@ export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = '
           </div>
 
           {text('note', t.note)}
+          {item.takesCost && (
+            <div className={styles.field}>
+              <label htmlFor="cost" className={styles.label}>
+                {t.cost} {optional}
+              </label>
+              <input
+                id="cost"
+                name="cost"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
+                autoComplete="off"
+                className={styles.input}
+                defaultValue={values.cost ?? ''}
+                aria-invalid={errors.cost ? true : undefined}
+                aria-describedby={errors.cost ? 'cost-error cost-hint' : 'cost-hint'}
+              />
+              <p id="cost-hint" className={styles.hint}>
+                {t.costHint}
+              </p>
+              {errorOf('cost')}
+            </div>
+          )}
           {text('responsible', t.responsible, t.responsibleHint)}
           <div className={styles.field}>
             <label htmlFor="recheckOn" className={styles.label}>

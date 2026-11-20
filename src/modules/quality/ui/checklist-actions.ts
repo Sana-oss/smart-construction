@@ -9,11 +9,11 @@ import { redirect } from 'next/navigation';
 import { getMyProject } from '@/modules/projects';
 import { createServerSupabase } from '@/platform/supabase/server';
 import { supabaseFileStore } from '@/platform/supabase/storage';
-import { createChecklist, ensureReadiness, recordCheck } from '../application/checklists';
+import { createChecklist, ensureReadiness, ensureStopPlan, recordCheck } from '../application/checklists';
 import { checkPhotoStoragePath, type CheckField, type NewChecklistField } from '../domain/checklist';
 import { supabaseChecklistStore } from '../infra/supabase-checklist-store';
 import { checklistErrorsAr, checklistFailedAr } from './messages.ar';
-import { checklistPath, READINESS_PATH } from './routes';
+import { checklistPath, READINESS_PATH, stopPlanPath } from './routes';
 
 export interface NewChecklistState {
   fieldErrors?: Partial<Record<NewChecklistField, string>>;
@@ -49,7 +49,7 @@ export interface CheckState {
   values?: Partial<Record<CheckField, string>>;
 }
 
-const CHECK_FIELDS = ['result', 'note', 'responsible', 'recheckOn'] as const;
+const CHECK_FIELDS = ['result', 'note', 'responsible', 'recheckOn', 'cost'] as const;
 
 /** Bound to one item of one checklist. */
 export async function recordCheckAction(checklistId: string, itemId: string, _prev: CheckState, form: FormData): Promise<CheckState> {
@@ -66,7 +66,9 @@ export async function recordCheckAction(checklistId: string, itemId: string, _pr
     return { fieldErrors, values };
   }
   revalidatePath('/', 'layout');
-  redirect(result.kind === 'readiness' ? `${READINESS_PATH}?done=saved` : `${checklistPath(checklistId)}?done=saved`);
+  if (result.kind === 'readiness') redirect(`${READINESS_PATH}?done=saved`);
+  if (result.kind === 'safe_stop' && result.phaseId) redirect(`${stopPlanPath(result.phaseId)}&done=saved`);
+  redirect(`${checklistPath(checklistId)}?done=saved`);
 }
 
 export type CheckPhotoTicket = { ok: true; path: string; token: string } | { ok: false; message: string };
@@ -91,4 +93,13 @@ export async function createReadinessAction(): Promise<void> {
   await ensureReadiness(supabaseChecklistStore(await createServerSupabase()), project.id);
   revalidatePath('/', 'layout');
   redirect(READINESS_PATH);
+}
+
+/** 3.14 (FR-DEC-04): the phase's stop plan, from its template (the same plan when it exists). Bound to the phase. */
+export async function createStopPlanAction(phaseId: string): Promise<void> {
+  const project = await getMyProject();
+  if (!project) redirect(stopPlanPath(phaseId));
+  await ensureStopPlan(supabaseChecklistStore(await createServerSupabase()), project.id, project.phases.map((p) => p.id), phaseId);
+  revalidatePath('/', 'layout');
+  redirect(stopPlanPath(phaseId));
 }

@@ -7,9 +7,11 @@ import {
   getChecklistDetail,
   getPhaseChecklists,
   getReadiness,
+  getStopPlan,
   type ChecklistDetail,
   type ChecklistWithProgress,
   type ReadinessView,
+  type StopPlanView,
   type TemplateRecord,
 } from '../application/checklists';
 import { supabaseChecklistStore } from '../infra/supabase-checklist-store';
@@ -54,4 +56,21 @@ export async function getReadinessGapsAr(projectId: string): Promise<string[]> {
   const view = await getReadiness(await store(), projectId);
   if (!view.detail) return [readinessTextAr.notCreated];
   return view.gaps.map((g) => readinessTextAr.gap(g.text, g.state));
+}
+
+/** A phase's stop plan and the owner's protection cost estimates (3.14). */
+export async function getStopPlanView(projectId: string, phaseId: string): Promise<StopPlanView> {
+  return getStopPlan(await store(), projectId, phaseId);
+}
+
+/** For the phase page's link: each phase's stop plan, if any, with «x من y». */
+export async function getStopPlanProgress(projectId: string): Promise<Record<string, { checked: number; total: number }>> {
+  const s = await store();
+  const lists = (await s.listChecklists(projectId)).filter((l) => l.kind === 'safe_stop' && l.phaseId);
+  const out: Record<string, { checked: number; total: number }> = {};
+  for (const l of lists) {
+    const d = await getChecklistDetail(s, projectId, l.id);
+    if (d) out[l.phaseId!] = { checked: d.progress.checked, total: d.progress.total };
+  }
+  return out;
 }

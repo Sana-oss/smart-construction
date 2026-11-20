@@ -15,6 +15,14 @@ export const checklistTextAr = {
   unreviewed: 'قالب غير مراجَع من مهندس',
   approvedBy: 'قالب مراجَع',
 
+  /** Stop plan (3.14): a measure is ready, needs work, or does not apply. */
+  stopPlanResult: {
+    ok: 'جاهز',
+    issue: 'يحتاج عمل',
+    na: 'لا ينطبق',
+    none: 'لم يُراجَع',
+  } satisfies Record<CheckResult | 'none', string>,
+
   /** Readiness (3.15): an item is there or missing, not «سليم». */
   readinessResult: {
     ok: 'متوفر',
@@ -101,6 +109,8 @@ export const checklistTextAr = {
     photoUploadFailed: 'تعذّر رفع الصورة. تحقق من الاتصال وحاول مرة أخرى.',
     submit: 'حفظ والعودة للقائمة',
     submitting: 'جارٍ الحفظ…',
+    cost: 'التكلفة التقديرية · د.ل',
+    costHint: 'من عرض سعر أو تقدير المقاول. لا يقترح النظام أرقامًا؛ تدخل في «الحماية» بسيناريو التوقف.',
   },
 } as const;
 
@@ -112,6 +122,9 @@ export const checklistErrorsAr: Record<CheckErrorCode, string> = {
   invalid_date: 'التاريخ غير صحيح.',
   invalid_reference: 'اختر من القائمة.',
   photo_required: 'هذا البند يتطلب صورة ليُسجَّل «سليم». أرفق صورة، أو سجّل «توجد ملاحظة».',
+  invalid_number: 'اكتب مبلغًا صحيحًا بثلاث خانات عشرية على الأكثر، مثل 1,200 أو 350.5',
+  too_large: 'المبلغ كبير جدًا.',
+  must_be_positive: 'المبلغ لا يكون سالبًا.',
 };
 
 export const checklistFailedAr: Record<ChecklistFailure | 'no_project', string> = {
@@ -147,5 +160,30 @@ export const readinessTextAr = {
     none: 'لم تُنشأ بعد',
     gaps: (n: number) => (n === 1 ? 'بند واحد ناقص' : `${n} بنود ناقصة`),
     ready: 'جاهز',
+  },
+} as const;
+
+// A phase's stop plan (3.14; FR-DEC-04; design S19.1 «نقاط التوقف الآمنة»).
+export const stopPlanTextAr = {
+  pageTitle: 'نقاط التوقف الآمنة',
+  title: 'نقاط التوقف الآمنة',
+  subtitle: (phase: string) => `خطة توقف مقترحة · ${phase}`,
+  engineerDecides: 'يحدد المهندس نقطة التوقف المناسبة',
+  /** Design S19.1, word for word. */
+  disclaimer: 'التطبيق لا يقرر سلامة التوقف تلقائيًا؛ يعتمد القرار على تقييم المهندس للموقع.',
+  empty: 'لا خطة توقف لهذه المرحلة بعد',
+  emptyNote: 'خطة بما يلزم إن توقف العمل في هذه المرحلة: حدود الأعمال المنجزة، وحماية الحديد والأسطح، والتدعيم، والتصريف، وخطة الاستئناف.',
+  create: 'إنشاء خطة التوقف',
+  progress: (checked: number, total: number) => `${checked} من ${total} بندًا روجع`,
+  protectionTotal: 'مجموع تكاليف الحماية المقدّرة',
+  protectionNone: 'لم تُدخل تكاليف بعد',
+  protectionNote: 'من تقديراتك لكل إجراء؛ يدخل «الحماية» في سيناريو التوقف.',
+  toScenario: 'فتح أرقام سيناريو التوقف',
+  saved: 'حُفظ البند.',
+  costOf: (amount: string) => `${amount} د.ل`,
+  phaseLink: {
+    title: 'نقاط التوقف الآمنة',
+    none: 'لا خطة بعد',
+    plan: (checked: number, total: number) => `${checked} من ${total} بندًا`,
   },
 } as const;

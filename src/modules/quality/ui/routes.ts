@@ -11,3 +11,6 @@ export const checkItemPath = (checklistId: string, itemId: string) => `/checklis
 
 /** The project's readiness list (3.15). */
 export const READINESS_PATH = '/readiness';
+
+/** A phase's stop plan (3.14, design S19.1). */
+export const stopPlanPath = (phaseId: string) => `/stop-plan?phase=${encodeURIComponent(phaseId)}`;
