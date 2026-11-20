@@ -1,6 +1,7 @@
 import { IMAGE_MAX_STORED_BYTES, IMAGE_STORED_TYPE, isUuid, toDb, todayInTripoli } from '@/shared-kernel';
 import type { FileStore } from '@/platform/supabase/storage';
 import { isReceiptPathOf } from '../domain/receipt';
+import { toForeignRecord, type ForeignRecord } from '../domain/currency';
 import { validateNewExpense, type ExpenseError, type ExpenseType, type NewExpenseInput } from '../domain/expense';
 import type { ExpenseFailure, ExpenseGateway } from './expense-gateway';
 
@@ -25,6 +26,8 @@ export interface SavedExpense {
   /** "YYYY-MM-DD": the date given, or today in Libya when none was given. */
   paidOn: string;
   hasReceipt: boolean;
+  /** Paid in a foreign currency (3.18), or null. */
+  foreign: ForeignRecord | null;
 }
 
 export type CreateExpenseResult =
@@ -65,6 +68,7 @@ export async function createExpense(
   }
   const { title, expenseType, phaseId, payee, paidOn, clientOpId } = valid.value;
   const amountLyd = toDb(valid.value.amountLyd);
+  const foreign = toForeignRecord(valid.value.foreign);
 
   if (receiptPath !== null) {
     const file = await store!.info(receiptPath);
@@ -84,6 +88,7 @@ export async function createExpense(
     paidOn,
     clientOpId,
     receiptPath,
+    foreign,
   });
 
   if (outcome.status === 'failed') {
@@ -104,6 +109,7 @@ export async function createExpense(
       payee,
       paidOn: paidOn ?? today,
       hasReceipt: receiptPath !== null && outcome.status === 'created',
+      foreign,
     },
   };
 }

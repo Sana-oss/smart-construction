@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { DOCUMENTS_PATH, PHOTOS_PATH } from '@/modules/documents';
 import { DECISION_PATH } from '@/modules/decisions';
-import { CASHFLOW_PATH } from '@/modules/finance';
+import { CASHFLOW_PATH, RATES_PATH } from '@/modules/finance';
 import { PRICES_PATH } from '@/modules/materials';
 import { getSignedInUserId, SIGN_IN_PATH, SignOutButton } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
@@ -37,6 +37,7 @@ export default async function MorePage() {
             {row(DECISION_PATH, t.decision, t.decisionNote)}
             {row(CASHFLOW_PATH, t.cashflow, t.cashflowNote)}
             {row(PRICES_PATH, t.prices, t.pricesNote)}
+            {row(RATES_PATH, t.rates, t.ratesNote)}
             {row(DOCUMENTS_PATH, t.documents, t.documentsNote)}
             {row(PHOTOS_PATH, t.photos, t.photosNote)}
             <div className={`${styles.row} ${styles.disabled}`} aria-disabled="true">

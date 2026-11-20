@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ExpenseCriteria, ExpenseListItem, ExpenseReader } from '../application/list-expenses';
+import { isCurrency } from '../domain/currency';
 import { EXPENSE_TYPES, type ExpenseType } from '../domain/expense';
 
 // Supabase adapter for the expenses list. Always used with the signed-in user's client, so RLS decides what is
@@ -15,6 +16,9 @@ interface ExpenseRow {
   payee: string | null;
   paid_on: string;
   receipt_path: string | null;
+  original_amount?: string | null;
+  original_currency?: string | null;
+  rate_lyd_per_unit?: string | null;
 }
 
 const isExpenseType = (v: unknown): v is ExpenseType => (EXPENSE_TYPES as readonly unknown[]).includes(v);
@@ -33,6 +37,10 @@ export function toListItem(row: ExpenseRow): ExpenseListItem {
     payee: row.payee,
     paidOn: row.paid_on,
     receiptPath: row.receipt_path ?? null,
+    foreign:
+      isCurrency(row.original_currency) && row.original_amount && row.rate_lyd_per_unit
+        ? { currency: row.original_currency, originalAmount: row.original_amount, rateLydPerUnit: row.rate_lyd_per_unit }
+        : null,
   };
 }
 
@@ -66,7 +74,7 @@ export function supabaseExpenseReader(supabase: SupabaseClient): ExpenseReader {
       // "amount_lyd::text": the amount arrives as text, so it never passes through a JS number (data rules).
       const query = supabase
         .from('expenses')
-        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path', { count: 'exact' })
+        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path, original_amount::text, original_currency, rate_lyd_per_unit::text', { count: 'exact' })
         .eq('project_id', projectId);
       const { data, error, count } = await applyCriteria(query, criteria)
         .order('paid_on', { ascending: false })
@@ -81,7 +89,7 @@ export function supabaseExpenseReader(supabase: SupabaseClient): ExpenseReader {
     async expenseById(projectId, expenseId) {
       const { data, error } = await supabase
         .from('expenses')
-        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path')
+        .select('id, title, amount_lyd::text, expense_type, phase_id, payee, paid_on, receipt_path, original_amount::text, original_currency, rate_lyd_per_unit::text')
         .eq('project_id', projectId)
         .eq('id', expenseId)
         .returns<ExpenseRow[]>()

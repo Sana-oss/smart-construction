@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { todayInTripoli } from '@/shared-kernel';
-import { expenseTextAr as t, QuickExpenseForm } from '@/modules/finance';
+import { expenseTextAr as t, getLatestRates, QuickExpenseForm } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { currentPhaseOf, getMyProject, PROJECT_HOME_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
 
@@ -20,6 +20,7 @@ export default async function NewExpensePage() {
       phases={project.phases.map((p) => ({ id: p.id, name: p.name, current: p.id === current?.id }))}
       today={todayInTripoli()}
       homeHref={PROJECT_HOME_PATH}
+      rates={await getLatestRates(project.id)}
     />
   );
 }

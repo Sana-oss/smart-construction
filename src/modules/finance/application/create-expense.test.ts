@@ -32,6 +32,7 @@ describe('createExpense', () => {
       phaseId: PHASE,
       payee: 'مورد الحديد',
       paidOn: '2026-11-09',
+      foreign: null,
     };
     expect(gw.createExpense).toHaveBeenCalledWith({ projectId: PROJECT, clientOpId: OP, receiptPath: null, ...stored });
     expect(result).toEqual({ ok: true, duplicate: false, saved: { expenseId: 'e1', hasReceipt: false, ...stored } });
@@ -143,5 +144,15 @@ describe('createExpense', () => {
       expect(c.remove).toHaveBeenCalledWith([RECEIPT]);
       expect(r.ok && r.duplicate).toBe(true);
     });
+  });
+});
+
+describe('createExpense in a foreign currency (3.18)', () => {
+  it('stores the LYD equivalent and the original amount, currency and rate', async () => {
+    const gw = fakeGateway();
+    const result = await createExpense(gw, { ...command, amount: '', currency: 'USD', originalAmount: '1,000', rate: '7.25' }, NOW);
+    const foreign = { currency: 'USD', originalAmount: '1000.000', rateLydPerUnit: '7.2500' };
+    expect(gw.createExpense).toHaveBeenCalledWith(expect.objectContaining({ amountLyd: '7250.000', foreign }));
+    expect(result.ok && result.saved).toMatchObject({ amountLyd: '7250.000', foreign });
   });
 });

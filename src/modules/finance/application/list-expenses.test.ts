@@ -18,6 +18,7 @@ const item = (n: number): ExpenseListItem => ({
   payee: null,
   paidOn: '2026-11-10',
   receiptPath: null,
+  foreign: null,
 });
 
 function fakeReader(items: ExpenseListItem[], totalCount: number, monthAmounts: string[]) {

@@ -1,3 +1,4 @@
+import type { ForeignRecord } from '../domain/currency';
 import type { ExpenseType } from '../domain/expense';
 
 // Port: what the expense use case needs from storage, in our own words. The Supabase adapter
@@ -16,6 +17,8 @@ export interface NewExpenseRecord {
   clientOpId: string;
   /** "<project id>/receipts/<id>.jpg", already uploaded and checked, or null (no receipt photo). */
   receiptPath: string | null;
+  /** Paid in a foreign currency (3.18): then amountLyd is original × rate. Null for LYD. */
+  foreign: ForeignRecord | null;
 }
 
 export type ExpenseFailure =
@@ -49,6 +52,8 @@ export interface ExpenseChangeRecord {
   payee: string | null;
   /** "YYYY-MM-DD" */
   paidOn: string;
+  /** Null = paid in LYD (an edit may also remove a currency). */
+  foreign: ForeignRecord | null;
 }
 
 export type ChangeExpenseOutcome = { status: 'done' } | { status: 'failed'; reason: ExpenseFailure };

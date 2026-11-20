@@ -18,8 +18,9 @@ import { PROJECT_FILES_BUCKET } from '@/platform/supabase/storage';
 import type { SavedExpense } from '../application/create-expense';
 import { validateNewExpense } from '../domain/expense';
 import { createExpenseAction, prepareReceiptUploadAction, type ExpenseFormState } from './actions';
-import { ExpenseFields } from './ExpenseFields';
+import { ExpenseFields, type LatestRates } from './ExpenseFields';
 import { BackIcon } from './icons';
+import { ForeignNote } from './ForeignNote';
 import { expenseTextAr as t, expenseTypeAr } from './messages.ar';
 import { EXPENSES_PATH } from './routes';
 import styles from './expense.module.css';
@@ -37,6 +38,8 @@ interface Props {
   today: string;
   /** Where the back button goes. */
   homeHref: string;
+  /** The owner's latest reference rates (3.18), to start the rate field with. */
+  rates: LatestRates;
 }
 
 const initialState: ExpenseFormState = {};
@@ -57,7 +60,7 @@ export function QuickExpenseForm(props: Props) {
   return <ExpenseRound key={round} {...props} onAnother={() => setRound((r) => r + 1)} />;
 }
 
-function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnother: () => void }) {
+function ExpenseRound({ phases, today, homeHref, rates, onAnother }: Props & { onAnother: () => void }) {
   const [state, formAction, pending] = useActionState(createExpenseAction, initialState);
 
   // client_op_id: made ONCE per expense, in the browser. Every retry of this form (double tap, weak connection)
@@ -107,6 +110,9 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
         phaseId: read('phaseId'),
         payee: read('payee'),
         paidOn: read('paidOn'),
+        currency: read('currency'),
+        originalAmount: read('originalAmount'),
+        rate: read('rate'),
         clientOpId: read('clientOpId'),
       },
       today,
@@ -167,6 +173,7 @@ function ExpenseRound({ phases, today, homeHref, onAnother }: Props & { onAnothe
             phases={phases}
             today={today}
             errors={errors}
+            rates={rates}
             values={{ phaseId: phases.find((p) => p.current)?.id ?? '', paidOn: today, ...values }}
           />
 
@@ -254,6 +261,12 @@ function Saved({
             <bdi dir="ltr">{formatAmount(expense.amountLyd)}</bdi> {t.lyd}
           </strong>
           <p>{[expenseTypeAr[expense.expenseType], phaseName].filter(Boolean).join(' · ')}</p>
+          {expense.foreign && (
+            // 3.18: what was paid, in its currency and at the owner's rate.
+            <p>
+              <ForeignNote foreign={expense.foreign} />
+            </p>
+          )}
         </div>
 
         <div className={styles.list}>

@@ -72,7 +72,9 @@ do $$ begin
     raise exception 'FAIL: there must be exactly one create_expense function';
   end if;
   if exists (select 1 from pg_roles where rolname = 'anon')
-     and has_function_privilege('anon', 'public.create_expense(uuid, numeric, uuid, text, text, uuid, text, date, text)', 'execute') then
+     -- By name, not by parameters: later versions of create_expense (0020) must stay closed to anon too.
+     and has_function_privilege('anon', (select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                                         where n.nspname = 'public' and p.proname = 'create_expense'), 'execute') then
     raise exception 'FAIL: anon can execute create_expense';
   end if;
   raise notice 'OK: one create_expense, not callable by anon';
