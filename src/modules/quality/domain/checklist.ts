@@ -1,4 +1,4 @@
-import { isIsoDate } from '@/shared-kernel';
+import { isIsoDate, isUuid } from '@/shared-kernel';
 
 // Pre-pour and pre-cover checkpoints (3.12; FR-QLT-01, FR-QLT-02; design S26.1 «قائمة الفحص», S26.2 «تفاصيل بند الفحص»).
 // Pure: no React, no database.
@@ -17,7 +17,15 @@ export const CHECKLIST_TITLE_MAX = 80;
 export const CHECK_NOTE_MAX = 200;
 export const RESPONSIBLE_MAX = 80;
 
-export type CheckErrorCode = 'required' | 'too_short' | 'too_long' | 'unknown_choice' | 'invalid_date' | 'invalid_reference';
+export type CheckErrorCode =
+  | 'required'
+  | 'too_short'
+  | 'too_long'
+  | 'unknown_choice'
+  | 'invalid_date'
+  | 'invalid_reference'
+  /** FR-QLT-01: an item that requires a photo is not «سليم» without one. */
+  | 'photo_required';
 
 const clean = (s: string | null | undefined) => (s ?? '').trim().replace(/\s+/g, ' ');
 const length = (s: string) => [...s].length;
@@ -56,7 +64,7 @@ export function validateNewChecklist(
 // ---------------------------------------------------------------------------------------------------------------
 // Recording the check of one item (S26.2).
 
-export type CheckField = 'result' | 'note' | 'responsible' | 'recheckOn';
+export type CheckField = 'result' | 'note' | 'responsible' | 'recheckOn' | 'photo';
 export interface CheckInput {
   result?: string | null;
   note?: string | null;
@@ -116,4 +124,29 @@ export function checklistProgress(items: ItemState[]): ChecklistProgress {
     unchecked: items.length - checked,
     complete: items.length > 0 && checked === items.length,
   };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The item photo (slice 2; FR-QLT-01). One photo per item, replaceable. Compressed in the browser like site photos and
+// receipts (shared-kernel/images.ts), stored in the private bucket of 0013 under the project's folder.
+
+/** "<project id>/checklists/<id>.jpg". A fresh id per upload: a retried save never overwrites a stored photo. */
+export function checkPhotoStoragePath(projectId: string, photoId: string): string {
+  if (!isUuid(projectId) || !isUuid(photoId)) throw new Error('checkPhotoStoragePath needs two uuids');
+  return `${projectId}/checklists/${photoId}.jpg`;
+}
+
+/** True only for a checklist photo path of THIS project (a browser could send any path). */
+export function isCheckPhotoPathOf(projectId: string, path: string): boolean {
+  const m = /^([0-9a-f-]{36})\/checklists\/([0-9a-f-]{36})\.jpg$/.exec(path);
+  return m !== null && m[1] === projectId && isUuid(m[1]) && isUuid(m[2]);
+}
+
+/**
+ * FR-QLT-01: «بند إلزامي الصورة لا يُعلَّم سليمًا دون صورة». Only «سليم» needs it: a problem or «لا ينطبق» is recorded as
+ * it is (decision D2: the system documents, it never blocks recording a problem). Which items require a photo is data on
+ * the template, not code.
+ */
+export function photoRequirement(result: CheckResult, requiresPhoto: boolean, hasPhoto: boolean): 'photo_required' | null {
+  return result === 'ok' && requiresPhoto && !hasPhoto ? 'photo_required' : null;
 }

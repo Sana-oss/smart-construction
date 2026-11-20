@@ -6,10 +6,10 @@ reset role;
 set role authenticated;
 set app.uid = '00000000-0000-0000-0000-0000000000a1';
 do $$ begin
+  -- Which items require a photo changed in 0026 (rls_0026 tests it); 0025 seeded four unreviewed items.
   if not exists (select 1 from checklist_templates where kind = 'hold_point' and status = 'unreviewed'
-                 and jsonb_array_length(items) = 4 and items -> 2 ->> 'text' = 'فحص التسليح'
-                 and not exists (select 1 from jsonb_array_elements(items) e where (e ->> 'requires_photo')::boolean)) then
-    raise exception 'FAIL: expected the unreviewed pre-pour template with four items and no required photo';
+                 and jsonb_array_length(items) = 4 and items -> 2 ->> 'text' = 'فحص التسليح') then
+    raise exception 'FAIL: expected the unreviewed pre-pour template with four items';
   end if;
   begin
     update checklist_templates set status = 'approved', reviewed_by = 'me', reviewed_on = current_date;
@@ -102,7 +102,7 @@ begin
   exception when check_violation then null;
   end;
   begin
-    update checklist_items set requires_photo = true where id = v_item;
+    update checklist_items set requires_photo = not requires_photo where id = v_item;
     raise exception 'FAIL: the photo rule of a copied item was changed';
   exception when check_violation then null;
   end;
@@ -140,7 +140,8 @@ begin
   if not exists (select 1 from checklists where id = v_list and status = 'completed' and completed_at is not null) then
     raise exception 'FAIL: the checklist was not completed';
   end if;
-  update checklist_items set result = 'ok', note = 'عولجت' where checklist_id = v_list and position = 3;
+  -- Position 3 («فحص التسليح») requires a photo since 0026, so it is changed to «لا ينطبق», not «سليم».
+  update checklist_items set result = 'na', note = 'عولجت' where checklist_id = v_list and position = 3;
   if (select status from checklists where id = v_list) <> 'completed' then raise exception 'FAIL: completion was undone'; end if;
   raise notice 'OK: the checklist completes with its last result';
 end $$;
@@ -159,7 +160,7 @@ do $$ begin
     raise exception 'FAIL: the checks were not audited';
   end if;
   if not exists (select 1 from audit_log where table_name = 'checklist_items'
-                 and detail -> 'before' ->> 'result' = 'issue' and detail -> 'after' ->> 'result' = 'ok') then
+                 and detail -> 'before' ->> 'result' = 'issue' and detail -> 'after' ->> 'result' = 'na') then
     raise exception 'FAIL: the audit does not keep the old result';
   end if;
   raise notice 'OK: one completion event; every check audited with its old values';

@@ -1,6 +1,7 @@
 // Reads for Server Components (pages). Server-only: uses the signed-in user's session cookie (RLS applies).
 
 import { createServerSupabase } from '@/platform/supabase/server';
+import { supabaseFileStore } from '@/platform/supabase/storage';
 import {
   getChecklistCounts,
   getChecklistDetail,
@@ -27,4 +28,11 @@ export async function getChecklistDetailView(projectId: string, checklistId: str
 
 export async function getChecklistTemplates(): Promise<TemplateRecord[]> {
   return (await store()).listTemplates();
+}
+
+/** A short-lived link to an item's photo (NFR-SEC-03: private bucket), or null when it is not readable. */
+export async function getCheckPhotoUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const urls = await supabaseFileStore(await createServerSupabase()).signedUrls([path], 10 * 60);
+  return urls.get(path) ?? null;
 }

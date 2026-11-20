@@ -7,6 +7,6 @@ export { NewChecklistForm } from './ui/NewChecklistForm';
 export { ChecklistScreen } from './ui/ChecklistScreen';
 export { CheckItemForm } from './ui/CheckItemForm';
 export { createChecklistAction, recordCheckAction } from './ui/checklist-actions';
-export { getChecklistCountsView, getChecklistDetailView, getChecklistTemplates, getPhaseChecklistsView } from './ui/queries';
+export { getChecklistCountsView, getChecklistDetailView, getChecklistTemplates, getCheckPhotoUrl, getPhaseChecklistsView } from './ui/queries';
 export { checklistTextAr, ENGINEER_NOTE_AR } from './ui/messages.ar';
 export { checklistPath, checkItemPath, newChecklistPath, phaseChecklistsPath } from './ui/routes';

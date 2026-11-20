@@ -142,7 +142,7 @@ export async function removeProjectFiles(account: TestAccount): Promise<number> 
   const { data: projects } = await client.from('projects').select('id');
   let removed = 0;
   for (const { id } of projects ?? []) {
-    for (const folder of ['photos', 'documents', 'receipts']) {
+    for (const folder of ['photos', 'documents', 'receipts', 'checklists']) {
       const { data } = await client.storage.from('project-files').list(`${id}/${folder}`);
       const paths = (data ?? []).map((f) => `${id}/${folder}/${f.name}`);
       if (paths.length > 0) removed += (await client.storage.from('project-files').remove(paths)).data?.length ?? 0;

@@ -12,6 +12,7 @@ export function mapChecklistError(error: { code?: string }): ChecklistFailure {
       return 'not_allowed';
     case '23503': // create_checklist: the phase or the template is not this project's / unknown
       return 'unknown_reference';
+    case '23505': // the same photo on two items (0026)
     case '23514':
     case '23502':
     case '22007':
@@ -47,6 +48,7 @@ interface ItemRow {
   responsible: string | null;
   recheck_on: string | null;
   checked_at: string | null;
+  photo_path: string | null;
 }
 
 /** Supabase caps a response at 1,000 rows: a partial list would show a wrong progress, so refuse it. */
@@ -88,7 +90,7 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
       // checklist_items has no project_id (0001): filtered through its checklist.
       const { data, error, count } = await supabase
         .from('checklist_items')
-        .select('id, checklist_id, position, text, requires_photo, result, note, responsible, recheck_on, checked_at, checklists!inner(project_id, kind)', {
+        .select('id, checklist_id, position, text, requires_photo, result, note, responsible, recheck_on, checked_at, photo_path, checklists!inner(project_id, kind)', {
           count: 'exact',
         })
         .eq('checklists.project_id', projectId)
@@ -107,6 +109,7 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
           responsible: r.responsible,
           recheckOn: r.recheck_on,
           checkedAt: r.checked_at,
+          photoPath: r.photo_path,
         }),
       );
     },
@@ -126,7 +129,7 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
       // Who checked and when are set by the database (0025), never sent from here.
       const { data, error } = await supabase
         .from('checklist_items')
-        .update({ result: check.result, note: check.note, responsible: check.responsible, recheck_on: check.recheckOn })
+        .update({ result: check.result, note: check.note, responsible: check.responsible, recheck_on: check.recheckOn, photo_path: check.photoPath })
         .eq('id', itemId)
         .select('id');
       if (error) return { status: 'failed', reason: mapChecklistError(error) };
