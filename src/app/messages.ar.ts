@@ -32,6 +32,8 @@ export const morePageTextAr = {
   pageTitle: 'المزيد',
   title: 'المزيد',
   subtitle: 'الوثائق والصور والحساب',
+  decision: 'الاستمرار أو التوقف',
+  decisionNote: 'مقارنة تقديرية من أرقامك ورصيدك',
   prices: 'سجل الأسعار',
   pricesNote: 'ما دفعته وعروض الموردين بتواريخها',
   cashflow: 'الالتزامات والدخل',

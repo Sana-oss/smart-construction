@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { DOCUMENTS_PATH, PHOTOS_PATH } from '@/modules/documents';
+import { DECISION_PATH } from '@/modules/decisions';
 import { CASHFLOW_PATH } from '@/modules/finance';
 import { PRICES_PATH } from '@/modules/materials';
 import { getSignedInUserId, SIGN_IN_PATH, SignOutButton } from '@/modules/identity';
@@ -33,6 +34,7 @@ export default async function MorePage() {
         </header>
         <div className={styles.content}>
           <div className={styles.list}>
+            {row(DECISION_PATH, t.decision, t.decisionNote)}
             {row(CASHFLOW_PATH, t.cashflow, t.cashflowNote)}
             {row(PRICES_PATH, t.prices, t.pricesNote)}
             {row(DOCUMENTS_PATH, t.documents, t.documentsNote)}
