@@ -294,3 +294,109 @@ export const issueFailedAr = {
   unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
   no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 } as const;
+
+// The concrete log (3.13; FR-QLT-04, FR-QLT-05). Wording from the design: S27.1 «سجل الخرسانة», S27.2 «تسجيل صبة».
+// Curing and formwork dates are the engineer's, copied by the owner: the app suggests no number of days.
+export const concreteTextAr = {
+  back: 'رجوع',
+  optional: 'اختياري',
+  requiredHint: 'الحقول المميزة بـ * مطلوبة.',
+  m3: 'م³',
+
+  log: {
+    pageTitle: 'سجل الخرسانة',
+    title: 'سجل الخرسانة',
+    subtitleAll: 'المشروع · سجل التوريد والصب',
+    subtitlePhase: (phase: string) => `${phase} · سجل التوريد والصب`,
+    total: 'إجمالي الكمية المسجلة',
+    count: (n: number) => (n === 0 ? 'لا صبات بعد' : n === 1 ? 'صبة واحدة موثقة' : n === 2 ? 'صبّتان موثقتان' : `${n} صبات موثقة`),
+    row: (date: string, supplier: string) => `${date} · المورد: ${supplier}`,
+    empty: 'لا صبات مسجلة',
+    emptyNote: 'سجّل كل صبة: العنصر والتاريخ والمورد والكمية وعينات المكعبات، ومواعيد المعالجة وفك الشدات كما يحددها المهندس.',
+    reminders: 'تذكيرات',
+    open: (element: string) => `تفاصيل ${element}`,
+    add: 'تسجيل صبة جديدة',
+    added: 'حُفظت الصبة.',
+    deleted: 'حُذفت الصبة، وبقي أثرها في سجل التدقيق.',
+  },
+
+  reminder: {
+    curing: (element: string) => `آخر يوم لمعالجة «${element}» بالماء`,
+    formwork: (element: string) => `فك شدات «${element}»`,
+    when: (days: number) => (days < 0 ? (days === -1 ? 'متأخر يومًا' : `متأخر ${-days} أيام`) : days === 0 ? 'اليوم' : days === 1 ? 'غدًا' : `بعد ${days} أيام`),
+    note: 'المواعيد كما حددها المهندس؛ لا يقترح النظام مددًا.',
+  },
+
+  form: {
+    pageTitle: 'تسجيل صبة',
+    title: 'تسجيل صبة',
+    subtitle: 'توثيق بيانات التوريد والتنفيذ',
+    element: 'عنصر الصب',
+    elementHint: 'مثل: سقف الدور الأرضي',
+    pouredOn: 'تاريخ الصب',
+    supplier: 'المورد',
+    qtyM3: 'الكمية الفعلية · م³',
+    cubeSamples: 'عدد عينات المكعبات',
+    mixRef: 'مرجع الخلطة المعتمدة',
+    mixRefHint: 'مثل: حسب مستند المشروع',
+    deliveryRef: 'رقم إذن التوريد',
+    phase: 'المرحلة',
+    noPhase: 'بلا مرحلة',
+    engineerGroup: 'مواعيد يحددها المهندس',
+    curingUntil: 'آخر يوم للمعالجة بالماء',
+    formworkOn: 'موعد فك الشدات',
+    engineerHint: 'انسخها من تعليمات المهندس؛ النظام لا يقترح مددًا، ويذكّرك قبلها بيومين.',
+    note: 'ملاحظات',
+    docsNote: 'تُرفق نتائج الاختبارات والمستندات في وثائق المرحلة.',
+    submit: 'حفظ السجل',
+    submitting: 'جارٍ الحفظ…',
+  },
+
+  detail: {
+    pageTitle: 'تفاصيل الصبة',
+    pouredOn: 'تاريخ الصب',
+    supplier: 'المورد',
+    qty: 'الكمية',
+    cubes: 'عينات المكعبات',
+    mixRef: 'مرجع الخلطة',
+    deliveryRef: 'إذن التوريد',
+    phase: 'المرحلة',
+    note: 'ملاحظات',
+    curing: 'المعالجة بالماء حتى',
+    formwork: 'فك الشدات',
+    done: 'تمّ',
+    undo: 'إلغاء «تمّ»',
+    doneAt: (date: string) => `تمّ ${date}`,
+    noDate: 'لم يُحدَّد',
+    delete: 'حذف الصبة',
+    deleteConfirm: 'حذف هذه الصبة؟ يبقى أثرها في سجل التدقيق.',
+    changed: 'حُدّث التذكير.',
+  },
+
+  dashboard: { title: 'سجل الخرسانة', reminders: (n: number) => (n === 1 ? 'تذكير واحد' : `${n} تذكيرات`), none: 'لا تذكيرات' },
+  phaseLink: { title: 'سجل الخرسانة' },
+} as const;
+
+export const pourErrorsAr = {
+  required: 'هذا الحقل مطلوب.',
+  too_short: 'النص قصير جدًا.',
+  too_long: 'النص طويل جدًا.',
+  invalid_number: 'اكتب رقمًا صحيحًا، مثل 30 أو 12.5',
+  must_be_positive: 'يجب أن تكون الكمية أكبر من صفر.',
+  too_large: 'الرقم كبير جدًا.',
+  too_many_decimals: 'ثلاث خانات عشرية على الأكثر.',
+  must_be_whole: 'اكتب عددًا صحيحًا.',
+  invalid_date: 'التاريخ غير صحيح.',
+  date_in_future: 'تاريخ الصب لا يكون بعد اليوم.',
+  before_pour: 'هذا الموعد لا يكون قبل تاريخ الصب.',
+  invalid_reference: 'اختر من القائمة.',
+} as const;
+
+export const pourFailedAr = {
+  not_allowed: 'لا تملك صلاحية التعديل في هذا المشروع، أو انتهت الجلسة. سجّل الدخول من جديد.',
+  unknown_reference: 'لم يُعثر على المرحلة في هذا المشروع.',
+  rejected: 'تعذّر الحفظ. راجع البيانات وحاول مرة أخرى.',
+  not_found: 'لم يُعثر على هذه الصبة. ربما حُذفت من قبل.',
+  unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
+  no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
+} as const;

@@ -23,6 +23,14 @@ export { IssueDetailScreen } from './ui/IssueDetailScreen';
 export { getIssueListView, getIssueView, getOpenIssueCounts, getOpenIssuesOfPhaseAr } from './ui/issue-queries';
 export { issueTextAr, openCountAr } from './ui/messages.ar';
 export { issuePath, issuesPath, newIssuePath } from './ui/routes';
+
+// The concrete log (3.13; S27.1, S27.2)
+export { ConcreteLog } from './ui/ConcreteLog';
+export { PourForm } from './ui/PourForm';
+export { PourDetail } from './ui/PourDetail';
+export { getConcreteLogView, getPourView } from './ui/concrete-queries';
+export { concreteTextAr } from './ui/messages.ar';
+export { concretePath, newPourPath, pourPath } from './ui/routes';
 export { protectionCostText } from './application/checklists';
 export { getChecklistCountsView, getChecklistDetailView, getChecklistTemplates, getCheckPhotoUrl, getPhaseChecklistsView } from './ui/queries';
 export { checklistTextAr, ENGINEER_NOTE_AR } from './ui/messages.ar';
