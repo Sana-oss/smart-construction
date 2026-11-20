@@ -28,3 +28,10 @@ export const newIssuePath = (from: { phaseId?: string | null; checklistId?: stri
 };
 /** Follow one defect (S28.3). */
 export const issuePath = (id: string) => `/issues/${id}`;
+
+/** The concrete log (S27.1), of the project or of one phase. */
+export const concretePath = (phaseId?: string | null) => (phaseId ? `/concrete?phase=${encodeURIComponent(phaseId)}` : '/concrete');
+/** Record a pour (S27.2). */
+export const newPourPath = (phaseId?: string | null) => (phaseId ? `/concrete/new?phase=${encodeURIComponent(phaseId)}` : '/concrete/new');
+/** One pour, with its reminders. */
+export const pourPath = (id: string) => `/concrete/${id}`;

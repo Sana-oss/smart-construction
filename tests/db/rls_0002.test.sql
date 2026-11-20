@@ -19,7 +19,7 @@ do $$ begin
   raise exception 'LEAK: old issue status allowed';
 exception when check_violation then raise notice 'OK: old issue status rejected'; end $$;
 do $$ begin
-  insert into concrete_pours(project_id,poured_on,location,qty_m3,supplier,client_op_id) values ('11111111-1111-1111-1111-111111111111',current_date,'Foundation',1,'S','55555555-5555-5555-5555-555555555555');
+  insert into concrete_pours(project_id,poured_on,location,qty_m3,supplier,client_op_id) values ('11111111-1111-1111-1111-111111111111',current_date,'Foundation',1,'Supplier B','55555555-5555-5555-5555-555555555555'); -- supplier: 0030 needs 2+ letters
   raise exception 'LEAK: duplicate pour allowed';
 exception when unique_violation then raise notice 'OK: duplicate concrete pour rejected'; end $$;
 do $$ begin

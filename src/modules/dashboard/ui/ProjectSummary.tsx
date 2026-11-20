@@ -10,7 +10,18 @@ import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
 import { BUDGET_PATH, budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
 import { getQuantityTableView, MATERIALS_PATH } from '@/modules/materials';
-import { getOpenIssueCounts, getReadinessView, issuesPath, issueTextAr, openCountAr, READINESS_PATH, readinessTextAr } from '@/modules/quality';
+import {
+  concretePath,
+  concreteTextAr,
+  getConcreteLogView,
+  getOpenIssueCounts,
+  getReadinessView,
+  issuesPath,
+  issueTextAr,
+  openCountAr,
+  READINESS_PATH,
+  readinessTextAr,
+} from '@/modules/quality';
 import {
   currentPhaseOf,
   overallProgress,
@@ -82,11 +93,12 @@ interface Props {
 }
 
 export async function ProjectSummary({ project, tasks, today, firstName, moreHref }: Props) {
-  const [expenses, quantities, readiness, openIssues] = await Promise.all([
+  const [expenses, quantities, readiness, openIssues, concrete] = await Promise.all([
     getRecordedExpensesLyd(project.id),
     getQuantityTableView(project.id),
     getReadinessView(project.id),
     getOpenIssueCounts(project.id),
+    getConcreteLogView(project.id),
   ]);
   // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
@@ -164,6 +176,13 @@ export async function ProjectSummary({ project, tasks, today, firstName, moreHre
           />
           {/* 3.17 (FR-QLT-07): open defects show on the dashboard. */}
           <Row href={issuesPath()} title={issueTextAr.dashboard.title} note={issueTextAr.dashboard.note} value={openCountAr(openIssues.total)} />
+          {/* 3.13 (FR-QLT-05): reminders on the engineer's curing and formwork dates. */}
+          <Row
+            href={concretePath()}
+            title={concreteTextAr.dashboard.title}
+            note={concreteTextAr.log.count(concrete.count)}
+            value={concrete.reminders.length > 0 ? concreteTextAr.dashboard.reminders(concrete.reminders.length) : concreteTextAr.dashboard.none}
+          />
           <Row
             href={MATERIALS_PATH}
             title={t.materials}
