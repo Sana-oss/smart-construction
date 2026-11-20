@@ -1,9 +1,10 @@
-import { IMAGE_MAX_STORED_BYTES, IMAGE_STORED_TYPE, isUuid } from '@/shared-kernel';
+import { IMAGE_MAX_STORED_BYTES, IMAGE_STORED_TYPE, isUuid, toDb, type Money } from '@/shared-kernel';
 import type { FileStore } from '@/platform/supabase/storage';
 import {
   checklistProgress,
   isCheckPhotoPathOf,
   photoRequirement,
+  planProtectionCost,
   readinessGaps,
   validateCheck,
   validateNewChecklist,
@@ -24,15 +25,18 @@ import {
 
 export interface TemplateRecord {
   id: string;
-  kind: 'hold_point' | 'readiness';
+  kind: ChecklistKind;
   title: string;
   itemCount: number;
   status: 'unreviewed' | 'approved';
   source: string;
 }
 
-/** 'hold_point' = pre-pour (3.12, one per pour of a phase); 'readiness' = the project's readiness list (3.15). */
-export type ChecklistKind = 'hold_point' | 'readiness';
+/**
+ * 'hold_point' = pre-pour (3.12, one per pour of a phase); 'readiness' = the project's readiness list (3.15);
+ * 'safe_stop' = a phase's stop plan (3.14, one per phase).
+ */
+export type ChecklistKind = 'hold_point' | 'readiness' | 'safe_stop';
 
 export interface ChecklistRecord {
   id: string;
@@ -59,6 +63,10 @@ export interface ChecklistItemRecord {
   checkedAt: string | null;
   /** "<project id>/checklists/<id>.jpg" (slice 2), or null. */
   photoPath: string | null;
+  /** 3.14: a stop-plan protection measure takes the owner's cost estimate. */
+  takesCost: boolean;
+  /** Canonical decimal string, or null. */
+  costLyd: string | null;
 }
 
 export type ChecklistFailure =
@@ -78,9 +86,11 @@ export interface ChecklistStore {
   /** create_checklist (0025): the checklist and a copy of the template's items, in one transaction. */
   createChecklist(c: { projectId: string; phaseId: string; title: string; templateId: string }): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ChecklistFailure }>;
   /** photoPath: the item's photo after this save (the new one, the one it had, or null). */
-  recordCheck(itemId: string, check: CheckValue & { photoPath: string | null }): Promise<{ status: 'done' } | { status: 'failed'; reason: ChecklistFailure }>;
+  recordCheck(itemId: string, check: CheckValue & { photoPath: string | null; costLyd: Money | null }): Promise<{ status: 'done' } | { status: 'failed'; reason: ChecklistFailure }>;
   /** create_readiness_checklist (0027): the project's readiness list; the same one when it exists. */
   createReadiness(projectId: string): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ChecklistFailure }>;
+  /** create_stop_plan (0028): the phase's stop plan; the same one when it exists. */
+  createStopPlan(projectId: string, phaseId: string): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ChecklistFailure }>;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -153,7 +163,7 @@ export async function createChecklist(store: ChecklistStore, projectId: string, 
 
 export type RecordCheckResult =
   /** kind: where to go back after saving (a pre-pour checklist, or the readiness list). */
-  | { ok: true; kind: ChecklistKind }
+  | { ok: true; kind: ChecklistKind; phaseId: string | null }
   | { ok: false; kind: 'invalid'; errors: { field: CheckField; code: CheckErrorCode }[] }
   | { ok: false; kind: 'failed'; reason: ChecklistFailure };
 
@@ -211,14 +221,16 @@ export async function recordCheck(
     return { ok: false, kind: 'invalid', errors: [{ field: 'photo', code: 'photo_required' }] };
   }
 
-  const r = await store.recordCheck(item.id, { ...v.value, photoPath });
+  // A cost belongs only on a stop-plan protection measure (the database refuses it elsewhere, 0028).
+  const costLyd = item.takesCost ? v.value.costLyd : null;
+  const r = await store.recordCheck(item.id, { ...v.value, costLyd, photoPath });
   if (r.status === 'failed') {
     await dropNewPhoto();
     return { ok: false, kind: 'failed', reason: r.reason };
   }
   // The new photo replaced an older one: the old file goes (the audit log keeps its path, 0025).
   if (newPhoto !== null && item.photoPath !== null && item.photoPath !== newPhoto) await files!.remove([item.photoPath]);
-  return { ok: true, kind: detail!.checklist.kind };
+  return { ok: true, kind: detail!.checklist.kind, phaseId: detail!.checklist.phaseId };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -243,3 +255,29 @@ export async function getReadiness(store: ChecklistStore, projectId: string): Pr
 export async function ensureReadiness(store: ChecklistStore, projectId: string) {
   return store.createReadiness(projectId);
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// A phase's stop plan (3.14; FR-DEC-04)
+
+export interface StopPlanView {
+  /** null = not created yet for this phase. */
+  detail: ChecklistDetail | null;
+  /** The owner's estimates for the protection measures (null = none typed). Fills the stop scenario's protection cost. */
+  protectionCost: Money | null;
+}
+
+export async function getStopPlan(store: ChecklistStore, projectId: string, phaseId: string): Promise<StopPlanView> {
+  const plan = (await store.listChecklists(projectId)).find((l) => l.kind === 'safe_stop' && l.phaseId === phaseId);
+  if (!plan) return { detail: null, protectionCost: null };
+  const detail = await getChecklistDetail(store, projectId, plan.id);
+  return { detail, protectionCost: detail ? planProtectionCost(detail.items) : null };
+}
+
+/** Creates the phase's stop plan from the template (or finds it). The phase must be one of the project's. */
+export async function ensureStopPlan(store: ChecklistStore, projectId: string, phaseIds: string[], phaseId: string) {
+  if (!phaseIds.includes(phaseId)) return { status: 'failed' as const, reason: 'unknown_reference' as const };
+  return store.createStopPlan(projectId, phaseId);
+}
+
+/** Display string of a plan's protection cost (for the stop scenario's form). */
+export const protectionCostText = (m: Money | null) => (m === null ? null : toDb(m));

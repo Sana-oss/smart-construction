@@ -22,9 +22,14 @@ interface Props {
   stored: StoredComparison['inputs'] | null;
   phases: { id: string; name: string }[];
   backHref: string;
+  /**
+   * 3.14: the current phase's stop plan, with the sum of the owner's protection cost estimates ("2000.500"). It fills
+   * «الحماية» when no protection cost is saved yet; the owner can still change it.
+   */
+  planProtection?: { phaseName: string; total: string; href: string } | null;
 }
 
-export function ComparisonForm({ stored, phases, backHref }: Props) {
+export function ComparisonForm({ stored, phases, backHref, planProtection = null }: Props) {
   const [state, formAction, pending] = useActionState(saveComparisonAction, {} as ComparisonFormState);
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? {
@@ -32,7 +37,7 @@ export function ComparisonForm({ stored, phases, backHref }: Props) {
     materialsOnHand: plain(stored?.materialsOnHand),
     phaseId: stored?.phaseId ?? '',
     phaseCost: plain(stored?.phaseCost),
-    protection: plain(stored?.protection),
+    protection: plain(stored?.protection ?? planProtection?.total),
     storage: plain(stored?.storage),
     restart: plain(stored?.restart),
     priceChangePct: stored?.priceChangePct ?? '0',
@@ -112,7 +117,12 @@ export function ComparisonForm({ stored, phases, backHref }: Props) {
 
           <p className={styles.label}>{t.pauseGroup}</p>
           <p className={styles.hint}>{t.pauseHint}</p>
-          {amount('protection', t.protection)}
+          {amount('protection', t.protection, planProtection ? t.protectionFromPlan(planProtection.phaseName, plain(planProtection.total)) : undefined)}
+          {planProtection && (
+            <Link href={planProtection.href} className={styles.hint}>
+              {t.openPlan}
+            </Link>
+          )}
           {amount('storage', t.storage)}
           {amount('restart', t.restart)}
 

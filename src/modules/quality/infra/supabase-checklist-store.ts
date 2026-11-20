@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { toDb } from '@/shared-kernel';
 import type { ChecklistFailure, ChecklistItemRecord, ChecklistRecord, ChecklistStore, TemplateRecord } from '../application/checklists';
 import type { CheckResult } from '../domain/checklist';
 
@@ -24,7 +25,7 @@ export function mapChecklistError(error: { code?: string }): ChecklistFailure {
 
 interface TemplateRow {
   id: string;
-  kind: 'hold_point' | 'readiness';
+  kind: 'hold_point' | 'readiness' | 'safe_stop';
   title: string;
   items: unknown[];
   status: 'unreviewed' | 'approved';
@@ -32,7 +33,7 @@ interface TemplateRow {
 }
 interface ChecklistRow {
   id: string;
-  kind: 'hold_point' | 'readiness';
+  kind: 'hold_point' | 'readiness' | 'safe_stop';
   phase_id: string | null;
   title: string;
   status: 'open' | 'completed';
@@ -51,6 +52,8 @@ interface ItemRow {
   recheck_on: string | null;
   checked_at: string | null;
   photo_path: string | null;
+  takes_cost: boolean;
+  cost_lyd: string | null;
 }
 
 /** Supabase caps a response at 1,000 rows: a partial list would show a wrong progress, so refuse it. */
@@ -73,7 +76,7 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
         .from('checklists')
         .select('id, kind, phase_id, title, status, template_status, created_at', { count: 'exact' })
         .eq('project_id', projectId)
-        .in('kind', ['hold_point', 'readiness'])
+        .in('kind', ['hold_point', 'readiness', 'safe_stop'])
         .returns<ChecklistRow[]>();
       if (error) throw new Error(`checklists unavailable: ${error.message}`);
       return complete(data, count, 'checklists').map(
@@ -93,11 +96,11 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
       // checklist_items has no project_id (0001): filtered through its checklist.
       const { data, error, count } = await supabase
         .from('checklist_items')
-        .select('id, checklist_id, position, text, requires_photo, result, note, responsible, recheck_on, checked_at, photo_path, checklists!inner(project_id, kind)', {
+        .select('id, checklist_id, position, text, requires_photo, result, note, responsible, recheck_on, checked_at, photo_path, takes_cost, cost_lyd::text, checklists!inner(project_id, kind)', {
           count: 'exact',
         })
         .eq('checklists.project_id', projectId)
-        .in('checklists.kind', ['hold_point', 'readiness'])
+        .in('checklists.kind', ['hold_point', 'readiness', 'safe_stop'])
         .returns<ItemRow[]>();
       if (error) throw new Error(`checklist items unavailable: ${error.message}`);
       return complete(data, count, 'checklist items').map(
@@ -113,6 +116,8 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
           recheckOn: r.recheck_on,
           checkedAt: r.checked_at,
           photoPath: r.photo_path,
+          takesCost: r.takes_cost,
+          costLyd: r.cost_lyd,
         }),
       );
     },
@@ -128,6 +133,12 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
       return typeof data === 'string' ? { status: 'done', id: data } : { status: 'failed', reason: 'unavailable' };
     },
 
+    async createStopPlan(projectId, phaseId) {
+      const { data, error } = await supabase.rpc('create_stop_plan', { p_project_id: projectId, p_phase_id: phaseId });
+      if (error) return { status: 'failed', reason: mapChecklistError(error) };
+      return typeof data === 'string' ? { status: 'done', id: data } : { status: 'failed', reason: 'unavailable' };
+    },
+
     async createReadiness(projectId) {
       const { data, error } = await supabase.rpc('create_readiness_checklist', { p_project_id: projectId });
       if (error) return { status: 'failed', reason: mapChecklistError(error) };
@@ -138,7 +149,7 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
       // Who checked and when are set by the database (0025), never sent from here.
       const { data, error } = await supabase
         .from('checklist_items')
-        .update({ result: check.result, note: check.note, responsible: check.responsible, recheck_on: check.recheckOn, photo_path: check.photoPath })
+        .update({ result: check.result, note: check.note, responsible: check.responsible, recheck_on: check.recheckOn, photo_path: check.photoPath, cost_lyd: check.costLyd === null ? null : toDb(check.costLyd) })
         .eq('id', itemId)
         .select('id');
       if (error) return { status: 'failed', reason: mapChecklistError(error) };

@@ -9,6 +9,7 @@ import {
   getCheckPhotoUrl,
   READINESS_PATH,
   recordCheckAction,
+  stopPlanPath,
 } from '@/modules/quality';
 
 export const metadata = { title: `${checklistTextAr.item.pageTitle} · ركيزة` };
@@ -29,7 +30,13 @@ export default async function CheckItemPage({ params }: { params: Promise<{ id: 
       photoUrl={await getCheckPhotoUrl(item.photoPath)}
       checklistTitle={detail.checklist.title}
       kind={detail.checklist.kind}
-      backHref={detail.checklist.kind === 'readiness' ? READINESS_PATH : checklistPath(detail.checklist.id)}
+      backHref={
+        detail.checklist.kind === 'readiness'
+          ? READINESS_PATH
+          : detail.checklist.kind === 'safe_stop' && detail.checklist.phaseId
+            ? stopPlanPath(detail.checklist.phaseId)
+            : checklistPath(detail.checklist.id)
+      }
     />
   );
 }

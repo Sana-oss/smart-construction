@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import type { Money } from '@/shared-kernel';
 import type { FileStore } from '@/platform/supabase/storage';
 import type { CheckValue } from '../domain/checklist';
 import {
   createChecklist,
   ensureReadiness,
+  ensureStopPlan,
   getReadiness,
+  getStopPlan,
   getChecklistCounts,
   getChecklistDetail,
   getPhaseChecklists,
@@ -36,7 +39,7 @@ function fakeStore({ rebarNeedsPhoto = false } = {}) {
       lists.push({ id: listId, kind: 'hold_point', phaseId: c.phaseId, title: c.title, status: 'open', templateStatus: TEMPLATE.status, createdAt: `2026-11-20T10:00:${String(n).slice(-2)}Z` });
       for (const [i, text] of ['مراجعة المخطط المعتمد', 'فحص الشدة والدعامات', 'فحص التسليح'].entries()) {
         const requiresPhoto = rebarNeedsPhoto && text === 'فحص التسليح';
-        items.push({ id: id(++n), checklistId: listId, position: i + 1, text, requiresPhoto, result: null, note: null, responsible: null, recheckOn: null, checkedAt: null, photoPath: null });
+        items.push({ id: id(++n), checklistId: listId, position: i + 1, text, requiresPhoto, result: null, note: null, responsible: null, recheckOn: null, checkedAt: null, photoPath: null, takesCost: false, costLyd: null });
       }
       return { status: 'done', id: listId };
     },
@@ -46,14 +49,24 @@ function fakeStore({ rebarNeedsPhoto = false } = {}) {
       const listId = id(++n);
       lists.push({ id: listId, kind: 'readiness', phaseId: null, title: 'جاهزية المشروع', status: 'open', templateStatus: 'unreviewed', createdAt: '2026-11-20T09:00:00Z' });
       for (const [i, text] of ['فحص التربة', 'ترخيص البناء', 'عقد مقاول'].entries()) {
-        items.push({ id: id(++n), checklistId: listId, position: i + 1, text, requiresPhoto: false, result: null, note: null, responsible: null, recheckOn: null, checkedAt: null, photoPath: null });
+        items.push({ id: id(++n), checklistId: listId, position: i + 1, text, requiresPhoto: false, result: null, note: null, responsible: null, recheckOn: null, checkedAt: null, photoPath: null, takesCost: false, costLyd: null });
       }
       return { status: 'done', id: listId };
     },
-    async recordCheck(itemId, check: CheckValue & { photoPath: string | null }) {
+    async createStopPlan(_projectId, phaseId) {
+      const existing = lists.find((l) => l.kind === 'safe_stop' && l.phaseId === phaseId);
+      if (existing) return { status: 'done', id: existing.id };
+      const listId = id(++n);
+      lists.push({ id: listId, kind: 'safe_stop', phaseId, title: 'خطة التوقف', status: 'open', templateStatus: 'unreviewed', createdAt: '2026-11-20T08:00:00Z' });
+      for (const [i, [text, takesCost]] of ([['تحديد حدود الأعمال المنجزة', false], ['حماية الحديد المكشوف', true], ['عزل الأسطح من المطر', true]] as const).entries()) {
+        items.push({ id: id(++n), checklistId: listId, position: i + 1, text, requiresPhoto: false, result: null, note: null, responsible: null, recheckOn: null, checkedAt: null, photoPath: null, takesCost, costLyd: null });
+      }
+      return { status: 'done', id: listId };
+    },
+    async recordCheck(itemId, check: CheckValue & { photoPath: string | null; costLyd: Money | null }) {
       const item = items.find((i) => i.id === itemId);
       if (!item) return { status: 'failed', reason: 'not_found' };
-      Object.assign(item, check, { checkedAt: '2026-11-20T11:00:00Z' });
+      Object.assign(item, check, { costLyd: check.costLyd === null ? null : check.costLyd.toFixed(3), checkedAt: '2026-11-20T11:00:00Z' });
       const list = lists.find((l) => l.id === item.checklistId)!;
       if (items.filter((i) => i.checklistId === list.id).every((i) => i.result !== null)) list.status = 'completed';
       return { status: 'done' };
@@ -102,7 +115,7 @@ describe('recording checks (FR-QLT-01, design S26.2)', () => {
     const c = await createChecklist(store, PROJECT, [PHASE], { title: 'صبة', phaseId: PHASE, templateId: TEMPLATE.id });
     const listId = c.ok ? c.id : '';
     const [first, second, third] = (await getChecklistDetail(store, PROJECT, listId))!.items;
-    expect(await recordCheck(store, PROJECT, listId, first.id, { result: 'ok' })).toEqual({ ok: true, kind: 'hold_point' });
+    expect(await recordCheck(store, PROJECT, listId, first.id, { result: 'ok' })).toEqual({ ok: true, kind: 'hold_point', phaseId: PHASE });
     await recordCheck(store, PROJECT, listId, second.id, { result: 'issue', note: 'دعامة مائلة', responsible: 'مقاول الهيكل', recheckOn: '2026-11-25' });
     let detail = (await getChecklistDetail(store, PROJECT, listId))!;
     expect([detail.progress.checked, detail.progress.issues, detail.checklist.status]).toEqual([2, 1, 'open']);
@@ -160,10 +173,10 @@ describe('the item photo (FR-QLT-01, slice 2)', () => {
       errors: [{ field: 'photo', code: 'photo_required' }],
     });
     // A problem is recorded without a photo (D2: the system never blocks recording a problem).
-    expect(await recordCheck(store, PROJECT, listId, item.id, { result: 'issue', note: 'نقص كانات' })).toEqual({ ok: true, kind: 'hold_point' });
+    expect(await recordCheck(store, PROJECT, listId, item.id, { result: 'issue', note: 'نقص كانات' })).toEqual({ ok: true, kind: 'hold_point', phaseId: PHASE });
 
     const { files } = fakeFiles({ [photo(1)]: jpeg });
-    expect(await recordCheck(store, PROJECT, listId, item.id, { result: 'ok', photoPath: photo(1) }, files)).toEqual({ ok: true, kind: 'hold_point' });
+    expect(await recordCheck(store, PROJECT, listId, item.id, { result: 'ok', photoPath: photo(1) }, files)).toEqual({ ok: true, kind: 'hold_point', phaseId: PHASE });
     expect((await getChecklistDetail(store, PROJECT, listId))!.items.find((i) => i.id === item.id)).toMatchObject({ result: 'ok', photoPath: photo(1) });
   });
 
@@ -171,7 +184,7 @@ describe('the item photo (FR-QLT-01, slice 2)', () => {
     const { store, listId, item } = await rebarItem();
     const { files, removed } = fakeFiles({ [photo(1)]: jpeg, [photo(2)]: jpeg });
     await recordCheck(store, PROJECT, listId, item.id, { result: 'ok', photoPath: photo(1) }, files);
-    expect(await recordCheck(store, PROJECT, listId, item.id, { result: 'ok', note: 'أُعيد الفحص' })).toEqual({ ok: true, kind: 'hold_point' });
+    expect(await recordCheck(store, PROJECT, listId, item.id, { result: 'ok', note: 'أُعيد الفحص' })).toEqual({ ok: true, kind: 'hold_point', phaseId: PHASE });
     expect((await getChecklistDetail(store, PROJECT, listId))!.items.find((i) => i.id === item.id)!.photoPath).toBe(photo(1));
     await recordCheck(store, PROJECT, listId, item.id, { result: 'ok', photoPath: photo(2) }, files);
     expect((await getChecklistDetail(store, PROJECT, listId))!.items.find((i) => i.id === item.id)!.photoPath).toBe(photo(2));
@@ -208,7 +221,7 @@ describe('the readiness list (FR-PRJ-05)', () => {
     expect(view.gaps.map((g) => g.text)).toEqual(['فحص التربة', 'ترخيص البناء', 'عقد مقاول']);
     const [soil, permit, contract] = view.detail!.items;
     const listId = view.detail!.checklist.id;
-    expect(await recordCheck(store, PROJECT, listId, soil.id, { result: 'ok' })).toEqual({ ok: true, kind: 'readiness' });
+    expect(await recordCheck(store, PROJECT, listId, soil.id, { result: 'ok' })).toEqual({ ok: true, kind: 'readiness', phaseId: null });
     await recordCheck(store, PROJECT, listId, permit.id, { result: 'issue', note: 'قيد الإصدار' });
     await recordCheck(store, PROJECT, listId, contract.id, { result: 'na' });
     view = await getReadiness(store, PROJECT);
@@ -220,5 +233,33 @@ describe('the readiness list (FR-PRJ-05)', () => {
     await ensureReadiness(store, PROJECT);
     expect(await getPhaseChecklists(store, PROJECT, PHASE)).toEqual([]);
     expect(await getChecklistCounts(store, PROJECT)).toEqual({});
+  });
+});
+
+describe('the stop plan of a phase (3.14, FR-DEC-04)', () => {
+  it('is one per phase; costs on its protection measures sum to the stop scenario protection cost', async () => {
+    const { store } = fakeStore();
+    expect(await getStopPlan(store, PROJECT, PHASE)).toEqual({ detail: null, protectionCost: null });
+    expect(await ensureStopPlan(store, PROJECT, [PHASE], OTHER_PHASE)).toEqual({ status: 'failed', reason: 'unknown_reference' });
+    const r = await ensureStopPlan(store, PROJECT, [PHASE], PHASE);
+    const again = await ensureStopPlan(store, PROJECT, [PHASE], PHASE);
+    expect(r.status === 'done' && again.status === 'done' && r.id === again.id).toBe(true);
+
+    let plan = await getStopPlan(store, PROJECT, PHASE);
+    const [limits, rebar, roof] = plan.detail!.items;
+    const listId = plan.detail!.checklist.id;
+    expect(await recordCheck(store, PROJECT, listId, rebar.id, { result: 'ok', cost: '1,200' })).toEqual({ ok: true, kind: 'safe_stop', phaseId: PHASE });
+    await recordCheck(store, PROJECT, listId, roof.id, { result: 'issue', cost: '800' });
+    // A cost typed on an item that takes none is dropped, not stored.
+    await recordCheck(store, PROJECT, listId, limits.id, { result: 'ok', cost: '999' });
+    plan = await getStopPlan(store, PROJECT, PHASE);
+    expect(plan.protectionCost!.toFixed(3)).toBe('2000.000');
+    expect(plan.detail!.items[0].costLyd).toBeNull();
+  });
+
+  it('is not one of the phase pre-pour checklists', async () => {
+    const { store } = fakeStore();
+    await ensureStopPlan(store, PROJECT, [PHASE], PHASE);
+    expect(await getPhaseChecklists(store, PROJECT, PHASE)).toEqual([]);
   });
 });

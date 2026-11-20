@@ -3,7 +3,7 @@ import { todayInTripoli } from '@/shared-kernel';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { documentsOfPhasePath, documentsTextAr, filesCountAr, getProjectDocuments } from '@/modules/documents';
 import { getMyProject, getProjectTasks, PhaseDetail, PHASES_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
-import { checklistTextAr, getChecklistCountsView, phaseChecklistsPath } from '@/modules/quality';
+import { checklistTextAr, getChecklistCountsView, getStopPlanProgress, phaseChecklistsPath, stopPlanPath, stopPlanTextAr } from '@/modules/quality';
 import { BottomNav } from '../../_shell/BottomNav';
 
 export const metadata = { title: 'المرحلة · ركيزة' };
@@ -19,10 +19,11 @@ export default async function PhasePage({ params }: { params: Promise<{ id: stri
   const phase = project.phases.find((p) => p.id === id);
   if (!phase) notFound();
 
-  const [allTasks, documents, checklists] = await Promise.all([
+  const [allTasks, documents, checklists, stopPlans] = await Promise.all([
     getProjectTasks(project.id),
     getProjectDocuments(project.id),
     getChecklistCountsView(project.id),
+    getStopPlanProgress(project.id),
   ]);
   const tasks = allTasks.filter((t) => t.phaseId === phase.id);
   // Design S10.4: the phase's documents, from the documents module (projects may not import it).
@@ -34,6 +35,12 @@ export default async function PhasePage({ params }: { params: Promise<{ id: stri
       label: checklistTextAr.phaseLink.title,
       note: lists ? checklistTextAr.phaseLink.count(lists.count, lists.open) : checklistTextAr.phaseLink.none,
       href: phaseChecklistsPath(phase.id),
+    },
+    // Design S10.1 «نقاط التوقف الآمنة» (3.14): the phase's stop plan.
+    {
+      label: stopPlanTextAr.phaseLink.title,
+      note: stopPlans[phase.id] ? stopPlanTextAr.phaseLink.plan(stopPlans[phase.id].checked, stopPlans[phase.id].total) : stopPlanTextAr.phaseLink.none,
+      href: stopPlanPath(phase.id),
     },
     { label: documentsTextAr.list.phaseTitle, note: filesCountAr(phaseDocs), href: documentsOfPhasePath(phase.id) },
   ];
