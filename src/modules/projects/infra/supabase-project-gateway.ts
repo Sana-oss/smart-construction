@@ -82,7 +82,7 @@ export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway
       };
     },
 
-    async updatePhaseSchedule(phaseId, s, startGaps = null) {
+    async updatePhaseSchedule(phaseId, s, startGaps = null, closeOpenIssues = null) {
       // One database function = one transaction: the phase and its audit row (0010). Runs under RLS.
       const { error } = await supabase.rpc('update_phase_schedule', {
         p_phase_id: phaseId,
@@ -93,6 +93,8 @@ export function supabaseProjectGateway(supabase: SupabaseClient): ProjectGateway
         p_actual_end: s.actualEnd,
         // 0027: what the owner confirmed when starting with readiness gaps (FR-PRJ-05), or null.
         p_start_gaps: startGaps && startGaps.length > 0 ? startGaps : null,
+        // 0029: the open defects the owner confirmed when finishing the phase (FR-QLT-07), or null.
+        p_close_open_issues: closeOpenIssues && closeOpenIssues.length > 0 ? closeOpenIssues : null,
       });
       if (!error) return { status: 'updated' };
       if (error.code === '42501') return { status: 'failed', reason: 'not_allowed' };

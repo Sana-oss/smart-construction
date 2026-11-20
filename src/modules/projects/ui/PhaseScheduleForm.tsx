@@ -27,12 +27,14 @@ interface Props {
   action?: (prev: PhaseFormState, form: FormData) => Promise<PhaseFormState>;
   /** Where the owner can complete the readiness list (shown with the gate's warning). */
   readinessHref?: string;
+  /** Where the owner can see the phase's defects (shown with the close warning, FR-QLT-07). */
+  issuesHref?: string;
 }
 
 const initialState: PhaseFormState = {};
 const FORM_ID = 'phase-schedule-form';
 
-export function PhaseScheduleForm({ phaseId, phaseName, schedule, today, backHref, action, readinessHref }: Props) {
+export function PhaseScheduleForm({ phaseId, phaseName, schedule, today, backHref, action, readinessHref, issuesHref }: Props) {
   const [state, formAction, pending] = useActionState(action ?? updatePhaseScheduleAction.bind(null, phaseId), initialState);
   const errors = state.fieldErrors ?? {};
   const value = (f: PhaseScheduleField) => state.values?.[f] ?? (schedule[f] as string | null) ?? '';
@@ -135,6 +137,22 @@ export function PhaseScheduleForm({ phaseId, phaseName, schedule, today, backHre
               {readinessHref && <Link href={readinessHref}>{t.form.gateLink}</Link>}
               <label className={styles.check}>
                 <input type="checkbox" name="startConfirmed" value="yes" /> {t.form.gateConfirm}
+              </label>
+            </div>
+          )}
+          {/* FR-QLT-07 / D2: finishing with open defects is allowed, after an explicit, logged confirmation. */}
+          {state.closeOpenIssues && state.closeOpenIssues.length > 0 && (
+            <div className={styles.warning} role="alert">
+              <strong>{t.form.closeTitle}</strong>
+              <p>{t.form.closeNote}</p>
+              <ul>
+                {state.closeOpenIssues.map((g) => (
+                  <li key={g}>{g}</li>
+                ))}
+              </ul>
+              {issuesHref && <Link href={issuesHref}>{t.form.closeLink}</Link>}
+              <label className={styles.check}>
+                <input type="checkbox" name="closeConfirmed" value="yes" /> {t.form.closeConfirm}
               </label>
             </div>
           )}

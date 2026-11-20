@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
 import { BUDGET_PATH, budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
 import { getQuantityTableView, MATERIALS_PATH } from '@/modules/materials';
-import { getReadinessView, READINESS_PATH, readinessTextAr } from '@/modules/quality';
+import { getOpenIssueCounts, getReadinessView, issuesPath, issueTextAr, openCountAr, READINESS_PATH, readinessTextAr } from '@/modules/quality';
 import {
   currentPhaseOf,
   overallProgress,
@@ -82,10 +82,11 @@ interface Props {
 }
 
 export async function ProjectSummary({ project, tasks, today, firstName, moreHref }: Props) {
-  const [expenses, quantities, readiness] = await Promise.all([
+  const [expenses, quantities, readiness, openIssues] = await Promise.all([
     getRecordedExpensesLyd(project.id),
     getQuantityTableView(project.id),
     getReadinessView(project.id),
+    getOpenIssueCounts(project.id),
   ]);
   // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
@@ -161,6 +162,8 @@ export async function ProjectSummary({ project, tasks, today, firstName, moreHre
                   : readinessTextAr.dashboard.ready
             }
           />
+          {/* 3.17 (FR-QLT-07): open defects show on the dashboard. */}
+          <Row href={issuesPath()} title={issueTextAr.dashboard.title} note={issueTextAr.dashboard.note} value={openCountAr(openIssues.total)} />
           <Row
             href={MATERIALS_PATH}
             title={t.materials}

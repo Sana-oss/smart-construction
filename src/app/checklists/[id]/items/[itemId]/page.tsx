@@ -8,6 +8,7 @@ import {
   getChecklistDetailView,
   getCheckPhotoUrl,
   READINESS_PATH,
+  newIssuePath,
   recordCheckAction,
   stopPlanPath,
 } from '@/modules/quality';
@@ -30,6 +31,7 @@ export default async function CheckItemPage({ params }: { params: Promise<{ id: 
       photoUrl={await getCheckPhotoUrl(item.photoPath)}
       checklistTitle={detail.checklist.title}
       kind={detail.checklist.kind}
+      newIssueHref={detail.checklist.kind === 'hold_point' ? newIssuePath({ checklistId: detail.checklist.id, itemId: item.id }) : null}
       backHref={
         detail.checklist.kind === 'readiness'
           ? READINESS_PATH

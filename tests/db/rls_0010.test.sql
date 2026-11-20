@@ -103,10 +103,11 @@ exception when insufficient_privilege then raise notice 'OK: anon cannot change 
 reset role;
 
 -- 5. anon has no execute right on the function at all (0011; Supabase grants it to anon by default). Since 0027 the
---    function has a seventh parameter (p_start_gaps), so the check names the current signature.
+--    function has a seventh parameter (p_start_gaps), and since 0029 an eighth (p_close_open_issues), so the check names
+--    the current signature.
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon')
-     and has_function_privilege('anon', 'public.update_phase_schedule(uuid, text, date, date, date, date, jsonb)', 'execute') then
+     and has_function_privilege('anon', 'public.update_phase_schedule(uuid, text, date, date, date, date, jsonb, jsonb)', 'execute') then
     raise exception 'FAIL: anon can execute update_phase_schedule';
   end if;
   raise notice 'OK: anon cannot execute update_phase_schedule';

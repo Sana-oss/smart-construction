@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { todayInTripoli } from '@/shared-kernel';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, phasePath, PhaseScheduleForm, phasesTextAr, SETUP_DETAILS_PATH } from '@/modules/projects';
-import { READINESS_PATH } from '@/modules/quality';
+import { issuesPath, READINESS_PATH } from '@/modules/quality';
 import { savePhaseWithGateAction } from './actions';
 
 export const metadata = { title: `${phasesTextAr.form.subtitle} · ركيزة` };
@@ -33,6 +33,7 @@ export default async function PhasePage({ params }: { params: Promise<{ id: stri
       backHref={phasePath(phase.id)}
       action={savePhaseWithGateAction.bind(null, phase.id)}
       readinessHref={READINESS_PATH}
+      issuesHref={issuesPath(phase.id)}
     />
   );
 }

@@ -14,3 +14,17 @@ export const READINESS_PATH = '/readiness';
 
 /** A phase's stop plan (3.14, design S19.1). */
 export const stopPlanPath = (phaseId: string) => `/stop-plan?phase=${encodeURIComponent(phaseId)}`;
+
+/** The defects list (S28.1), of the project or of one phase. */
+export const issuesPath = (phaseId?: string | null) => (phaseId ? `/issues?phase=${encodeURIComponent(phaseId)}` : '/issues');
+/** Record a defect (S28.2); optionally from a phase, or from a checklist item with a problem (S26.2). */
+export const newIssuePath = (from: { phaseId?: string | null; checklistId?: string; itemId?: string } = {}) => {
+  const q = new URLSearchParams();
+  if (from.phaseId) q.set('phase', from.phaseId);
+  if (from.checklistId) q.set('checklist', from.checklistId);
+  if (from.itemId) q.set('item', from.itemId);
+  const s = q.toString();
+  return s ? `/issues/new?${s}` : '/issues/new';
+};
+/** Follow one defect (S28.3). */
+export const issuePath = (id: string) => `/issues/${id}`;

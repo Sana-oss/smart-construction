@@ -15,6 +15,14 @@ export { StopPlanScreen } from './ui/StopPlanScreen';
 export { getStopPlanProgress, getStopPlanView } from './ui/queries';
 export { stopPlanTextAr } from './ui/messages.ar';
 export { stopPlanPath } from './ui/routes';
+
+// The defects list (3.17; S28.1, S28.2, S28.3)
+export { IssuesList } from './ui/IssuesList';
+export { IssueForm } from './ui/IssueForm';
+export { IssueDetailScreen } from './ui/IssueDetailScreen';
+export { getIssueListView, getIssueView, getOpenIssueCounts, getOpenIssuesOfPhaseAr } from './ui/issue-queries';
+export { issueTextAr, openCountAr } from './ui/messages.ar';
+export { issuePath, issuesPath, newIssuePath } from './ui/routes';
 export { protectionCostText } from './application/checklists';
 export { getChecklistCountsView, getChecklistDetailView, getChecklistTemplates, getCheckPhotoUrl, getPhaseChecklistsView } from './ui/queries';
 export { checklistTextAr, ENGINEER_NOTE_AR } from './ui/messages.ar';

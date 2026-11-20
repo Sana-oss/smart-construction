@@ -4,7 +4,8 @@ set app.uid='00000000-0000-0000-0000-00000000000a';
 insert into obligations(project_id,title,creditor,amount_lyd,due_on) values ('11111111-1111-1111-1111-111111111111','Test row','Supplier',5000,current_date+10);
 insert into expected_income(project_id,title,source,amount_lyd,expected_on) values ('11111111-1111-1111-1111-111111111111','Test row','Salary',3000,current_date+20);
 insert into concrete_pours(project_id,poured_on,location,qty_m3,supplier,client_op_id) values ('11111111-1111-1111-1111-111111111111',current_date,'Foundation',12.5,'Supplier A','55555555-5555-5555-5555-555555555555');
-insert into issues(project_id,status) values ('11111111-1111-1111-1111-111111111111','in_progress');
+-- Since 0029 a defect has a title; these rows test the states of 0002 only.
+insert into issues(project_id,status,title) values ('11111111-1111-1111-1111-111111111111','in_progress','Test issue');
 -- 0002 added the 'readiness' kind. Since 0025 a checklist is created only by create_checklist (it raises
 -- app.creating_checklist) and has a title; this row tests the kind alone, so it raises the same flag.
 do $$ begin
@@ -14,7 +15,7 @@ end $$;
 insert into price_records(project_id,material,unit,price_lyd,transport_cost_lyd) values ('11111111-1111-1111-1111-111111111111','Cement','bag',95,3.5);
 
 do $$ begin
-  insert into issues(project_id,status) values ('11111111-1111-1111-1111-111111111111','resolved');
+  insert into issues(project_id,status,title) values ('11111111-1111-1111-1111-111111111111','resolved','Test issue');
   raise exception 'LEAK: old issue status allowed';
 exception when check_violation then raise notice 'OK: old issue status rejected'; end $$;
 do $$ begin

@@ -8,8 +8,17 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getMyProject, isPhaseStart, phasePath, readPhaseForm, savePhaseSchedule, type PhaseFormState, type PhaseStatus } from '@/modules/projects';
-import { getReadinessGapsAr } from '@/modules/quality';
+import {
+  getMyProject,
+  isPhaseClose,
+  isPhaseStart,
+  phasePath,
+  readPhaseForm,
+  savePhaseSchedule,
+  type PhaseFormState,
+  type PhaseStatus,
+} from '@/modules/projects';
+import { getOpenIssuesOfPhaseAr, getReadinessGapsAr } from '@/modules/quality';
 
 const STATUSES: PhaseStatus[] = ['not_started', 'in_progress', 'closing', 'done', 'blocked'];
 
@@ -25,7 +34,16 @@ export async function savePhaseWithGateAction(phaseId: string, _prev: PhaseFormS
       startGaps = gaps;
     }
   }
-  const failed = await savePhaseSchedule(phaseId, values, startGaps);
+  // FR-QLT-07 (3.17): finishing a phase with open defects asks first, the same way (D2).
+  let closeOpenIssues: string[] | null = null;
+  if (project && phase && STATUSES.includes(values.status as PhaseStatus) && isPhaseClose(phase.status, values.status as PhaseStatus)) {
+    const open = await getOpenIssuesOfPhaseAr(project.id, phase.id);
+    if (open.length > 0) {
+      if (form.get('closeConfirmed') !== 'yes') return { closeOpenIssues: open, startGaps: startGaps ?? undefined, values };
+      closeOpenIssues = open;
+    }
+  }
+  const failed = await savePhaseSchedule(phaseId, values, startGaps, closeOpenIssues);
   if (failed) return failed;
   revalidatePath('/', 'layout');
   redirect(phasePath(phaseId));
