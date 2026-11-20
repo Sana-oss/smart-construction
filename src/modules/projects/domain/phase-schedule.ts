@@ -142,3 +142,11 @@ export function phasesOverview(phases: readonly PhaseSchedule[], today: string):
 export function isPhaseStart(oldStatus: PhaseStatus, newStatus: PhaseStatus): boolean {
   return oldStatus === 'not_started' && newStatus === 'in_progress';
 }
+
+/**
+ * FR-QLT-07: finishing a phase is moving it to «مكتملة» from any other state. This is where open defects warn (the
+ * warning itself is composed by the app: the defects belong to quality).
+ */
+export function isPhaseClose(oldStatus: PhaseStatus, newStatus: PhaseStatus): boolean {
+  return newStatus === 'done' && oldStatus !== 'done';
+}

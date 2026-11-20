@@ -134,7 +134,7 @@ do $$ begin
   if has_function_privilege('anon', 'public.create_readiness_checklist(uuid)', 'execute') then
     raise exception 'LEAK: anon may execute create_readiness_checklist';
   end if;
-  if has_function_privilege('anon', 'public.update_phase_schedule(uuid, text, date, date, date, date, jsonb)', 'execute') then
+  if has_function_privilege('anon', 'public.update_phase_schedule(uuid, text, date, date, date, date, jsonb, jsonb)', 'execute') then
     raise exception 'LEAK: anon may execute update_phase_schedule';
   end if;
   raise notice 'OK: anon cannot call either function';

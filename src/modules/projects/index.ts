@@ -4,7 +4,7 @@
 // Domain (pure)
 export { validateProjectDetails, validateBudget, DEFAULT_CONTINGENCY_PCT, type ProjectType } from './domain/project-setup';
 export { planInitialPhases, currentPhaseOf, type PhaseStatus, type PlannedPhase } from './domain/phase-plan';
-export { isPhaseStart, phaseDelay, phasesOverview, type PhaseDelay, type PhaseSchedule } from './domain/phase-schedule';
+export { isPhaseClose, isPhaseStart, phaseDelay, phasesOverview, type PhaseDelay, type PhaseSchedule } from './domain/phase-schedule';
 export { phaseProgress, progressByPhase, overallProgress, isTaskOverdue, type PhaseProgress, type TaskStatus } from './domain/tasks';
 export type { PhaseTask } from './application/tasks';
 export { LIBYA_DISTRICTS } from './domain/libya-districts';

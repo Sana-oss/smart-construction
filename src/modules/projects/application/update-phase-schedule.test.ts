@@ -25,13 +25,13 @@ describe('updatePhaseSchedule', () => {
       plannedEnd: '2027-01-31',
       actualStart: null,
       actualEnd: null,
-    }, null);
+    }, null, null);
   });
 
   it('passes on the readiness gaps the owner confirmed when starting the phase (FR-PRJ-05)', async () => {
     const gateway = fakeGateway();
     await updatePhaseSchedule(gateway, 'ph1', { status: 'in_progress' }, TODAY, ['ترخيص البناء (ناقص)']);
-    expect(gateway.updatePhaseSchedule).toHaveBeenCalledWith('ph1', expect.objectContaining({ status: 'in_progress' }), ['ترخيص البناء (ناقص)']);
+    expect(gateway.updatePhaseSchedule).toHaveBeenCalledWith('ph1', expect.objectContaining({ status: 'in_progress' }), ['ترخيص البناء (ناقص)'], null);
   });
 
   it('does not reach the database with invalid values', async () => {

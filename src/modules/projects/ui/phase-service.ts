@@ -26,9 +26,10 @@ export async function savePhaseSchedule(
   phaseId: string,
   values: Partial<Record<PhaseScheduleField, string>>,
   startGaps: string[] | null,
+  closeOpenIssues: string[] | null = null,
 ): Promise<PhaseFormState | null> {
   if (!isUuid(phaseId)) return { formError: phaseUpdateFailedAr.not_allowed, values };
-  const result = await updatePhaseSchedule(supabaseProjectGateway(await createServerSupabase()), phaseId, values, todayInTripoli(), startGaps);
+  const result = await updatePhaseSchedule(supabaseProjectGateway(await createServerSupabase()), phaseId, values, todayInTripoli(), startGaps, closeOpenIssues);
   if (result.ok) return null;
   if (result.kind === 'failed') return { formError: phaseUpdateFailedAr[result.reason], values };
   const fieldErrors: PhaseFormState['fieldErrors'] = {};

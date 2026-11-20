@@ -17,6 +17,8 @@ export interface PhaseFormState {
   formError?: string;
   /** FR-PRJ-05: starting this phase leaves these readiness gaps; the form asks the owner to confirm. */
   startGaps?: string[];
+  /** FR-QLT-07: finishing this phase leaves these defects open; the form asks the owner to confirm. */
+  closeOpenIssues?: string[];
   fieldErrors?: Partial<Record<PhaseScheduleField, string>>;
   /** What the owner chose, sent back after an error (React resets the form after each submission). */
   values?: Partial<Record<PhaseScheduleField, string>>;

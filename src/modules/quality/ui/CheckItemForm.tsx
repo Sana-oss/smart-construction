@@ -28,12 +28,14 @@ interface Props {
   /** A short-lived link to the stored photo, or null. */
   photoUrl: string | null;
   checklistTitle: string;
+  /** S26.2 «تسجيل عيب مرتبط»: shown when the item is recorded as a problem (3.17). */
+  newIssueHref?: string | null;
   /** Readiness items are «متوفر / ناقص», not «سليم / توجد ملاحظة». */
   kind?: 'hold_point' | 'readiness' | 'safe_stop';
   backHref: string;
 }
 
-export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = 'hold_point', backHref }: Props) {
+export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = 'hold_point', backHref, newIssueHref = null }: Props) {
   const resultLabels =
     kind === 'readiness' ? checklistTextAr.readinessResult : kind === 'safe_stop' ? checklistTextAr.stopPlanResult : checklistTextAr.result;
   const [state, formAction, pending] = useActionState(action, {} as CheckState);
@@ -258,6 +260,14 @@ export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = '
             />
             {errorOf('recheckOn')}
           </div>
+          {newIssueHref && item.result === 'issue' && (
+            <Link href={newIssueHref} className={styles.quickLink}>
+              <span className={styles.rowText}>
+                <strong>{t.linkIssue}</strong>
+                <small>{t.linkIssueNote}</small>
+              </span>
+            </Link>
+          )}
           <p className={styles.hint}>{checklistTextAr.engineerNote}</p>
         </form>
       </div>

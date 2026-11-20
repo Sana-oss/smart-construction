@@ -109,6 +109,8 @@ export const checklistTextAr = {
     photoUploadFailed: 'تعذّر رفع الصورة. تحقق من الاتصال وحاول مرة أخرى.',
     submit: 'حفظ والعودة للقائمة',
     submitting: 'جارٍ الحفظ…',
+    linkIssue: 'تسجيل عيب مرتبط',
+    linkIssueNote: 'ربط الملاحظة بسجل العيوب لمتابعتها حتى تُغلق',
     cost: 'التكلفة التقديرية · د.ل',
     costHint: 'من عرض سعر أو تقدير المقاول. لا يقترح النظام أرقامًا؛ تدخل في «الحماية» بسيناريو التوقف.',
   },
@@ -186,4 +188,109 @@ export const stopPlanTextAr = {
     none: 'لا خطة بعد',
     plan: (checked: number, total: number) => `${checked} من ${total} بندًا`,
   },
+} as const;
+
+// The defects list (3.17; FR-QLT-06, FR-QLT-07). Wording from the design: S28.1 «سجل العيوب», S28.2 «تسجيل عيب»,
+// S28.3 «متابعة العيب». The design's «إغلاق العيب يتطلب اعتماد المهندس» is kept as advice: there are no engineer
+// accounts, so the owner closes it.
+export const issueTextAr = {
+  back: 'رجوع',
+  optional: 'اختياري',
+  requiredHint: 'الحقول المميزة بـ * مطلوبة.',
+  status: { open: 'مفتوح', in_progress: 'قيد المعالجة', closed: 'مغلق' },
+  severity: { minor: 'منخفضة', major: 'متوسطة', critical: 'عالية' },
+
+  list: {
+    pageTitle: 'سجل العيوب',
+    title: 'سجل العيوب',
+    subtitleAll: (open: number) => `المشروع · ${openCountAr(open)}`,
+    subtitlePhase: (phase: string, open: number) => `${phase} · ${openCountAr(open)}`,
+    empty: 'لا عيوب مسجلة',
+    emptyNote: 'سجّل كل عيب أو ملاحظة بصورته وموقعه والمسؤول عن معالجته، وتابعه حتى يُغلق.',
+    priorityNote: 'تصنيف الأولوية توضيحي ويحدده المهندس بعد المعاينة.',
+    row: (status: string, responsible: string | null, date: string) => [status, responsible, date].filter(Boolean).join(' · '),
+    open: (title: string) => `متابعة: ${title}`,
+    add: 'تسجيل عيب',
+    added: 'سُجّل العيب.',
+  },
+
+  form: {
+    pageTitle: 'تسجيل عيب',
+    title: 'تسجيل عيب',
+    subtitle: 'ملاحظة جديدة مرتبطة بالمرحلة',
+    fromCheck: (item: string) => `من بند الفحص «${item}»`,
+    titleLabel: 'عنوان الملاحظة',
+    location: 'الموقع',
+    locationHint: 'مثل: الدور الأرضي · المحور ب',
+    description: 'الوصف',
+    responsible: 'المسؤول',
+    responsibleHint: 'مثل: مقاول الهيكل',
+    severity: 'الأولوية',
+    severityHint: 'توضيحية؛ يحددها المهندس بعد المعاينة.',
+    phase: 'المرحلة',
+    noPhase: 'بلا مرحلة',
+    dueOn: 'موعد المعالجة',
+    photo: 'صورة العيب',
+    submit: 'حفظ الملاحظة',
+    submitting: 'جارٍ الحفظ…',
+  },
+
+  detail: {
+    pageTitle: 'متابعة العيب',
+    title: 'متابعة العيب',
+    statusLabel: 'الحالة',
+    responsible: (who: string) => `المسؤول: ${who}`,
+    location: 'الموقع',
+    description: 'الوصف',
+    due: 'موعد المعالجة',
+    phase: 'المرحلة',
+    timeline: 'المتابعة',
+    created: 'تسجيل الملاحظة',
+    started: 'بدء المعالجة',
+    closed: 'إغلاق العيب',
+    toInProgress: 'بدء المعالجة',
+    toClosed: 'إغلاق العيب',
+    reopen: 'إعادة فتح العيب',
+    closeConfirm: 'إغلاق هذا العيب؟ يُنصح بإغلاقه بعد مراجعة المهندس.',
+    reopenConfirm: 'إعادة فتح هذا العيب؟',
+    engineerAdvice: 'إغلاق العيب يُفضَّل أن يكون بعد اعتماد المهندس.',
+    photo: 'الصورة',
+    photoAdd: 'إضافة صورة',
+    photoReplace: 'استبدال الصورة',
+    photoSave: 'حفظ الصورة',
+    changed: 'حُدّثت حالة العيب.',
+    photoSaved: 'حُفظت الصورة.',
+    backToList: 'العودة لسجل العيوب',
+  },
+
+  /** For the warning when a phase is finished (FR-QLT-07), one line per open defect. */
+  gapLine: (title: string, status: 'open' | 'in_progress') => `${title} (${status === 'open' ? 'مفتوح' : 'قيد المعالجة'})`,
+  dashboard: { title: 'سجل العيوب', note: 'العيوب والملاحظات حتى الإغلاق', none: 'لا عيوب مفتوحة' },
+  phaseLink: { title: 'سجل العيوب' },
+} as const;
+
+export function openCountAr(n: number): string {
+  if (n === 0) return 'لا عيوب مفتوحة';
+  if (n === 1) return 'عيب واحد مفتوح';
+  if (n === 2) return 'عيبان مفتوحان';
+  return n <= 10 ? `${n} عيوب مفتوحة` : `${n} عيبًا مفتوحًا`;
+}
+
+export const issueErrorsAr = {
+  required: 'هذا الحقل مطلوب.',
+  too_short: 'النص قصير جدًا.',
+  too_long: 'النص طويل جدًا.',
+  unknown_choice: 'اختر من القائمة.',
+  invalid_date: 'التاريخ غير صحيح.',
+  invalid_reference: 'اختر من القائمة.',
+} as const;
+
+export const issueFailedAr = {
+  not_allowed: 'لا تملك صلاحية التعديل في هذا المشروع، أو انتهت الجلسة. سجّل الدخول من جديد.',
+  unknown_reference: 'لم يُعثر على المرحلة أو القائمة في هذا المشروع.',
+  rejected: 'تعذّر الحفظ. راجع البيانات وحاول مرة أخرى.',
+  not_found: 'لم يُعثر على هذا العيب. ربما حُذف من قبل.',
+  photo_missing: 'لم تصل الصورة. حاول مرة أخرى.',
+  unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
+  no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 } as const;

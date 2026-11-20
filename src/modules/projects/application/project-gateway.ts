@@ -64,11 +64,13 @@ export interface ProjectGateway {
   createFirstProject(project: NewProject): Promise<CreateProjectOutcome>;
   /**
    * Changes only the status and the four dates of one phase, with an audit row, in one transaction (0010).
-   * startGaps (0027): the readiness gaps the owner confirmed when starting the phase; logged in the same transaction.
+   * startGaps (0027): the readiness gaps the owner confirmed when starting the phase; closeOpenIssues (0029): the open
+   * defects the owner confirmed when finishing it. Both logged in the same transaction.
    */
   updatePhaseSchedule(
     phaseId: string,
     schedule: PhaseSchedule,
     startGaps?: string[] | null,
+    closeOpenIssues?: string[] | null,
   ): Promise<{ status: 'updated' } | { status: 'failed'; reason: PhaseUpdateFailure }>;
 }
