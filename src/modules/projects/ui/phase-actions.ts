@@ -15,6 +15,8 @@ import { phasePath } from './routes';
 
 export interface PhaseFormState {
   formError?: string;
+  /** FR-PRJ-05: starting this phase leaves these readiness gaps; the form asks the owner to confirm. */
+  startGaps?: string[];
   fieldErrors?: Partial<Record<PhaseScheduleField, string>>;
   /** What the owner chose, sent back after an error (React resets the form after each submission). */
   values?: Partial<Record<PhaseScheduleField, string>>;

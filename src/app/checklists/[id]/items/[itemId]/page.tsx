@@ -1,7 +1,15 @@
 import { notFound, redirect } from 'next/navigation';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
-import { checklistPath, checklistTextAr, CheckItemForm, getChecklistDetailView, getCheckPhotoUrl, recordCheckAction } from '@/modules/quality';
+import {
+  checklistPath,
+  checklistTextAr,
+  CheckItemForm,
+  getChecklistDetailView,
+  getCheckPhotoUrl,
+  READINESS_PATH,
+  recordCheckAction,
+} from '@/modules/quality';
 
 export const metadata = { title: `${checklistTextAr.item.pageTitle} · ركيزة` };
 
@@ -20,7 +28,8 @@ export default async function CheckItemPage({ params }: { params: Promise<{ id: 
       item={item}
       photoUrl={await getCheckPhotoUrl(item.photoPath)}
       checklistTitle={detail.checklist.title}
-      backHref={checklistPath(detail.checklist.id)}
+      kind={detail.checklist.kind}
+      backHref={detail.checklist.kind === 'readiness' ? READINESS_PATH : checklistPath(detail.checklist.id)}
     />
   );
 }

@@ -64,7 +64,7 @@ export function ChecklistScreen({ detail, phaseName, backHref, notice = null }: 
                 </small>
               </Link>
               <span className={styles.rowValue}>
-                {checklistTextAr.result[item.result ?? 'none']}
+                {(checklist.kind === 'readiness' ? checklistTextAr.readinessResult : checklistTextAr.result)[item.result ?? 'none']}
                 {item.photoPath ? (
                   <small className={styles.hint}>{t.hasPhoto}</small>
                 ) : (

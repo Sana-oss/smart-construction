@@ -134,3 +134,11 @@ export function phasesOverview(phases: readonly PhaseSchedule[], today: string):
     late: phases.filter((p) => phaseDelay(p, today).kind === 'late').length,
   };
 }
+
+/**
+ * FR-PRJ-05: starting a phase is moving it from «لم تبدأ» to «قيد التنفيذ». This is where the readiness gate warns (the
+ * gate itself is composed by the app: projects does not know the readiness list, which belongs to quality).
+ */
+export function isPhaseStart(oldStatus: PhaseStatus, newStatus: PhaseStatus): boolean {
+  return oldStatus === 'not_started' && newStatus === 'in_progress';
+}

@@ -4,6 +4,7 @@ import {
   checklistProgress,
   isCheckPhotoPathOf,
   photoRequirement,
+  readinessGaps,
   validateCheck,
   validateNewChecklist,
   type CheckErrorCode,
@@ -14,6 +15,7 @@ import {
   type ChecklistProgress,
   type NewChecklistField,
   type NewChecklistInput,
+  type ReadinessGap,
 } from '../domain/checklist';
 
 // Use cases: pre-pour checkpoints (3.12, slice 1; FR-QLT-01, FR-QLT-02; design S26.1, S26.2). Run on the server as the
@@ -22,14 +24,19 @@ import {
 
 export interface TemplateRecord {
   id: string;
+  kind: 'hold_point' | 'readiness';
   title: string;
   itemCount: number;
   status: 'unreviewed' | 'approved';
   source: string;
 }
 
+/** 'hold_point' = pre-pour (3.12, one per pour of a phase); 'readiness' = the project's readiness list (3.15). */
+export type ChecklistKind = 'hold_point' | 'readiness';
+
 export interface ChecklistRecord {
   id: string;
+  kind: ChecklistKind;
   phaseId: string | null;
   title: string;
   status: 'open' | 'completed';
@@ -72,6 +79,8 @@ export interface ChecklistStore {
   createChecklist(c: { projectId: string; phaseId: string; title: string; templateId: string }): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ChecklistFailure }>;
   /** photoPath: the item's photo after this save (the new one, the one it had, or null). */
   recordCheck(itemId: string, check: CheckValue & { photoPath: string | null }): Promise<{ status: 'done' } | { status: 'failed'; reason: ChecklistFailure }>;
+  /** create_readiness_checklist (0027): the project's readiness list; the same one when it exists. */
+  createReadiness(projectId: string): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ChecklistFailure }>;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -88,7 +97,7 @@ const byCreated = (a: ChecklistRecord, b: ChecklistRecord) => b.createdAt.locale
 export async function getPhaseChecklists(store: ChecklistStore, projectId: string, phaseId: string): Promise<ChecklistWithProgress[]> {
   const [lists, items] = await Promise.all([store.listChecklists(projectId), store.listItems(projectId)]);
   return lists
-    .filter((l) => l.phaseId === phaseId)
+    .filter((l) => l.kind === 'hold_point' && l.phaseId === phaseId)
     .sort(byCreated)
     .map((checklist) => ({ checklist, progress: checklistProgress(items.filter((i) => i.checklistId === checklist.id)) }));
 }
@@ -98,7 +107,7 @@ export async function getChecklistCounts(store: ChecklistStore, projectId: strin
   const lists = await store.listChecklists(projectId);
   const counts: Record<string, { count: number; open: number }> = {};
   for (const l of lists) {
-    if (!l.phaseId) continue;
+    if (l.kind !== 'hold_point' || !l.phaseId) continue;
     const c = (counts[l.phaseId] ??= { count: 0, open: 0 });
     c.count += 1;
     if (l.status === 'open') c.open += 1;
@@ -134,7 +143,8 @@ export async function createChecklist(store: ChecklistStore, projectId: string, 
   const templates = await store.listTemplates();
   const v = validateNewChecklist(input, {
     phase: (id) => phaseIds.includes(id),
-    template: (id) => templates.some((t) => t.id === id),
+    // Only a pre-pour template makes a phase's checklist (the readiness template is the project's, 3.15).
+    template: (id) => templates.some((t) => t.id === id && t.kind === 'hold_point'),
   });
   if (!v.ok) return { ok: false, kind: 'invalid', errors: v.errors };
   const r = await store.createChecklist({ projectId, ...v.value });
@@ -142,7 +152,8 @@ export async function createChecklist(store: ChecklistStore, projectId: string, 
 }
 
 export type RecordCheckResult =
-  | { ok: true }
+  /** kind: where to go back after saving (a pre-pour checklist, or the readiness list). */
+  | { ok: true; kind: ChecklistKind }
   | { ok: false; kind: 'invalid'; errors: { field: CheckField; code: CheckErrorCode }[] }
   | { ok: false; kind: 'failed'; reason: ChecklistFailure };
 
@@ -207,5 +218,28 @@ export async function recordCheck(
   }
   // The new photo replaced an older one: the old file goes (the audit log keeps its path, 0025).
   if (newPhoto !== null && item.photoPath !== null && item.photoPath !== newPhoto) await files!.remove([item.photoPath]);
-  return { ok: true };
+  return { ok: true, kind: detail!.checklist.kind };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The project's readiness list (3.15; FR-PRJ-05)
+
+export interface ReadinessView {
+  /** null = not created yet. */
+  detail: ChecklistDetail | null;
+  /** Missing or not reviewed: what the gate shows when a phase starts. */
+  gaps: ReadinessGap[];
+}
+
+export async function getReadiness(store: ChecklistStore, projectId: string): Promise<ReadinessView> {
+  const lists = await store.listChecklists(projectId);
+  const readiness = lists.find((l) => l.kind === 'readiness');
+  if (!readiness) return { detail: null, gaps: [] };
+  const detail = await getChecklistDetail(store, projectId, readiness.id);
+  return { detail, gaps: detail ? readinessGaps(detail.items) : [] };
+}
+
+/** Creates the project's readiness list from the template (or finds it). */
+export async function ensureReadiness(store: ChecklistStore, projectId: string) {
+  return store.createReadiness(projectId);
 }

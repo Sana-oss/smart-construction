@@ -62,6 +62,13 @@ export interface ProjectGateway {
   /** The signed-in owner's project (one per owner for now, decision 10), or null. */
   myProject(): Promise<MyProject | null>;
   createFirstProject(project: NewProject): Promise<CreateProjectOutcome>;
-  /** Changes only the status and the four dates of one phase, with an audit row, in one transaction (0010). */
-  updatePhaseSchedule(phaseId: string, schedule: PhaseSchedule): Promise<{ status: 'updated' } | { status: 'failed'; reason: PhaseUpdateFailure }>;
+  /**
+   * Changes only the status and the four dates of one phase, with an audit row, in one transaction (0010).
+   * startGaps (0027): the readiness gaps the owner confirmed when starting the phase; logged in the same transaction.
+   */
+  updatePhaseSchedule(
+    phaseId: string,
+    schedule: PhaseSchedule,
+    startGaps?: string[] | null,
+  ): Promise<{ status: 'updated' } | { status: 'failed'; reason: PhaseUpdateFailure }>;
 }

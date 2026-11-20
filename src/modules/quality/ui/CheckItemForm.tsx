@@ -28,10 +28,13 @@ interface Props {
   /** A short-lived link to the stored photo, or null. */
   photoUrl: string | null;
   checklistTitle: string;
+  /** Readiness items are «متوفر / ناقص», not «سليم / توجد ملاحظة». */
+  kind?: 'hold_point' | 'readiness';
   backHref: string;
 }
 
-export function CheckItemForm({ action, item, photoUrl, checklistTitle, backHref }: Props) {
+export function CheckItemForm({ action, item, photoUrl, checklistTitle, kind = 'hold_point', backHref }: Props) {
+  const resultLabels = kind === 'readiness' ? checklistTextAr.readinessResult : checklistTextAr.result;
   const [state, formAction, pending] = useActionState(action, {} as CheckState);
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [photoStep, setPhotoStep] = useState<'idle' | 'preparing' | 'converting' | 'uploading'>('idle');
@@ -162,7 +165,7 @@ export function CheckItemForm({ action, item, photoUrl, checklistTitle, backHref
             {CHECK_RESULTS.map((r) => (
               <label key={r} className={styles.choice}>
                 <input type="radio" name="result" value={r} defaultChecked={values.result === r} />
-                <span>{checklistTextAr.result[r]}</span>
+                <span>{resultLabels[r]}</span>
               </label>
             ))}
             {errorOf('result')}

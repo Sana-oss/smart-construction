@@ -8,3 +8,6 @@ export const newChecklistPath = (phaseId: string) => `/checklists/new?phase=${en
 export const checklistPath = (id: string) => `/checklists/${id}`;
 /** One item of a checklist (design S26.2). */
 export const checkItemPath = (checklistId: string, itemId: string) => `/checklists/${checklistId}/items/${itemId}`;
+
+/** The project's readiness list (3.15). */
+export const READINESS_PATH = '/readiness';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, phaseDelay, phasesOverview, validatePhaseSchedule, type PhaseSchedule } from './phase-schedule';
+import { daysBetween, isPhaseStart, phaseDelay, phasesOverview, validatePhaseSchedule, type PhaseSchedule } from './phase-schedule';
 
 const TODAY = '2026-11-18';
 const phase = (p: Partial<PhaseSchedule>): PhaseSchedule => ({
@@ -127,5 +127,14 @@ describe('phasesOverview', () => {
       TODAY,
     );
     expect(o).toEqual({ total: 4, done: 2, late: 2 });
+  });
+});
+
+describe('isPhaseStart (FR-PRJ-05)', () => {
+  it('is only «لم تبدأ» to «قيد التنفيذ»', () => {
+    expect(isPhaseStart('not_started', 'in_progress')).toBe(true);
+    expect(isPhaseStart('in_progress', 'in_progress')).toBe(false);
+    expect(isPhaseStart('not_started', 'done')).toBe(false);
+    expect(isPhaseStart('blocked', 'in_progress')).toBe(false);
   });
 });

@@ -9,11 +9,11 @@ import { redirect } from 'next/navigation';
 import { getMyProject } from '@/modules/projects';
 import { createServerSupabase } from '@/platform/supabase/server';
 import { supabaseFileStore } from '@/platform/supabase/storage';
-import { createChecklist, recordCheck } from '../application/checklists';
+import { createChecklist, ensureReadiness, recordCheck } from '../application/checklists';
 import { checkPhotoStoragePath, type CheckField, type NewChecklistField } from '../domain/checklist';
 import { supabaseChecklistStore } from '../infra/supabase-checklist-store';
 import { checklistErrorsAr, checklistFailedAr } from './messages.ar';
-import { checklistPath } from './routes';
+import { checklistPath, READINESS_PATH } from './routes';
 
 export interface NewChecklistState {
   fieldErrors?: Partial<Record<NewChecklistField, string>>;
@@ -66,7 +66,7 @@ export async function recordCheckAction(checklistId: string, itemId: string, _pr
     return { fieldErrors, values };
   }
   revalidatePath('/', 'layout');
-  redirect(`${checklistPath(checklistId)}?done=saved`);
+  redirect(result.kind === 'readiness' ? `${READINESS_PATH}?done=saved` : `${checklistPath(checklistId)}?done=saved`);
 }
 
 export type CheckPhotoTicket = { ok: true; path: string; token: string } | { ok: false; message: string };
@@ -82,4 +82,13 @@ export async function prepareCheckPhotoUploadAction(): Promise<CheckPhotoTicket>
   const path = checkPhotoStoragePath(project.id, crypto.randomUUID());
   const ticket = await supabaseFileStore(await createServerSupabase()).uploadTicket(path);
   return ticket ? { ok: true, path, token: ticket.token } : { ok: false, message: checklistFailedAr.not_allowed };
+}
+
+/** FR-PRJ-05: the project's readiness list, from its template (the same list when it exists). */
+export async function createReadinessAction(): Promise<void> {
+  const project = await getMyProject();
+  if (!project) redirect(READINESS_PATH);
+  await ensureReadiness(supabaseChecklistStore(await createServerSupabase()), project.id);
+  revalidatePath('/', 'layout');
+  redirect(READINESS_PATH);
 }
