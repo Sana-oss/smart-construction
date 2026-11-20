@@ -32,6 +32,8 @@ export const morePageTextAr = {
   pageTitle: 'المزيد',
   title: 'المزيد',
   subtitle: 'الوثائق والصور والحساب',
+  budget: 'ميزانية المشروع',
+  budgetNote: 'المخصصات والإنفاق لكل مرحلة',
   rates: 'أسعار الصرف المرجعية',
   ratesNote: 'سعرك لكل عملة، للمصروفات بعملة أخرى',
   decision: 'الاستمرار أو التوقف',

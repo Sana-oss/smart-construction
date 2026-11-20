@@ -3,6 +3,8 @@
 import { createServerSupabase } from '@/platform/supabase/server';
 import { getCashflow, type CashflowView } from '../application/cashflow';
 import { getRateLog, type RateLog } from '../application/rates';
+import { getBudgetView, type BudgetView, type ProjectBudget } from '../application/budget-plan';
+import { supabaseBudgetStore } from '../infra/supabase-budget-store';
 import { supabaseRateStore } from '../infra/supabase-rate-store';
 import type { LatestRates } from './ExpenseFields';
 import { supabaseCashflowStore } from '../infra/supabase-cashflow-store';
@@ -43,4 +45,9 @@ export async function getRateLogView(projectId: string): Promise<RateLog> {
 export async function getLatestRates(projectId: string): Promise<LatestRates> {
   const { latest } = await getRateLogView(projectId);
   return Object.fromEntries(Object.entries(latest).map(([code, r]) => [code, { lydPerUnit: r!.lydPerUnit, rateDate: r!.rateDate }])) as LatestRates;
+}
+
+/** The budget and its plan per phase (design S15.1, S15.2). `project` comes from the projects module (the page). */
+export async function getProjectBudget(project: ProjectBudget): Promise<BudgetView> {
+  return getBudgetView(supabaseBudgetStore(await createServerSupabase()), project);
 }
