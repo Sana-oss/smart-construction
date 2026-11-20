@@ -35,11 +35,9 @@ test.describe.serial('owner journey and stranger', () => {
     await expect(dashboard.getByRole('link', { name: /مراحل المشروع/ })).toContainText('2 من 4');
     await expectNoSidewaysScroll(page);
 
-    // Bottom navigation: on the dashboard with «الرئيسية» current; «المواد» shown but not active yet.
-    const bar = page.getByRole('navigation', { name: 'التبويبات الرئيسية' });
+    // Bottom navigation: on the dashboard with «الرئيسية» current; «المواد» is a tab since the calculators (3.3).
     await expect(navTab(page, 'الرئيسية')).toHaveAttribute('aria-current', 'page');
-    await expect(bar.getByText('المواد')).toBeVisible();
-    await expect(bar.getByRole('link', { name: /المواد/ })).toHaveCount(0);
+    await expect(navTab(page, 'المواد')).toBeVisible();
 
     // Empty expenses list (S13.3) before the first expense, opened from the bottom navigation.
     await navTab(page, 'المصروفات').click();

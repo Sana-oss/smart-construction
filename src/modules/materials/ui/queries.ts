@@ -1,8 +1,11 @@
 // Reads for Server Components (pages). Server-only: uses the signed-in user's session cookie (RLS applies).
 
 import { createServerSupabase } from '@/platform/supabase/server';
+import { getRebarCalculator, type RebarCalculatorView } from '../application/calculators';
 import { getPriceHistory, getPriceLog, type PriceLog, type PriceWithStatus } from '../application/prices';
 import { priceWarnings, type PriceWarnings } from '../domain/price';
+import type { RebarInput } from '../domain/calculators';
+import { supabaseCoefficientReader } from '../infra/supabase-coefficient-reader';
 import { supabasePriceStore } from '../infra/supabase-price-store';
 
 /** The price log (design S24.1). `today` is the date in Libya. */
@@ -18,4 +21,9 @@ export async function getProjectPriceHistory(projectId: string, material: string
 /** What the price log says should not be trusted as it is (for the 3.7 comparison, FR-DEC-03). */
 export async function getProjectPriceWarnings(projectId: string, today: string): Promise<PriceWarnings> {
   return priceWarnings(await supabasePriceStore(await createServerSupabase()).list(projectId), today);
+}
+
+/** The rebar calculator (design S22): the stored coefficient, and the calculation when the form was sent. */
+export async function getRebarCalculatorView(input: RebarInput | null): Promise<RebarCalculatorView> {
+  return getRebarCalculator(supabaseCoefficientReader(await createServerSupabase()), input);
 }

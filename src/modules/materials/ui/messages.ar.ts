@@ -87,3 +87,107 @@ export const priceFailedAr: Record<PriceFailure | 'no_project', string> = {
   unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
   no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 };
+
+// Quantity calculators (3.3, slice 1). Wording from the design: S20.1 «المواد والكميات», S22.1 «حاسبة الحديد», S22.2
+// «نتيجة وزن الحديد», S23.1 «الحاسبات الأخرى», S23.2 «حجم الخرسانة». The design's example numbers are not reused.
+export const calcTextAr = {
+  back: 'رجوع',
+  lyd: 'د.ل',
+  optional: 'اختياري',
+  requiredHint: 'الحقول المميزة بـ * مطلوبة.',
+
+  home: {
+    pageTitle: 'المواد والكميات',
+    title: 'المواد والكميات',
+    subtitle: 'الحاسبات وسجل الأسعار',
+    quantitiesSoon: 'جدول الكميات وتسجيل الشراء قريبًا.',
+    linksLabel: 'أدوات المواد',
+    rebar: 'حاسبة الحديد',
+    rebarNote: 'وزن الأسياخ من جدول التفريد',
+    others: 'حاسبات أخرى',
+    othersNote: 'حجم الخرسانة، مساحة التشطيب، عدد البلاط',
+    prices: 'سجل الأسعار',
+    pricesNote: 'ما دفعته وعروض الموردين بتواريخها',
+  },
+
+  rebar: {
+    pageTitle: 'حاسبة الحديد',
+    title: 'حاسبة الحديد',
+    subtitle: 'تقدير وزن الأسياخ وفق المدخلات',
+    source: 'أدخل القطر والطول والعدد من جدول تفريد الحديد الذي أعدّه المهندس. لا يقدّر النظام الحديد من المساحة أو الأبعاد.',
+    diameter: 'قطر السيخ · مم',
+    length: 'طول السيخ · متر',
+    count: 'عدد الأسياخ',
+    waste: 'نسبة الهدر · %',
+    wasteHint: 'إن حدّدها المهندس أو المورد. لا يقترح النظام نسبة.',
+    price: 'سعر الطن · د.ل',
+    priceHint: 'من سجل الأسعار أو عرض المورد، لتقدير التكلفة.',
+    scope: 'الحاسبة تقدّر الوزن فقط، ولا تختار أقطار أو تسليح العناصر الإنشائية.',
+    submit: 'احسب الوزن التقريبي',
+    noCoefficient: 'لا يوجد معامل وزن مسجّل للحديد، فلا يعرض النظام رقمًا. يُضاف المعامل حين يعتمده المهندس.',
+  },
+
+  rebarResult: {
+    pageTitle: 'نتيجة وزن الحديد',
+    title: 'نتيجة وزن الحديد',
+    subtitle: (d: string, l: string, n: string) => `قطر ${d} مم · طول ${l} م · ${n} سيخًا`,
+    weight: 'الوزن التقريبي',
+    kg: 'كجم',
+    tons: (t: string) => `حوالي ${t} طن`,
+    withWaste: (pct: string) => `مع هدر ${pct}%`,
+    withoutWaste: 'الوزن دون هدر',
+    bar: 'وزن السيخ الواحد',
+    approximate: 'قيمة تقريبية',
+    totalLength: 'إجمالي الأطوال',
+    meters: 'متر',
+    lengthNote: (n: string, l: string) => `${n} × ${l} مترًا`,
+    cost: 'التكلفة التقديرية',
+    costNote: (price: string) => `بسعر ${price} د.ل للطن`,
+    formula: 'المعادلة المستخدمة',
+    formulaValue: (divisor: string) => `الوزن لكل متر = القطر² ÷ ${divisor}`,
+    unreviewedShort: 'غير مراجَع',
+    approvedShort: 'معتمد',
+    unreviewed: 'المعامل غير مراجَع من مهندس بعد',
+    reviewed: (by: string, on: string) => `اعتمد المعامل ${by} في ${on}`,
+    disclaimer: 'نتيجة توضيحية لتقدير الشراء. يُراجع الوزن الفعلي ومواصفات المورد قبل الاعتماد.',
+    edit: 'تعديل المدخلات',
+    backToMaterials: 'العودة للمواد',
+  },
+
+  others: {
+    pageTitle: 'الحاسبات الأخرى',
+    title: 'الحاسبات الأخرى',
+    subtitle: 'تقديرات كميات مبدئية للمشروع',
+    open: (title: string) => `فتح حاسبة ${title}`,
+    review: 'تراجع الكميات النهائية مقابل المخططات وجدول الكميات المعتمد.',
+    notYet: 'الطوب والأسمنت والرمل تحتاج نسبًا هندسية لم يعتمدها المهندس بعد، فلم تُضف.',
+  },
+
+  geometric: {
+    concrete: { title: 'حجم الخرسانة', unit: 'م³', formula: 'الطول × العرض × السمك', resultLabel: 'الحجم الهندسي' },
+    area: { title: 'مساحة التشطيب', unit: 'م²', formula: 'الطول × العرض', resultLabel: 'المساحة' },
+    tiles: { title: 'عدد البلاط', unit: 'قطعة', formula: 'المساحة ÷ مساحة البلاطة', resultLabel: 'عدد البلاط' },
+    fields: {
+      lengthM: 'الطول · م',
+      widthM: 'العرض · م',
+      thicknessM: 'السمك · م',
+      areaM2: 'المساحة · م²',
+      tileLengthCm: 'طول البلاطة · سم',
+      tileWidthCm: 'عرض البلاطة · سم',
+    },
+    subtitle: 'مثال حسابي لعنصر مستطيل',
+    noAdditions: 'دون إضافات',
+    tilesNote: (tileArea: string) => `مساحة البلاطة ${tileArea} م² · مقرّبة لأعلى إلى قطعة كاملة، دون هدر أو قص`,
+    disclaimer: 'مدخلات توضيحية، وليست توصية بسمك أو أبعاد إنشائية.',
+    submit: 'احسب',
+    backToCalculators: 'العودة للحاسبات',
+  },
+} as const;
+
+export const calcErrorsAr: Record<'required' | 'invalid_number' | 'must_be_positive' | 'too_large' | 'must_be_whole', string> = {
+  required: 'هذا الحقل مطلوب.',
+  invalid_number: 'اكتب رقمًا موجبًا، مثل 12 أو 0.15',
+  must_be_positive: 'يجب أن يكون الرقم أكبر من صفر.',
+  too_large: 'الرقم كبير جدًا. تأكد من الوحدة.',
+  must_be_whole: 'اكتب عددًا صحيحًا.',
+};

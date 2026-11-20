@@ -13,7 +13,7 @@ import styles from './more.module.css';
 export const metadata = { title: `${t.pageTitle} · ركيزة` };
 
 // «المزيد»: the screens without a tab of their own (design S07.1's «الفريق والوثائق والتقارير» row and the «المزيد» tab).
-// Team and reports are not built yet, so only what exists is listed; materials is shown as coming.
+// Team and reports are not built yet, so only what exists is listed. Materials has its own tab (since 20 Nov 2026).
 export default async function MorePage() {
   if (!(await getSignedInUserId())) redirect(SIGN_IN_PATH);
   if (!(await getMyProject())) redirect(SETUP_DETAILS_PATH);
@@ -41,10 +41,6 @@ export default async function MorePage() {
             {row(RATES_PATH, t.rates, t.ratesNote)}
             {row(DOCUMENTS_PATH, t.documents, t.documentsNote)}
             {row(PHOTOS_PATH, t.photos, t.photosNote)}
-            <div className={`${styles.row} ${styles.disabled}`} aria-disabled="true">
-              <strong>{t.materials}</strong>
-              <small>{t.materialsNote}</small>
-            </div>
           </div>
           <div className={styles.account}>
             <p className={styles.groupTitle}>{t.account}</p>
