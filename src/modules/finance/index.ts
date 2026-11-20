@@ -59,3 +59,10 @@ export { AllocationForm } from './ui/AllocationForm';
 export { getProjectBudget } from './ui/queries';
 export { BUDGET_EDIT_PATH, BUDGET_PATH, BUDGET_PHASES_PATH } from './ui/routes';
 export { budgetTextAr } from './ui/messages.ar';
+
+// Extra works and changes (FR-FIN-10; 3.16 financial part, slice 2)
+export { ExtrasList } from './ui/ExtrasList';
+export { ExtraForm } from './ui/ExtraForm';
+export { getExtrasView } from './ui/queries';
+export { EXTRA_NEW_PATH, EXTRAS_PATH } from './ui/routes';
+export { extrasTextAr } from './ui/messages.ar';
