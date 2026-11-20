@@ -1,0 +1,119 @@
+import { isIsoDate } from '@/shared-kernel';
+
+// Pre-pour and pre-cover checkpoints (3.12; FR-QLT-01, FR-QLT-02; design S26.1 «قائمة الفحص», S26.2 «تفاصيل بند الفحص»).
+// Pure: no React, no database.
+//
+// Engineering content: the items come from a template that is DATA with a review status (checklist_templates, 0025).
+// The system documents a check and warns; it never certifies safety (FR-SYS-05). That is why a sound item is called
+// «سليم» and never «معتمد»: only the engineer approves.
+
+/** FR-QLT-01: sound, a problem, not applicable. No result yet = «لم يُفحص». */
+export const CHECK_RESULTS = ['ok', 'issue', 'na'] as const;
+export type CheckResult = (typeof CHECK_RESULTS)[number];
+
+/** Project decisions (20 Nov 2026), like the other text fields. */
+export const CHECKLIST_TITLE_MIN = 2;
+export const CHECKLIST_TITLE_MAX = 80;
+export const CHECK_NOTE_MAX = 200;
+export const RESPONSIBLE_MAX = 80;
+
+export type CheckErrorCode = 'required' | 'too_short' | 'too_long' | 'unknown_choice' | 'invalid_date' | 'invalid_reference';
+
+const clean = (s: string | null | undefined) => (s ?? '').trim().replace(/\s+/g, ' ');
+const length = (s: string) => [...s].length;
+
+// ---------------------------------------------------------------------------------------------------------------
+// A new checklist for a phase: a name (one phase has several pours) and the template it copies.
+
+export type NewChecklistField = 'title' | 'phaseId' | 'templateId';
+export interface NewChecklistInput {
+  title?: string | null;
+  phaseId?: string | null;
+  templateId?: string | null;
+}
+
+export function validateNewChecklist(
+  input: NewChecklistInput,
+  isKnown: { phase: (id: string) => boolean; template: (id: string) => boolean },
+): { ok: true; value: { title: string; phaseId: string; templateId: string } } | { ok: false; errors: { field: NewChecklistField; code: CheckErrorCode }[] } {
+  const errors: { field: NewChecklistField; code: CheckErrorCode }[] = [];
+  const title = clean(input.title);
+  if (title === '') errors.push({ field: 'title', code: 'required' });
+  else if (length(title) < CHECKLIST_TITLE_MIN) errors.push({ field: 'title', code: 'too_short' });
+  else if (length(title) > CHECKLIST_TITLE_MAX) errors.push({ field: 'title', code: 'too_long' });
+
+  const phaseId = clean(input.phaseId).toLowerCase();
+  if (phaseId === '') errors.push({ field: 'phaseId', code: 'required' });
+  else if (!isKnown.phase(phaseId)) errors.push({ field: 'phaseId', code: 'invalid_reference' });
+
+  const templateId = clean(input.templateId).toLowerCase();
+  if (templateId === '') errors.push({ field: 'templateId', code: 'required' });
+  else if (!isKnown.template(templateId)) errors.push({ field: 'templateId', code: 'invalid_reference' });
+
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, value: { title, phaseId, templateId } };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Recording the check of one item (S26.2).
+
+export type CheckField = 'result' | 'note' | 'responsible' | 'recheckOn';
+export interface CheckInput {
+  result?: string | null;
+  note?: string | null;
+  /** «المسؤول عن المعالجة», e.g. the structure contractor. */
+  responsible?: string | null;
+  /** «موعد إعادة الفحص»: when the item is checked again. */
+  recheckOn?: string | null;
+}
+export interface CheckValue {
+  result: CheckResult;
+  note: string | null;
+  responsible: string | null;
+  recheckOn: string | null;
+}
+
+export function validateCheck(input: CheckInput): { ok: true; value: CheckValue } | { ok: false; errors: { field: CheckField; code: CheckErrorCode }[] } {
+  const errors: { field: CheckField; code: CheckErrorCode }[] = [];
+  const result = clean(input.result);
+  if (result === '') errors.push({ field: 'result', code: 'required' });
+  else if (!(CHECK_RESULTS as readonly string[]).includes(result)) errors.push({ field: 'result', code: 'unknown_choice' });
+
+  const note = clean(input.note) || null;
+  if (note !== null && length(note) > CHECK_NOTE_MAX) errors.push({ field: 'note', code: 'too_long' });
+  const responsible = clean(input.responsible) || null;
+  if (responsible !== null && length(responsible) > RESPONSIBLE_MAX) errors.push({ field: 'responsible', code: 'too_long' });
+
+  // A re-inspection is planned: it may be today or later, so there is no "not in the future" rule here.
+  const recheckOn = (input.recheckOn ?? '').trim() || null;
+  if (recheckOn !== null && !isIsoDate(recheckOn)) errors.push({ field: 'recheckOn', code: 'invalid_date' });
+
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, value: { result: result as CheckResult, note, responsible, recheckOn } };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Where a checklist stands (S26.1 «8 من 12 بندًا»).
+
+export interface ItemState {
+  result: CheckResult | null;
+}
+
+export interface ChecklistProgress {
+  total: number;
+  /** Items with a result (sound, a problem or not applicable). */
+  checked: number;
+  issues: number;
+  unchecked: number;
+  /** Every item has a result. Problems do not stop completion: the list records them (decision D2: warn, never block). */
+  complete: boolean;
+}
+
+export function checklistProgress(items: ItemState[]): ChecklistProgress {
+  const checked = items.filter((i) => i.result !== null).length;
+  return {
+    total: items.length,
+    checked,
+    issues: items.filter((i) => i.result === 'issue').length,
+    unchecked: items.length - checked,
+    complete: items.length > 0 && checked === items.length,
+  };
+}

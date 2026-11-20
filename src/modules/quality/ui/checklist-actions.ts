@@ -1,0 +1,67 @@
+'use server';
+
+// Server Actions for the pre-pour checkpoints (FR-QLT-01, FR-QLT-02). Run on the server as the signed-in user, under
+// RLS. The project and its phases come from the session, never from the form; the use cases check every value; the
+// database copies the template, stamps and audits each check, and completes the checklist (0025).
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { getMyProject } from '@/modules/projects';
+import { createServerSupabase } from '@/platform/supabase/server';
+import { createChecklist, recordCheck } from '../application/checklists';
+import type { CheckField, NewChecklistField } from '../domain/checklist';
+import { supabaseChecklistStore } from '../infra/supabase-checklist-store';
+import { checklistErrorsAr, checklistFailedAr } from './messages.ar';
+import { checklistPath } from './routes';
+
+export interface NewChecklistState {
+  fieldErrors?: Partial<Record<NewChecklistField, string>>;
+  formError?: string;
+  values?: { title?: string; templateId?: string };
+}
+
+/** Bound to the phase the page was opened for. */
+export async function createChecklistAction(phaseId: string, _prev: NewChecklistState, form: FormData): Promise<NewChecklistState> {
+  const values = { title: String(form.get('title') ?? ''), templateId: String(form.get('templateId') ?? '') };
+  const project = await getMyProject();
+  if (!project) return { formError: checklistFailedAr.no_project, values };
+  const result = await createChecklist(
+    supabaseChecklistStore(await createServerSupabase()),
+    project.id,
+    project.phases.map((p) => p.id),
+    { ...values, phaseId },
+  );
+  if (!result.ok) {
+    if (result.kind === 'failed') return { formError: checklistFailedAr[result.reason], values };
+    const fieldErrors: NewChecklistState['fieldErrors'] = {};
+    for (const e of result.errors) fieldErrors[e.field] ??= checklistErrorsAr[e.code];
+    // The phase is not typed: a wrong one means the page was opened with a bad address.
+    return { fieldErrors, formError: fieldErrors.phaseId ? checklistFailedAr.unknown_reference : undefined, values };
+  }
+  revalidatePath('/', 'layout');
+  redirect(`${checklistPath(result.id)}?done=created`);
+}
+
+export interface CheckState {
+  fieldErrors?: Partial<Record<CheckField, string>>;
+  formError?: string;
+  values?: Partial<Record<CheckField, string>>;
+}
+
+const CHECK_FIELDS = ['result', 'note', 'responsible', 'recheckOn'] as const;
+
+/** Bound to one item of one checklist. */
+export async function recordCheckAction(checklistId: string, itemId: string, _prev: CheckState, form: FormData): Promise<CheckState> {
+  const values = Object.fromEntries(CHECK_FIELDS.map((k) => [k, String(form.get(k) ?? '')])) as Record<CheckField, string>;
+  const project = await getMyProject();
+  if (!project) return { formError: checklistFailedAr.no_project, values };
+  const result = await recordCheck(supabaseChecklistStore(await createServerSupabase()), project.id, checklistId, itemId, values);
+  if (!result.ok) {
+    if (result.kind === 'failed') return { formError: checklistFailedAr[result.reason], values };
+    const fieldErrors: CheckState['fieldErrors'] = {};
+    for (const e of result.errors) fieldErrors[e.field] ??= checklistErrorsAr[e.code];
+    return { fieldErrors, values };
+  }
+  revalidatePath('/', 'layout');
+  redirect(`${checklistPath(checklistId)}?done=saved`);
+}
