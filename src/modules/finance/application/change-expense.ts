@@ -1,6 +1,7 @@
 import { isUuid, toDb, todayInTripoli } from '@/shared-kernel';
 import type { FileStore } from '@/platform/supabase/storage';
 import { validateExpenseEdit, type ExpenseError, type ExpenseEditInput } from '../domain/expense';
+import { toForeignRecord } from '../domain/currency';
 import { isReceiptPathOf } from '../domain/receipt';
 import type { ExpenseEditor, ExpenseFailure } from './expense-gateway';
 
@@ -44,6 +45,7 @@ export async function updateExpense(
     phaseId,
     payee,
     paidOn,
+    foreign: toForeignRecord(valid.value.foreign),
   });
   return outcome.status === 'done' ? { ok: true } : { ok: false, kind: 'failed', reason: outcome.reason };
 }

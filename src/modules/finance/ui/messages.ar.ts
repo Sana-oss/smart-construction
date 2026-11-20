@@ -1,4 +1,5 @@
 import type { ExpenseFailure } from '../application/expense-gateway';
+import type { Currency } from '../domain/currency';
 import type { ExpenseErrorCode, ExpenseField, ExpenseType } from '../domain/expense';
 import type { ExpensePeriod } from '../domain/expense-filter';
 
@@ -252,3 +253,60 @@ export const cashflowFailedAr: Record<ExpenseFailure | 'no_project', string> = {
   not_found: 'لم يُعثر على هذه الحركة. ربما حُذفت من قبل.',
   unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
 };
+
+/**
+ * Foreign currency and the owner's reference rate (3.18, FR-FIN-04; decisions of 20 Nov 2026). No design screen: built
+ * from S14.1's fields and styles. The wording says the rate is the owner's own, never an official or fetched one.
+ */
+export const currencyTextAr = {
+  names: { USD: 'دولار أمريكي', EUR: 'يورو', TRY: 'ليرة تركية', CNY: 'يوان صيني' } satisfies Record<Currency, string>,
+  section: 'دُفع بعملة أخرى',
+  sectionOptional: 'اختياري',
+  currency: 'العملة',
+  currencyNone: 'بالدينار الليبي',
+  originalAmount: (code: string) => `المبلغ بالعملة · ${code}`,
+  rate: (code: string) => `سعر الصرف · د.ل لكل 1 ${code}`,
+  rateHint: 'سعرك المرجعي: ما دفعته أو ما تعتمده أنت. لا يجلب النظام سعر الصرف ولا يتوقعه.',
+  latest: (rate: string, date: string) => `آخر سعر في سجلك: ${rate} د.ل بتاريخ ${date}`,
+  noLatest: 'لا سعر لهذه العملة في سجلك بعد.',
+  equivalent: 'المبلغ بالدينار',
+  equivalentHint: 'يُحسب من المبلغ بالعملة × سعر الصرف، ويدخل في كل المجاميع.',
+  amountFromForeign: 'يُحسب من العملة الأخرى في آخر النموذج',
+  /** A rate keeps 4 decimals, not the 3 of money: its own message for «invalid_number». */
+  rateInvalid: 'اكتب سعرًا مثل 7.25، بأربع خانات عشرية على الأكثر.',
+  /** «1,000 USD بسعر 7.25» (ForeignNote). */
+  at: 'بسعر',
+
+  // The log (decision of 20 Nov 2026)
+  log: {
+    pageTitle: 'أسعار الصرف المرجعية',
+    title: 'أسعار الصرف المرجعية',
+    subtitle: 'أسعارك أنت لكل عملة، بتاريخها',
+    latestTitle: 'آخر سعر لكل عملة',
+    perUnit: (code: string) => `د.ل لكل 1 ${code}`,
+    history: 'كل الأسعار المسجلة',
+    empty: 'لا أسعار صرف مسجلة بعد',
+    emptyNote: 'سجّل السعر الذي تعتمده لكل عملة، فيبدأ به نموذج المصروف.',
+    notice: 'لا يجلب النظام سعر الصرف ولا يتوقعه، وتغيير السعر هنا لا يغيّر مصروفًا سُجّل من قبل.',
+    add: 'إضافة سعر صرف',
+    added: 'حُفظ سعر الصرف.',
+    deleted: 'حُذف سعر الصرف، وبقي أثره في سجل التدقيق.',
+    delete: 'حذف',
+    deleteLabel: (code: string, date: string) => `حذف سعر ${code} بتاريخ ${date}`,
+    deleteConfirm: (code: string, date: string) => `حذف سعر ${code} بتاريخ ${date}؟ لا يتغير أي مصروف مسجل.`,
+  },
+  form: {
+    pageTitle: 'إضافة سعر صرف',
+    title: 'إضافة سعر صرف',
+    subtitle: 'سعرك المرجعي لعملة واحدة',
+    currency: 'العملة',
+    currencyPlaceholder: 'اختر العملة',
+    rate: 'د.ل لكل وحدة واحدة',
+    date: 'التاريخ',
+    note: 'ملاحظة',
+    notePlaceholder: 'مثل: السوق الموازي، أو سعر المورد',
+    optional: 'اختياري',
+    submit: 'حفظ السعر',
+    submitting: 'جارٍ الحفظ…',
+  },
+} as const;

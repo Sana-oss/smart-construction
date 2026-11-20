@@ -23,6 +23,7 @@ describe('toListItem', () => {
       payee: 'مورد الحديد',
       paidOn: '2026-11-09',
       receiptPath: null,
+      foreign: null,
     });
   });
 
@@ -69,5 +70,16 @@ describe('applyCriteria (design S13.2)', () => {
       ['eq', 'expense_type', 'materials'],
       ['or', 'title.ilike.*حديد*تسليح*,payee.ilike.*حديد*تسليح*'],
     ]);
+  });
+});
+
+describe('toListItem with a foreign currency (3.18)', () => {
+  it('keeps the original amount, currency and rate as text', () => {
+    expect(toListItem({ ...row, original_amount: '1000.000', original_currency: 'USD', rate_lyd_per_unit: '7.2500' }).foreign).toEqual({
+      currency: 'USD',
+      originalAmount: '1000.000',
+      rateLydPerUnit: '7.2500',
+    });
+    expect(toListItem({ ...row, original_amount: '1', original_currency: 'GBP', rate_lyd_per_unit: '1' }).foreign).toBeNull();
   });
 });

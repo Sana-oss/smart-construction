@@ -32,6 +32,8 @@ export const morePageTextAr = {
   pageTitle: 'المزيد',
   title: 'المزيد',
   subtitle: 'الوثائق والصور والحساب',
+  rates: 'أسعار الصرف المرجعية',
+  ratesNote: 'سعرك لكل عملة، للمصروفات بعملة أخرى',
   decision: 'الاستمرار أو التوقف',
   decisionNote: 'مقارنة تقديرية من أرقامك ورصيدك',
   prices: 'سجل الأسعار',

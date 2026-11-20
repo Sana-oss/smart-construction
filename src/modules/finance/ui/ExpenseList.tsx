@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { formatAmount, type Money } from '@/shared-kernel';
 import type { ExpenseList as ExpenseListData } from '../application/list-expenses';
 import { filterQuery, isFiltered, type ExpenseFilter } from '../domain/expense-filter';
+import { ForeignNote } from './ForeignNote';
 import { BackIcon } from './icons';
 import { expenseCountAr, expensePeriodAr, expenseTextAr, expenseTypeAr } from './messages.ar';
 import { EXPENSE_NEW_PATH, EXPENSES_FILTER_PATH, EXPENSES_PATH, expensePath } from './routes';
@@ -146,6 +147,11 @@ export function ExpenseList({ projectName, list, phases, homeHref, notice = null
                           .filter(Boolean)
                           .join(' · ')}
                       </small>
+                      {e.foreign && (
+                        <small>
+                          <ForeignNote foreign={e.foreign} />
+                        </small>
+                      )}
                     </Link>
                     <span className={styles.rowValue}>
                       <Lyd value={e.amountLyd} />

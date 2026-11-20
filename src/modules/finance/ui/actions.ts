@@ -15,8 +15,8 @@ import type { ExpenseError } from '../domain/expense';
 import { deleteExpense, updateExpense } from '../application/change-expense';
 import { createExpense, type SavedExpense } from '../application/create-expense';
 import { supabaseExpenseEditor, supabaseExpenseGateway } from '../infra/supabase-expense-gateway';
-import { EXPENSE_VALUE_FIELDS, type ExpenseFormValues, type ExpenseValueField } from './ExpenseFields';
-import { expenseChangeFailedAr, expenseErrorsAr, expenseFailedAr, type ExpenseFieldErrors } from './messages.ar';
+import { EXPENSE_VALUE_FIELDS, type ExpenseFormValues, type ExpenseValueField } from './expense-form-values';
+import { currencyTextAr, expenseChangeFailedAr, expenseErrorsAr, expenseFailedAr, type ExpenseFieldErrors } from './messages.ar';
 import { EXPENSES_PATH } from './routes';
 
 
@@ -41,7 +41,7 @@ const readValues = (form: FormData) =>
 /** Domain errors -> one Arabic message per field (the first error of each field). */
 function fieldErrorsOf(errors: ExpenseError[]): ExpenseFieldErrors {
   const out: ExpenseFieldErrors = {};
-  for (const e of errors) out[e.field] ??= expenseErrorsAr[e.code];
+  for (const e of errors) out[e.field] ??= e.field === 'rate' && e.code === 'invalid_number' ? currencyTextAr.rateInvalid : expenseErrorsAr[e.code];
   return out;
 }
 

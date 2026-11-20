@@ -52,6 +52,7 @@ describe('updateExpense', () => {
       phaseId: PHASE,
       payee: null,
       paidOn: '2026-11-10',
+      foreign: null,
     });
   });
 

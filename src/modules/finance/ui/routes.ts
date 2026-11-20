@@ -10,3 +10,6 @@ export const EXPENSES_FILTER_PATH = '/expenses/filter';
 /** Obligations and expected income (design S16.1), and adding one (S16.2). */
 export const CASHFLOW_PATH = '/cashflow';
 export const CASHFLOW_NEW_PATH = '/cashflow/new';
+/** The owner's reference exchange rates (3.18), and adding one. */
+export const RATES_PATH = '/rates';
+export const RATE_NEW_PATH = '/rates/new';

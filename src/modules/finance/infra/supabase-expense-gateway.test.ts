@@ -13,6 +13,7 @@ const expense: NewExpenseRecord = {
   paidOn: null,
   clientOpId: '33333333-3333-4333-8333-333333333333',
   receiptPath: null,
+  foreign: null,
 };
 
 function fakeSupabase(result: { data: unknown; error: { code?: string; message?: string } | null }) {
@@ -47,6 +48,9 @@ describe('supabaseExpenseGateway.createExpense', () => {
       p_payee: 'مورد الحديد',
       p_paid_on: null,
       p_receipt_path: null,
+      p_original_amount: null,
+      p_original_currency: null,
+      p_rate_lyd_per_unit: null,
     });
   });
 
@@ -92,6 +96,7 @@ describe('supabaseExpenseEditor', () => {
     phaseId: null,
     payee: null,
     paidOn: '2026-11-10',
+    foreign: null,
   };
 
   it('updates only the editable fields of the expense of this project, with the amount as a string', async () => {
@@ -100,7 +105,19 @@ describe('supabaseExpenseEditor', () => {
     expect(from).toHaveBeenCalledWith('expenses');
     expect(calls).toContainEqual({
       method: 'update',
-      args: [{ title: 'رمل', amount_lyd: '650.250', expense_type: 'services', phase_id: null, payee: null, paid_on: '2026-11-10' }],
+      args: [
+        {
+          title: 'رمل',
+          amount_lyd: '650.250',
+          expense_type: 'services',
+          phase_id: null,
+          payee: null,
+          paid_on: '2026-11-10',
+          original_amount: null,
+          original_currency: null,
+          rate_lyd_per_unit: null,
+        },
+      ],
     });
     expect(calls).toContainEqual({ method: 'eq', args: ['id', 'e1'] });
     expect(calls).toContainEqual({ method: 'eq', args: ['project_id', PROJECT] });
@@ -121,5 +138,17 @@ describe('supabaseExpenseEditor', () => {
     const { client, calls } = fakeTable({ data: [{ receipt_path: `${PROJECT}/receipts/r.jpg` }], error: null });
     expect(await supabaseExpenseEditor(client).deleteExpense(PROJECT, 'e1')).toEqual({ status: 'done', receiptPath: `${PROJECT}/receipts/r.jpg` });
     expect(calls.map((c) => c.method)).toContain('delete');
+  });
+});
+
+describe('foreign currency reaches the database (3.18)', () => {
+  it('create_expense gets the original amount, currency and rate', async () => {
+    const { client, rpc } = fakeSupabase({ data: [{ expense_id: 'e1', created: true }], error: null });
+    const foreign = { currency: 'USD' as const, originalAmount: '1000.000', rateLydPerUnit: '7.2500' };
+    await supabaseExpenseGateway(client).createExpense({ ...expense, amountLyd: '7250.000', foreign });
+    expect(rpc).toHaveBeenCalledWith(
+      'create_expense',
+      expect.objectContaining({ p_amount_lyd: '7250.000', p_original_amount: '1000.000', p_original_currency: 'USD', p_rate_lyd_per_unit: '7.2500' }),
+    );
   });
 });

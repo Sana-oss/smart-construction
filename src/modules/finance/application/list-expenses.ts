@@ -1,5 +1,6 @@
 import { isUuid } from '@/shared-kernel';
 import type { FileStore } from '@/platform/supabase/storage';
+import type { ForeignRecord } from '../domain/currency';
 import type { ExpenseType } from '../domain/expense';
 import { isFiltered, NO_FILTER, periodRange, type ExpenseFilter } from '../domain/expense-filter';
 import { monthOf, monthSummary, type MonthRange, type MonthSummary } from '../domain/expense-list';
@@ -21,6 +22,8 @@ export interface ExpenseListItem {
   paidOn: string;
   /** Stored receipt photo (UC-07), or null. */
   receiptPath: string | null;
+  /** Paid in a foreign currency (3.18), or null. */
+  foreign: ForeignRecord | null;
   /** Short-lived link to the receipt photo (NFR-SEC-03), set by listExpenses; null without a receipt. */
   receiptUrl?: string | null;
 }

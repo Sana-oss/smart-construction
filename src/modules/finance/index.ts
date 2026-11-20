@@ -44,3 +44,10 @@ export { getCashflowView } from './ui/queries';
 export { CASHFLOW_NEW_PATH, CASHFLOW_PATH } from './ui/routes';
 export { cashflowTextAr } from './ui/messages.ar';
 export { cashflowOutlook, currentLiquidity, CASHFLOW_HORIZON_DAYS, type CashflowOutlook, type Movement } from './domain/cashflow';
+
+// Foreign currency and reference rates (3.18, FR-FIN-04; decisions of 20 Nov 2026)
+export { RateLog } from './ui/RateLog';
+export { RateForm } from './ui/RateForm';
+export { getLatestRates, getRateLogView } from './ui/queries';
+export { RATE_NEW_PATH, RATES_PATH } from './ui/routes';
+export { currencyTextAr } from './ui/messages.ar';

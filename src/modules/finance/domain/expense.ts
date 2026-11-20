@@ -1,4 +1,5 @@
 import { isIsoDate, isUuid, readMoneyInput, type Money } from '@/shared-kernel';
+import { usesForeignCurrency, validateForeign, type ForeignAmount } from './currency';
 
 // Rules for recording an expense (FR-FIN-02, UC-07; design screen S14.1 "مصروف سريع").
 // Pure: no React, Next or Supabase (rule R4). Money stays Decimal, never a JS number.
@@ -6,7 +7,7 @@ import { isIsoDate, isUuid, readMoneyInput, type Money } from '@/shared-kernel';
 // The six fields of the design (decision of 16 Nov 2026, change register): name, amount, type, phase,
 // supplier or beneficiary, date. The owner must TYPE three of them (name, amount, type); the phase and the
 // date are filled in by the screen (current phase, today) and the supplier is optional.
-// Foreign currency (FR-FIN-04) and the receipt photo come later.
+// Foreign currency (FR-FIN-04, 3.18) is an optional section at the end (currency.ts); the receipt photo too (receipt.ts).
 
 /**
  * The expense types shown in the design (S13.1 rows: «مواد», «عمالة», «خدمات»). Stored as these English keys;
@@ -20,7 +21,18 @@ export const EXPENSE_TITLE_MIN = 2;
 export const EXPENSE_TITLE_MAX = 80;
 export const EXPENSE_PAYEE_MAX = 80;
 
-export type ExpenseField = 'title' | 'amount' | 'expenseType' | 'phaseId' | 'payee' | 'paidOn' | 'clientOpId';
+export type ExpenseField =
+  | 'title'
+  | 'amount'
+  | 'expenseType'
+  | 'phaseId'
+  | 'payee'
+  | 'paidOn'
+  | 'clientOpId'
+  // Foreign currency (3.18, FR-FIN-04): optional, at the end of the form.
+  | 'currency'
+  | 'originalAmount'
+  | 'rate';
 
 export type ExpenseErrorCode =
   | 'required'
@@ -52,6 +64,14 @@ export interface NewExpenseInput {
   /** "YYYY-MM-DD". Empty means today (in Libya). */
   paidOn?: string | null;
   /**
+   * Paid in a foreign currency (3.18, FR-FIN-04; optional). When a currency is chosen, the amount in LYD is NOT typed:
+   * it is original × rate (validateForeign), and `amount` is ignored.
+   */
+  currency?: string | null;
+  originalAmount?: string | null;
+  /** The owner's reference rate: LYD for one unit of the currency. */
+  rate?: string | null;
+  /**
    * Made once by the browser for each expense the owner records (crypto.randomUUID). If the same request is
    * sent again (weak connection, double tap, offline queue), the server finds this id and does NOT create a
    * second expense (NFR-REL-01).
@@ -68,6 +88,8 @@ export interface NewExpense {
   payee: string | null;
   /** null = let the database use today's date in Libya. */
   paidOn: string | null;
+  /** Null for an expense paid in LYD. Otherwise amountLyd is its LYD equivalent. */
+  foreign: ForeignAmount | null;
   clientOpId: string;
 }
 
@@ -108,7 +130,18 @@ function readFields(input: ExpenseEditInput, today: string, errors: ExpenseError
   else if (length(title) < EXPENSE_TITLE_MIN) errors.push({ field: 'title', code: 'too_short' });
   else if (length(title) > EXPENSE_TITLE_MAX) errors.push({ field: 'title', code: 'too_long' });
 
-  const amountLyd = readAmountLyd(input.amount, (code) => errors.push({ field: 'amount', code }));
+  // In LYD as typed, or (3.18) the LYD equivalent of a foreign amount at the owner's rate.
+  let amountLyd: Money | null = null;
+  let foreign: ForeignAmount | null = null;
+  if (usesForeignCurrency(input)) {
+    const f = validateForeign(input);
+    if (f.ok) {
+      foreign = f.value;
+      amountLyd = f.value.amountLyd;
+    } else errors.push(...f.errors);
+  } else {
+    amountLyd = readAmountLyd(input.amount, (code) => errors.push({ field: 'amount', code }));
+  }
 
   const type = clean(input.expenseType);
   if (type === '') errors.push({ field: 'expenseType', code: 'required' });
@@ -134,7 +167,7 @@ function readFields(input: ExpenseEditInput, today: string, errors: ExpenseError
   }
 
   if (errors.length > 0 || amountLyd === null) return null;
-  return { title, amountLyd, expenseType: type as ExpenseType, phaseId, payee, paidOn };
+  return { title, amountLyd, expenseType: type as ExpenseType, phaseId, payee, paidOn, foreign };
 }
 
 /**

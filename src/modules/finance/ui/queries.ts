@@ -2,6 +2,9 @@
 
 import { createServerSupabase } from '@/platform/supabase/server';
 import { getCashflow, type CashflowView } from '../application/cashflow';
+import { getRateLog, type RateLog } from '../application/rates';
+import { supabaseRateStore } from '../infra/supabase-rate-store';
+import type { LatestRates } from './ExpenseFields';
 import { supabaseCashflowStore } from '../infra/supabase-cashflow-store';
 import { supabaseFileStore } from '@/platform/supabase/storage';
 import type { ExpenseFilter } from '../domain/expense-filter';
@@ -29,4 +32,15 @@ export async function getCashflowView(
   today: string,
 ): Promise<CashflowView> {
   return getCashflow(supabaseCashflowStore(await createServerSupabase()), project, today);
+}
+
+/** The reference rates log (3.18). */
+export async function getRateLogView(projectId: string): Promise<RateLog> {
+  return getRateLog(supabaseRateStore(await createServerSupabase()), projectId);
+}
+
+/** The latest rate of each currency, for the expense forms to start with. */
+export async function getLatestRates(projectId: string): Promise<LatestRates> {
+  const { latest } = await getRateLogView(projectId);
+  return Object.fromEntries(Object.entries(latest).map(([code, r]) => [code, { lydPerUnit: r!.lydPerUnit, rateDate: r!.rateDate }])) as LatestRates;
 }

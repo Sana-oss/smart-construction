@@ -10,7 +10,7 @@ import { useActionState, useState } from 'react';
 import { formatAmount } from '@/shared-kernel';
 import type { ExpenseListItem } from '../application/list-expenses';
 import { deleteExpenseAction, updateExpenseAction, type DeleteExpenseState, type ExpenseFormState } from './actions';
-import { ExpenseFields } from './ExpenseFields';
+import { ExpenseFields, type LatestRates } from './ExpenseFields';
 import { BackIcon } from './icons';
 import { expenseTextAr as t } from './messages.ar';
 import styles from './expense.module.css';
@@ -24,9 +24,11 @@ interface Props {
   today: string;
   /** Where the back button goes (the expenses list). */
   backHref: string;
+  /** The owner's latest reference rates (3.18). */
+  rates: LatestRates;
 }
 
-export function EditExpenseForm({ expense, phases, today, backHref }: Props) {
+export function EditExpenseForm({ expense, phases, today, backHref, rates }: Props) {
   const [state, formAction, pending] = useActionState(updateExpenseAction, {} as ExpenseFormState);
 
   // The stored values first; after a refused save, what the owner typed (React resets the form).
@@ -37,6 +39,10 @@ export function EditExpenseForm({ expense, phases, today, backHref }: Props) {
     phaseId: expense.phaseId ?? '',
     payee: expense.payee ?? '',
     paidOn: expense.paidOn,
+    // 3.18: a foreign expense opens with its own currency, original amount and rate (not the latest rate).
+    currency: expense.foreign?.currency ?? '',
+    originalAmount: expense.foreign ? formatAmount(expense.foreign.originalAmount) : '',
+    rate: expense.foreign ? expense.foreign.rateLydPerUnit.replace(/\.?0+$/, '') : '',
   };
 
   return (
@@ -61,7 +67,7 @@ export function EditExpenseForm({ expense, phases, today, backHref }: Props) {
           )}
           <p className={styles.hint}>{t.requiredHint}</p>
           <input type="hidden" name="expenseId" value={expense.id} />
-          <ExpenseFields phases={phases} today={today} values={values} errors={state.fieldErrors ?? {}} dateRequired />
+          <ExpenseFields phases={phases} today={today} values={values} errors={state.fieldErrors ?? {}} dateRequired rates={rates} />
 
           <div className={styles.field}>
             <span className={styles.label}>{t.edit.receipt}</span>

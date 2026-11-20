@@ -44,6 +44,10 @@ export function supabaseExpenseGateway(supabase: SupabaseClient): ExpenseGateway
         p_payee: e.payee,
         p_paid_on: e.paidOn,
         p_receipt_path: e.receiptPath,
+        // 3.18: the database checks that amount_lyd = original × rate (0020).
+        p_original_amount: e.foreign?.originalAmount ?? null,
+        p_original_currency: e.foreign?.currency ?? null,
+        p_rate_lyd_per_unit: e.foreign?.rateLydPerUnit ?? null,
       });
       if (error) return { status: 'failed', reason: mapExpenseError(error) };
 
@@ -72,6 +76,9 @@ export function supabaseExpenseEditor(supabase: SupabaseClient): ExpenseEditor {
           phase_id: c.phaseId,
           payee: c.payee,
           paid_on: c.paidOn,
+          original_amount: c.foreign?.originalAmount ?? null,
+          original_currency: c.foreign?.currency ?? null,
+          rate_lyd_per_unit: c.foreign?.rateLydPerUnit ?? null,
         })
         .eq('id', c.expenseId)
         .eq('project_id', c.projectId)
