@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
 import { BUDGET_PATH, budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
 import { getQuantityTableView, MATERIALS_PATH } from '@/modules/materials';
+import { getReadinessView, READINESS_PATH, readinessTextAr } from '@/modules/quality';
 import {
   currentPhaseOf,
   overallProgress,
@@ -81,7 +82,11 @@ interface Props {
 }
 
 export async function ProjectSummary({ project, tasks, today, firstName, moreHref }: Props) {
-  const [expenses, quantities] = await Promise.all([getRecordedExpensesLyd(project.id), getQuantityTableView(project.id)]);
+  const [expenses, quantities, readiness] = await Promise.all([
+    getRecordedExpensesLyd(project.id),
+    getQuantityTableView(project.id),
+    getReadinessView(project.id),
+  ]);
   // Spent = money spent before the app + recorded expenses (decision 2); the sum is done by the finance domain.
   const summary = budgetSummary(project.totalBudgetLyd, totalSpent(project.spentBeforeLyd, expenses), project.contingencyPct);
   const current = currentPhaseOf(project.phases);
@@ -142,6 +147,19 @@ export async function ProjectSummary({ project, tasks, today, firstName, moreHre
             title={t.phases}
             note={t.phasesNote}
             value={current ? t.phaseOf(current.position, project.phases.length) : '—'}
+          />
+          {/* 3.15 (FR-PRJ-05): the project's readiness list, before starting work. */}
+          <Row
+            href={READINESS_PATH}
+            title={readinessTextAr.dashboard.title}
+            note={readinessTextAr.subtitle}
+            value={
+              !readiness.detail
+                ? readinessTextAr.dashboard.none
+                : readiness.gaps.length > 0
+                  ? readinessTextAr.dashboard.gaps(readiness.gaps.length)
+                  : readinessTextAr.dashboard.ready
+            }
           />
           <Row
             href={MATERIALS_PATH}

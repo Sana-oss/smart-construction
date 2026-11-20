@@ -150,3 +150,20 @@ export function isCheckPhotoPathOf(projectId: string, path: string): boolean {
 export function photoRequirement(result: CheckResult, requiresPhoto: boolean, hasPhoto: boolean): 'photo_required' | null {
   return result === 'ok' && requiresPhoto && !hasPhoto ? 'photo_required' : null;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// The project's readiness list (3.15; FR-PRJ-05). Same engine, its own template.
+
+export interface ReadinessGap {
+  text: string;
+  /** «ناقص» (recorded as missing) or not reviewed yet. */
+  state: 'missing' | 'unchecked';
+}
+
+/** What is not ready: every item recorded as missing, or not reviewed yet. «لا ينطبق» is not a gap. */
+export function readinessGaps(items: { text: string; result: CheckResult | null; position: number }[]): ReadinessGap[] {
+  return [...items]
+    .sort((a, b) => a.position - b.position)
+    .filter((i) => i.result === null || i.result === 'issue')
+    .map((i) => ({ text: i.text, state: i.result === 'issue' ? 'missing' : 'unchecked' }));
+}

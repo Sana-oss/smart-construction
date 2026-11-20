@@ -15,6 +15,14 @@ export const checklistTextAr = {
   unreviewed: 'قالب غير مراجَع من مهندس',
   approvedBy: 'قالب مراجَع',
 
+  /** Readiness (3.15): an item is there or missing, not «سليم». */
+  readinessResult: {
+    ok: 'متوفر',
+    issue: 'ناقص',
+    na: 'لا ينطبق',
+    none: 'لم يُراجَع',
+  } satisfies Record<CheckResult | 'none', string>,
+
   result: {
     ok: 'سليم',
     issue: 'توجد ملاحظة',
@@ -115,3 +123,29 @@ export const checklistFailedAr: Record<ChecklistFailure | 'no_project', string> 
   unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
   no_project: 'لا يوجد مشروع بعد. أنشئ مشروعك أولًا.',
 };
+
+// The project's readiness list (3.15; FR-PRJ-05). No design screen of its own: the design's S11.1 «بوابة الجاهزية» is a
+// per-phase list; the owner chose one list per project (change register), built from the same pieces.
+export const readinessTextAr = {
+  pageTitle: 'جاهزية المشروع',
+  title: 'جاهزية المشروع',
+  subtitle: 'قبل بدء التنفيذ',
+  progress: (checked: number, total: number) => `${checked} من ${total} بندًا روجع`,
+  empty: 'لم تُنشأ قائمة الجاهزية بعد',
+  emptyNote: 'قائمة بما يلزم قبل البدء: فحص التربة، والمخططات المعتمدة، والترخيص، والمهندس المشرف، وعقد المقاول.',
+  addFloorNote: 'مشروع إضافة طابق: القائمة تضم التقييم الإنشائي للمبنى القائم قبل أي تنفيذ.',
+  create: 'إنشاء قائمة الجاهزية',
+  gapsCount: (n: number) => (n === 1 ? 'بند واحد ناقص أو لم يُراجَع.' : `${n} بنود ناقصة أو لم تُراجَع.`),
+  ready: 'كل البنود متوفرة أو لا تنطبق.',
+  gateNote: 'بدء مرحلة مع نقص ممكن، لكن يُطلب منك تأكيد صريح يُسجَّل.',
+  saved: 'حُفظ البند.',
+  /** For the gate on starting a phase: one line per gap. */
+  gap: (text: string, state: 'missing' | 'unchecked') => `${text} (${state === 'missing' ? 'ناقص' : 'لم يُراجَع'})`,
+  notCreated: 'قائمة جاهزية المشروع لم تُنشأ بعد',
+  dashboard: {
+    title: 'جاهزية المشروع',
+    none: 'لم تُنشأ بعد',
+    gaps: (n: number) => (n === 1 ? 'بند واحد ناقص' : `${n} بنود ناقصة`),
+    ready: 'جاهز',
+  },
+} as const;

@@ -4,7 +4,7 @@
 // Domain (pure)
 export { validateProjectDetails, validateBudget, DEFAULT_CONTINGENCY_PCT, type ProjectType } from './domain/project-setup';
 export { planInitialPhases, currentPhaseOf, type PhaseStatus, type PlannedPhase } from './domain/phase-plan';
-export { phaseDelay, phasesOverview, type PhaseDelay, type PhaseSchedule } from './domain/phase-schedule';
+export { isPhaseStart, phaseDelay, phasesOverview, type PhaseDelay, type PhaseSchedule } from './domain/phase-schedule';
 export { phaseProgress, progressByPhase, overallProgress, isTaskOverdue, type PhaseProgress, type TaskStatus } from './domain/tasks';
 export type { PhaseTask } from './application/tasks';
 export { LIBYA_DISTRICTS } from './domain/libya-districts';
@@ -37,3 +37,7 @@ export {
   phasePath,
   phaseSchedulePath,
 } from './ui/routes';
+
+// The readiness gate (3.15) is composed by the app: it saves the phase through these, with the confirmed gaps.
+export { readPhaseForm, savePhaseSchedule } from './ui/phase-service';
+export type { PhaseFormState } from './ui/phase-actions';

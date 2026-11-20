@@ -20,13 +20,20 @@ interface Props {
   /** The date in Libya, "YYYY-MM-DD": the latest allowed actual date. */
   today: string;
   backHref: string;
+  /**
+   * The app's action, when the save needs more than this module knows (the readiness gate, 3.15). Defaults to this
+   * module's own action.
+   */
+  action?: (prev: PhaseFormState, form: FormData) => Promise<PhaseFormState>;
+  /** Where the owner can complete the readiness list (shown with the gate's warning). */
+  readinessHref?: string;
 }
 
 const initialState: PhaseFormState = {};
 const FORM_ID = 'phase-schedule-form';
 
-export function PhaseScheduleForm({ phaseId, phaseName, schedule, today, backHref }: Props) {
-  const [state, formAction, pending] = useActionState(updatePhaseScheduleAction.bind(null, phaseId), initialState);
+export function PhaseScheduleForm({ phaseId, phaseName, schedule, today, backHref, action, readinessHref }: Props) {
+  const [state, formAction, pending] = useActionState(action ?? updatePhaseScheduleAction.bind(null, phaseId), initialState);
   const errors = state.fieldErrors ?? {};
   const value = (f: PhaseScheduleField) => state.values?.[f] ?? (schedule[f] as string | null) ?? '';
 
@@ -114,6 +121,23 @@ export function PhaseScheduleForm({ phaseId, phaseName, schedule, today, backHre
             {field('actualEnd', t.form.actualEnd, { max: today })}
           </div>
           <p className={styles.helper}>{t.form.actualHelper}</p>
+
+          {/* FR-PRJ-05 / D2: starting with readiness gaps is allowed, after an explicit, logged confirmation. */}
+          {state.startGaps && state.startGaps.length > 0 && (
+            <div className={styles.warning} role="alert">
+              <strong>{t.form.gateTitle}</strong>
+              <p>{t.form.gateNote}</p>
+              <ul>
+                {state.startGaps.map((g) => (
+                  <li key={g}>{g}</li>
+                ))}
+              </ul>
+              {readinessHref && <Link href={readinessHref}>{t.form.gateLink}</Link>}
+              <label className={styles.check}>
+                <input type="checkbox" name="startConfirmed" value="yes" /> {t.form.gateConfirm}
+              </label>
+            </div>
+          )}
         </form>
       </div>
 

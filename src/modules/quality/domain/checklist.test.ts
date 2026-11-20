@@ -4,6 +4,7 @@ import {
   checkPhotoStoragePath,
   isCheckPhotoPathOf,
   photoRequirement,
+  readinessGaps,
   validateCheck,
   validateNewChecklist,
 } from './checklist';
@@ -87,5 +88,21 @@ describe('the item photo (FR-QLT-01, slice 2)', () => {
     expect(photoRequirement('ok', false, false)).toBeNull();
     expect(photoRequirement('issue', true, false)).toBeNull();
     expect(photoRequirement('na', true, false)).toBeNull();
+  });
+});
+
+describe('readinessGaps (FR-PRJ-05)', () => {
+  it('lists missing and unreviewed items in order; «متوفر» and «لا ينطبق» are not gaps', () => {
+    expect(
+      readinessGaps([
+        { text: 'ترخيص البناء', result: 'issue', position: 3 },
+        { text: 'فحص التربة', result: null, position: 1 },
+        { text: 'مخططات معتمدة', result: 'ok', position: 2 },
+        { text: 'عقد مقاول', result: 'na', position: 5 },
+      ]),
+    ).toEqual([
+      { text: 'فحص التربة', state: 'unchecked' },
+      { text: 'ترخيص البناء', state: 'missing' },
+    ]);
   });
 });

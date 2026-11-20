@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
-import { ChecklistScreen, getChecklistDetailView, phaseChecklistsPath } from '@/modules/quality';
+import { ChecklistScreen, getChecklistDetailView, phaseChecklistsPath, READINESS_PATH } from '@/modules/quality';
 import { BottomNav } from '../../_shell/BottomNav';
 
 export const metadata = { title: 'قائمة الفحص · ركيزة' };
@@ -14,6 +14,8 @@ export default async function ChecklistPage({ params, searchParams }: { params: 
   const { id } = await params;
   const detail = await getChecklistDetailView(project.id, id);
   if (!detail) notFound();
+  // The readiness list has its own page.
+  if (detail.checklist.kind === 'readiness') redirect(READINESS_PATH);
   const phase = project.phases.find((p) => p.id === detail.checklist.phaseId);
   const { done } = await searchParams;
   return (

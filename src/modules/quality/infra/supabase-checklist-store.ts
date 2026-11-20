@@ -24,6 +24,7 @@ export function mapChecklistError(error: { code?: string }): ChecklistFailure {
 
 interface TemplateRow {
   id: string;
+  kind: 'hold_point' | 'readiness';
   title: string;
   items: unknown[];
   status: 'unreviewed' | 'approved';
@@ -31,6 +32,7 @@ interface TemplateRow {
 }
 interface ChecklistRow {
   id: string;
+  kind: 'hold_point' | 'readiness';
   phase_id: string | null;
   title: string;
   status: 'open' | 'completed';
@@ -61,22 +63,23 @@ function complete<T>(rows: T[] | null, count: number | null, what: string): T[] 
 export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore {
   return {
     async listTemplates() {
-      const { data, error } = await supabase.from('checklist_templates').select('id, title, items, status, source').returns<TemplateRow[]>();
+      const { data, error } = await supabase.from('checklist_templates').select('id, kind, title, items, status, source').returns<TemplateRow[]>();
       if (error) throw new Error(`checklist templates unavailable: ${error.message}`);
-      return (data ?? []).map((r): TemplateRecord => ({ id: r.id, title: r.title, itemCount: r.items.length, status: r.status, source: r.source }));
+      return (data ?? []).map((r): TemplateRecord => ({ id: r.id, kind: r.kind, title: r.title, itemCount: r.items.length, status: r.status, source: r.source }));
     },
 
     async listChecklists(projectId) {
       const { data, error, count } = await supabase
         .from('checklists')
-        .select('id, phase_id, title, status, template_status, created_at', { count: 'exact' })
+        .select('id, kind, phase_id, title, status, template_status, created_at', { count: 'exact' })
         .eq('project_id', projectId)
-        .eq('kind', 'hold_point')
+        .in('kind', ['hold_point', 'readiness'])
         .returns<ChecklistRow[]>();
       if (error) throw new Error(`checklists unavailable: ${error.message}`);
       return complete(data, count, 'checklists').map(
         (r): ChecklistRecord => ({
           id: r.id,
+          kind: r.kind,
           phaseId: r.phase_id,
           title: r.title,
           status: r.status,
@@ -94,7 +97,7 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
           count: 'exact',
         })
         .eq('checklists.project_id', projectId)
-        .eq('checklists.kind', 'hold_point')
+        .in('checklists.kind', ['hold_point', 'readiness'])
         .returns<ItemRow[]>();
       if (error) throw new Error(`checklist items unavailable: ${error.message}`);
       return complete(data, count, 'checklist items').map(
@@ -121,6 +124,12 @@ export function supabaseChecklistStore(supabase: SupabaseClient): ChecklistStore
         p_title: c.title,
         p_template_id: c.templateId,
       });
+      if (error) return { status: 'failed', reason: mapChecklistError(error) };
+      return typeof data === 'string' ? { status: 'done', id: data } : { status: 'failed', reason: 'unavailable' };
+    },
+
+    async createReadiness(projectId) {
+      const { data, error } = await supabase.rpc('create_readiness_checklist', { p_project_id: projectId });
       if (error) return { status: 'failed', reason: mapChecklistError(error) };
       return typeof data === 'string' ? { status: 'done', id: data } : { status: 'failed', reason: 'unavailable' };
     },
