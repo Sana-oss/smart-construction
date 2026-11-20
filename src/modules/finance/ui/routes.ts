@@ -13,3 +13,7 @@ export const CASHFLOW_NEW_PATH = '/cashflow/new';
 /** The owner's reference exchange rates (3.18), and adding one. */
 export const RATES_PATH = '/rates';
 export const RATE_NEW_PATH = '/rates/new';
+/** The budget (design S15.1), its plan per phase (S15.2) and the plan's form. */
+export const BUDGET_PATH = '/budget';
+export const BUDGET_PHASES_PATH = '/budget/phases';
+export const BUDGET_EDIT_PATH = '/budget/phases/edit';

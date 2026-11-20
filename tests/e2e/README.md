@@ -20,6 +20,8 @@ mistake, it fails with "stranger can read projects".
 
 `documents.spec.ts` (FR-DOC-01): PDF and PNG stored as they are; a Word file and a PDF over 10 MB refused in the browser; a form missing a field leaves NO file in storage; the signed link returns the PDF; the phase page lists only that phase's documents; a stranger reaches nothing while the owner can; delete asks first and removes the file.
 
+`budget.spec.ts` (design S15.1, S15.2, FR-FIN-11; needs migration 0021): the dashboard leads to the budget, whose figures match the dashboard; a phase gets an allocation, and 70,000 spent on 60,000 shows «116%» and the 10% warning on S15.2 and S15.1; an allocation above the budget is a warning, not a refusal; clearing a field removes the allocation; changes are audited; a stranger can neither see nor change allocations.
+
 `currency.spec.ts` (3.18, FR-FIN-04; needs migration 0020): the reference rates log keeps the newest rate per currency; a quick expense in dollars starts with that rate, shows the LYD amount computed (not typed) and the list shows «1,000 USD بسعر 7.25»; the dashboard totals in LYD; editing the rate recomputes the expense, a newer rate in the log does not; a stranger can neither see nor change the rates.
 
 `decision.spec.ts` (design S18, FR-DEC-01/02/03/05; needs migrations 0017-0019): with the cash of S16 and an expired quote in S24, the comparison shows the 30-day balance, the expired quote and «ناقص» before any figure; after the figures, each scenario's now/later costs, 30-day balance or shortfall and total match a calculation done by hand; a % out of range is refused; the S18.2 checklist is saved and audited; a stranger can neither see nor change it.

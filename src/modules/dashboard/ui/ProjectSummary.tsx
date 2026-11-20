@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount, money } from '@/shared-kernel';
-import { budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
+import { BUDGET_PATH, budgetSummary, EXPENSE_NEW_PATH, EXPENSES_PATH, totalSpent } from '@/modules/finance';
 import {
   currentPhaseOf,
   overallProgress,
@@ -117,6 +117,7 @@ export async function ProjectSummary({ project, tasks, today, firstName, moreHre
             }
           />
           <Row
+            href={BUDGET_PATH}
             title={t.budget}
             note={
               <>

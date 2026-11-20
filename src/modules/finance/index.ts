@@ -51,3 +51,11 @@ export { RateForm } from './ui/RateForm';
 export { getLatestRates, getRateLogView } from './ui/queries';
 export { RATE_NEW_PATH, RATES_PATH } from './ui/routes';
 export { currencyTextAr } from './ui/messages.ar';
+
+// The budget plan (design S15.1, S15.2; FR-FIN-11; 3.16 financial part, slice 1)
+export { BudgetOverview } from './ui/BudgetOverview';
+export { PhaseBudget } from './ui/PhaseBudget';
+export { AllocationForm } from './ui/AllocationForm';
+export { getProjectBudget } from './ui/queries';
+export { BUDGET_EDIT_PATH, BUDGET_PATH, BUDGET_PHASES_PATH } from './ui/routes';
+export { budgetTextAr } from './ui/messages.ar';

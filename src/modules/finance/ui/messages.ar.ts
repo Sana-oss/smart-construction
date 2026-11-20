@@ -310,3 +310,59 @@ export const currencyTextAr = {
     submitting: 'جارٍ الحفظ…',
   },
 } as const;
+
+/**
+ * The budget screens. Wording from the design: S15.1 «ميزانية المشروع», S15.2 «توزيع الميزانية». FR-FIN-11's warning
+ * uses D5 (10%, temporary). 3.16 financial part, slice 1 (20 Nov 2026).
+ */
+export const budgetTextAr = {
+  back: 'رجوع',
+  lyd: 'د.ل',
+  overview: {
+    pageTitle: 'ميزانية المشروع',
+    title: 'ميزانية المشروع',
+    subtitle: 'مقارنة الإنفاق بالمخصصات',
+    remaining: 'المتبقي من الميزانية',
+    approvedSpent: (approved: string, spent: string) => `المعتمد: ${approved} · المصروف: ${spent}`,
+    overBudget: 'المصروف تجاوز الميزانية الإجمالية.',
+    overPhases: (n: number) =>
+      n === 1 ? 'مرحلة واحدة تجاوزت مخصصها بأكثر من 10%.' : `${n} مراحل تجاوزت مخصصاتها بأكثر من 10%.`,
+    rows: {
+      phases: { title: 'تفصيل الميزانية حسب المراحل', note: 'مخصصات وإنفاق كل مرحلة', action: 'عرض' },
+      cashflow: { title: 'الالتزامات والدخل', note: 'الدفعات القادمة ومصادر التمويل', action: 'عرض' },
+      contracts: { title: 'العقود والدفعات', note: 'متابعة العقود والاستحقاقات', action: 'قريبًا' },
+      decision: { title: 'الاستمرار أو التوقف', note: 'مراجعة السيناريو المالي', action: 'مراجعة' },
+    },
+  },
+  phases: {
+    pageTitle: 'توزيع الميزانية',
+    title: 'توزيع الميزانية',
+    subtitle: 'المخصصات حسب مراحل المشروع',
+    allocated: (allocated: string, forPhases: string) => `الموزّع ${allocated} من ${forPhases} د.ل المتاحة للمراحل`,
+    overAllocated: 'مجموع المخصصات أكبر من الميزانية بعد بند الطوارئ. هذا تنبيه، ويمكنك الإبقاء عليه.',
+    noAllocation: 'بلا مخصص',
+    spent: (amount: string) => `مصروف: ${amount} د.ل`,
+    usedPct: (pct: number) => `${pct}% من المخصص`,
+    notStarted: 'لم تبدأ',
+    over: 'تجاوز المخصص بأكثر من 10%',
+    contingency: 'احتياطي المشروع',
+    contingencyNote: 'بند الطوارئ من الميزانية',
+    unassigned: 'مصروفات بلا مرحلة',
+    unassignedNote: 'سُجّلت دون ربطها بمرحلة',
+    before: 'المصروف قبل التطبيق',
+    beforeNote: 'لا يُوزَّع على المراحل',
+    edit: 'تعديل التوزيع',
+    backToBudget: 'العودة للميزانية',
+    saved: 'حُفظ توزيع الميزانية.',
+    deviationNote: 'التنبيه حين يزيد مصروف المرحلة على مخصصها بأكثر من 10%. هذه نسبة مؤقتة (القرار D5).',
+  },
+  form: {
+    pageTitle: 'تعديل توزيع الميزانية',
+    title: 'تعديل توزيع الميزانية',
+    subtitle: 'مخصص كل مرحلة بالدينار',
+    hint: (forPhases: string) => `المتاح للمراحل بعد بند الطوارئ: ${forPhases} د.ل. اترك الحقل فارغًا لمرحلة بلا مخصص.`,
+    phaseLabel: (name: string) => `${name} · د.ل`,
+    submit: 'حفظ التوزيع',
+    submitting: 'جارٍ الحفظ…',
+  },
+} as const;
