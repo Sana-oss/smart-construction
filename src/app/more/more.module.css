@@ -70,10 +70,6 @@
   outline-offset: -3px;
 }
 
-.disabled {
-  opacity: 0.5;
-}
-
 .account {
   margin-block-start: var(--space-6);
 }

@@ -2,20 +2,21 @@
 // الرئيسية، المصروفات، المراحل، المواد، المزيد). In the app layer because it links screens of several modules, and only
 // the app may import them all (rule R2). Rendered by each MAIN page; forms (quick expense, new photo, new document,
 // the wizard) leave it out so their save button stays at the bottom and the quick expense stays three answers.
-// «المواد» is shown but not active until the materials feature exists (3.3/3.9).
+// «المواد» opens the materials home since the calculators (3.3 slice 1, 20 Nov 2026).
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { EXPENSES_PATH } from '@/modules/finance';
+import { MATERIALS_PATH } from '@/modules/materials';
 import { PHASES_PATH, PROJECT_HOME_PATH } from '@/modules/projects';
 import { bottomNavTextAr as t } from '../messages.ar';
 import styles from './bottom-nav.module.css';
 
-export type NavTab = 'home' | 'expenses' | 'phases' | 'more';
+export type NavTab = 'home' | 'expenses' | 'phases' | 'materials' | 'more';
 export const MORE_PATH = '/more';
 
 /** Lucide icons, the same as the design file (house, wallet, layers, box, ellipsis). */
-const ICONS: Record<NavTab | 'materials', ReactNode> = {
+const ICONS: Record<NavTab, ReactNode> = {
   home: (
     <>
       <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
@@ -61,6 +62,7 @@ const TABS: { tab: NavTab; href: string; label: string }[] = [
   { tab: 'home', href: PROJECT_HOME_PATH, label: t.home },
   { tab: 'expenses', href: EXPENSES_PATH, label: t.expenses },
   { tab: 'phases', href: PHASES_PATH, label: t.phases },
+  { tab: 'materials', href: MATERIALS_PATH, label: t.materials },
 ];
 
 export function BottomNav({ active }: { active: NavTab }) {
@@ -73,13 +75,6 @@ export function BottomNav({ active }: { active: NavTab }) {
   return (
     <nav className={styles.nav} aria-label={t.label} data-bottom-nav="">
       {TABS.map(link)}
-      <span className={`${styles.item} ${styles.disabled}`} aria-disabled="true">
-        <Icon name="materials" />
-        <span>
-          {t.materials}
-          <span className={styles.srOnly}> ({t.soon})</span>
-        </span>
-      </span>
       {link({ tab: 'more', href: MORE_PATH, label: t.more })}
     </nav>
   );

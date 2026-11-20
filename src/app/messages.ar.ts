@@ -23,7 +23,6 @@ export const bottomNavTextAr = {
   expenses: 'المصروفات',
   phases: 'المراحل',
   materials: 'المواد',
-  soon: 'قريبًا',
   more: 'المزيد',
 };
 
@@ -46,7 +45,5 @@ export const morePageTextAr = {
   photosNote: 'سجل مرئي حسب المرحلة والتاريخ',
   documents: 'وثائق المشروع',
   documentsNote: 'المخططات والعقود والفواتير والتصاريح',
-  materials: 'المواد والكميات',
-  materialsNote: 'قريبًا',
   account: 'الحساب',
 };
