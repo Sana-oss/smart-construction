@@ -17,3 +17,6 @@ export const RATE_NEW_PATH = '/rates/new';
 export const BUDGET_PATH = '/budget';
 export const BUDGET_PHASES_PATH = '/budget/phases';
 export const BUDGET_EDIT_PATH = '/budget/phases/edit';
+/** Extra works and changes (FR-FIN-10), and adding one. */
+export const EXTRAS_PATH = '/budget/extras';
+export const EXTRA_NEW_PATH = '/budget/extras/new';

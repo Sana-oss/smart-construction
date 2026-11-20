@@ -5,6 +5,8 @@ import { getCashflow, type CashflowView } from '../application/cashflow';
 import { getRateLog, type RateLog } from '../application/rates';
 import { getBudgetView, type BudgetView, type ProjectBudget } from '../application/budget-plan';
 import { supabaseBudgetStore } from '../infra/supabase-budget-store';
+import { getExtras, type ExtrasView } from '../application/extras';
+import { supabaseExtraStore } from '../infra/supabase-extra-store';
 import { supabaseRateStore } from '../infra/supabase-rate-store';
 import type { LatestRates } from './ExpenseFields';
 import { supabaseCashflowStore } from '../infra/supabase-cashflow-store';
@@ -50,4 +52,9 @@ export async function getLatestRates(projectId: string): Promise<LatestRates> {
 /** The budget and its plan per phase (design S15.1, S15.2). `project` comes from the projects module (the page). */
 export async function getProjectBudget(project: ProjectBudget): Promise<BudgetView> {
   return getBudgetView(supabaseBudgetStore(await createServerSupabase()), project);
+}
+
+/** Extra works and their effect on the contingency (FR-FIN-10). `project` comes from the projects module (the page). */
+export async function getExtrasView(project: { id: string; totalBudgetLyd: string; contingencyPct: string }): Promise<ExtrasView> {
+  return getExtras(supabaseExtraStore(await createServerSupabase()), project);
 }

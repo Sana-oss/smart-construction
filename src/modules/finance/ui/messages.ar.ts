@@ -327,8 +327,15 @@ export const budgetTextAr = {
     overBudget: 'المصروف تجاوز الميزانية الإجمالية.',
     overPhases: (n: number) =>
       n === 1 ? 'مرحلة واحدة تجاوزت مخصصها بأكثر من 10%.' : `${n} مراحل تجاوزت مخصصاتها بأكثر من 10%.`,
+    contingencyUsedUp: 'استُهلك بند الطوارئ بالأعمال الإضافية المعتمدة.',
+    beyondBudget: (expected: string, beyond: string) => `التكلفة المتوقعة صارت ${expected} د.ل، أي فوق الميزانية بـ ${beyond} د.ل.`,
     rows: {
       phases: { title: 'تفصيل الميزانية حسب المراحل', note: 'مخصصات وإنفاق كل مرحلة', action: 'عرض' },
+      extras: {
+        title: 'الأعمال الإضافية والتغييرات',
+        note: (approved: string, proposed: string) => `معتمدة ${approved} · مقترحة ${proposed} د.ل`,
+        action: 'عرض',
+      },
       cashflow: { title: 'الالتزامات والدخل', note: 'الدفعات القادمة ومصادر التمويل', action: 'عرض' },
       contracts: { title: 'العقود والدفعات', note: 'متابعة العقود والاستحقاقات', action: 'قريبًا' },
       decision: { title: 'الاستمرار أو التوقف', note: 'مراجعة السيناريو المالي', action: 'مراجعة' },
@@ -347,6 +354,7 @@ export const budgetTextAr = {
     over: 'تجاوز المخصص بأكثر من 10%',
     contingency: 'احتياطي المشروع',
     contingencyNote: 'بند الطوارئ من الميزانية',
+    contingencyUsed: (used: string, left: string) => `للأعمال الإضافية المعتمدة: ${used} د.ل · متبقٍ: ${left} د.ل`,
     unassigned: 'مصروفات بلا مرحلة',
     unassignedNote: 'سُجّلت دون ربطها بمرحلة',
     before: 'المصروف قبل التطبيق',
@@ -363,6 +371,52 @@ export const budgetTextAr = {
     hint: (forPhases: string) => `المتاح للمراحل بعد بند الطوارئ: ${forPhases} د.ل. اترك الحقل فارغًا لمرحلة بلا مخصص.`,
     phaseLabel: (name: string) => `${name} · د.ل`,
     submit: 'حفظ التوزيع',
+    submitting: 'جارٍ الحفظ…',
+  },
+} as const;
+
+/**
+ * Extra works and changes (FR-FIN-10; 3.16 financial part, slice 2; decisions of 20 Nov 2026). No design screen: built
+ * from the design's list, card and form styles (change register).
+ */
+export const extrasTextAr = {
+  back: 'رجوع',
+  lyd: 'د.ل',
+  list: {
+    pageTitle: 'الأعمال الإضافية والتغييرات',
+    title: 'الأعمال الإضافية والتغييرات',
+    subtitle: 'ما زاد على الخطة، بقيمته وحالته',
+    approved: 'الأعمال الإضافية المعتمدة',
+    contingencyLeft: (left: string) => `تُخصم من بند الطوارئ أولًا · متبقٍ منه: ${left} د.ل`,
+    proposed: (amount: string) => `مقترحة بانتظار قرارك: ${amount} د.ل (لا تُحسب بعد)`,
+    empty: 'لا أعمال إضافية مسجلة',
+    emptyNote: 'سجّل كل عمل خارج الخطة بقيمته، واعتمده أو ارفضه، لترى أثره على الميزانية.',
+    add: 'إضافة عمل إضافي',
+    added: 'حُفظ العمل الإضافي.',
+    changed: 'حُدّثت حالة العمل الإضافي، وسُجّل التغيير في سجل التدقيق.',
+    deleted: 'حُذف العمل الإضافي، وبقي أثره في سجل التدقيق.',
+    approve: 'اعتماد',
+    reject: 'رفض',
+    delete: 'حذف',
+    approveConfirm: (title: string, cost: string) => `اعتماد «${title}» بقيمة ${cost} د.ل؟ تُخصم من بند الطوارئ أولًا.`,
+    rejectConfirm: (title: string) => `رفض «${title}»؟ لن يؤثر على الميزانية.`,
+    deleteConfirm: (title: string) => `حذف «${title}»؟ تبقى قيمه في سجل التدقيق.`,
+    actionLabel: (action: string, title: string) => `${action}: ${title}`,
+  },
+  status: { proposed: 'مقترحة', approved: 'معتمدة', rejected: 'مرفوضة' },
+  form: {
+    pageTitle: 'إضافة عمل إضافي',
+    title: 'إضافة عمل إضافي',
+    subtitle: 'عمل خارج الخطة أو تغيير فيها',
+    titleLabel: 'الوصف',
+    cost: 'القيمة · د.ل',
+    date: 'التاريخ',
+    phase: 'المرحلة',
+    noPhase: 'غير مرتبط بمرحلة',
+    status: 'الحالة',
+    note: 'ملاحظة',
+    optional: 'اختياري',
+    submit: 'حفظ العمل',
     submitting: 'جارٍ الحفظ…',
   },
 } as const;

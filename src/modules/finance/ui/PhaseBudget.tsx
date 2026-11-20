@@ -7,6 +7,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatAmount, money, type Money } from '@/shared-kernel';
 import type { BudgetView } from '../application/budget-plan';
+import type { ContingencyUse } from '../domain/extras';
 import { BackIcon } from './icons';
 import { budgetTextAr } from './messages.ar';
 import styles from './expense.module.css';
@@ -20,6 +21,8 @@ const Lyd = ({ value }: { value: Money | string }) => (
 
 interface Props {
   view: BudgetView;
+  /** FR-FIN-10: how much of the contingency the approved extra works use. */
+  extras: ContingencyUse;
   /** Phase names and statuses come from the projects module (the page passes them in). */
   phases: { id: string; name: string; status: string }[];
   spentBeforeLyd: string;
@@ -40,7 +43,7 @@ function Row({ title, note, value, warn = false }: { title: string; note: ReactN
   );
 }
 
-export function PhaseBudget({ view, phases, spentBeforeLyd, backHref, editHref, notice = null }: Props) {
+export function PhaseBudget({ view, extras, phases, spentBeforeLyd, backHref, editHref, notice = null }: Props) {
   const { plan, summary } = view;
   const nameOf = (id: string) => phases.find((p) => p.id === id);
   return (
@@ -94,7 +97,12 @@ export function PhaseBudget({ view, phases, spentBeforeLyd, backHref, editHref, 
               />
             );
           })}
-          <Row title={t.contingency} note={t.contingencyNote} value={<Lyd value={summary.contingency} />} />
+          <Row
+            title={t.contingency}
+            note={extras.approved.gt(0) ? t.contingencyUsed(formatAmount(extras.approved), formatAmount(extras.contingencyLeft)) : t.contingencyNote}
+            value={<Lyd value={summary.contingency} />}
+            warn={extras.usedUp}
+          />
           {plan.unassigned.gt(0) && <Row title={t.unassigned} note={t.unassignedNote} value={<Lyd value={plan.unassigned} />} />}
           {!money(spentBeforeLyd).isZero() && <Row title={t.before} note={t.beforeNote} value={<Lyd value={spentBeforeLyd} />} />}
         </ul>

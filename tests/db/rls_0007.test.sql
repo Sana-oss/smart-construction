@@ -196,9 +196,11 @@ do $$ begin
       where table_schema = 'public' and table_name = 'expenses' and column_name = 'paid_on') not like '%today_tripoli%' then
     raise exception 'FAIL: expenses.paid_on does not use today_tripoli()';
   end if;
+  -- At least the 5 of 0007 (later tables, such as change_orders.occurred_on in 0022, add more); the check below makes
+  -- sure no column uses the server's current_date instead.
   if (select count(*) from information_schema.columns
-      where table_schema = 'public' and column_default like '%today_tripoli%') <> 5 then
-    raise exception 'FAIL: expected 5 date columns to default to today_tripoli()';
+      where table_schema = 'public' and column_default like '%today_tripoli%') < 5 then
+    raise exception 'FAIL: expected at least 5 date columns to default to today_tripoli()';
   end if;
   if exists (select 1 from information_schema.columns
              where table_schema = 'public' and upper(column_default) like '%CURRENT_DATE%') then

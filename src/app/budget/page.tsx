@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { DECISION_PATH } from '@/modules/decisions';
-import { BudgetOverview, budgetTextAr, BUDGET_PHASES_PATH, CASHFLOW_PATH, getProjectBudget } from '@/modules/finance';
+import { BudgetOverview, budgetTextAr, BUDGET_PHASES_PATH, CASHFLOW_PATH, EXTRAS_PATH, getExtrasView, getProjectBudget } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, PROJECT_HOME_PATH, SETUP_DETAILS_PATH } from '@/modules/projects';
 import { BottomNav } from '../_shell/BottomNav';
@@ -12,10 +12,15 @@ export default async function BudgetPage() {
   if (!(await getSignedInUserId())) redirect(SIGN_IN_PATH);
   const project = await getMyProject();
   if (!project) redirect(SETUP_DETAILS_PATH);
-  const view = await getProjectBudget(project);
+  const [view, extras] = await Promise.all([getProjectBudget(project), getExtrasView(project)]);
   return (
     <>
-      <BudgetOverview view={view} backHref={PROJECT_HOME_PATH} links={{ phases: BUDGET_PHASES_PATH, cashflow: CASHFLOW_PATH, decision: DECISION_PATH }} />
+      <BudgetOverview
+        view={view}
+        extras={extras.use}
+        backHref={PROJECT_HOME_PATH}
+        links={{ phases: BUDGET_PHASES_PATH, extras: EXTRAS_PATH, cashflow: CASHFLOW_PATH, decision: DECISION_PATH }}
+      />
       <BottomNav active="home" />
     </>
   );
