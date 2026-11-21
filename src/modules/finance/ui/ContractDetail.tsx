@@ -5,11 +5,12 @@
 import Link from 'next/link';
 import { formatAmount, money } from '@/shared-kernel';
 import type { ContractDetail as ContractDetailData } from '../application/contracts';
+import type { ContractExtras } from '../domain/extras';
 import { paymentStage, type DueState } from '../domain/payments';
 import { ContractButton } from './ContractButton';
 import { BackIcon } from './icons';
 import { contractsTextAr, settleTextAr } from './messages.ar';
-import { paymentNewPath, paymentPath } from './routes';
+import { contractEditPath, EXTRAS_PATH, paymentEditPath, paymentNewPath, paymentPath } from './routes';
 import styles from './expense.module.css';
 
 const t = contractsTextAr.detail;
@@ -19,13 +20,15 @@ interface Props {
   phases: { id: string; name: string }[];
   /** FR-FIN-09: is each installment due? Computed by the page from the phase and its photos (other modules). */
   dueByPayment: Record<string, DueState>;
+  /** Extra works linked to this contract (3.16): shown, never part of its numbers. */
+  extras: ContractExtras;
   /** The contract copy: a document of type «عقد» with its short-lived link; null when none is linked. */
   copy: { title: string; url: string | null } | null;
   backHref: string;
-  notice?: 'added' | 'payment-added' | 'payment-deleted' | null;
+  notice?: 'added' | 'updated' | 'payment-added' | 'payment-updated' | 'payment-deleted' | null;
 }
 
-export function ContractDetail({ detail, phases, dueByPayment, copy, backHref, notice = null }: Props) {
+export function ContractDetail({ detail, phases, dueByPayment, extras, copy, backHref, notice = null }: Props) {
   const { contract, payments } = detail;
   const s = contract.summary;
   const phaseName = (id: string | null) => (id ? phases.find((p) => p.id === id)?.name ?? null : null);
@@ -44,7 +47,15 @@ export function ContractDetail({ detail, phases, dueByPayment, copy, backHref, n
       <div className={styles.scroll}>
         {notice && (
           <p role="status" className={styles.info}>
-            {notice === 'added' ? t.contractAdded : notice === 'payment-added' ? t.paymentAdded : t.paymentDeleted}
+            {notice === 'added'
+              ? t.contractAdded
+              : notice === 'updated'
+                ? t.contractUpdated
+                : notice === 'payment-added'
+                  ? t.paymentAdded
+                  : notice === 'payment-updated'
+                    ? t.paymentUpdated
+                    : t.paymentDeleted}
           </p>
         )}
 
@@ -81,6 +92,11 @@ export function ContractDetail({ detail, phases, dueByPayment, copy, backHref, n
                   </Link>
                   <span className={styles.rowValue}>
                     <bdi dir="ltr">{formatAmount(p.amountLyd)}</bdi> {contractsTextAr.lyd}
+                    {stage === 'scheduled' && (
+                      <Link href={paymentEditPath(contract.id, p.id)} className={styles.linkButton} aria-label={t.actionLabel(t.editPayment, p.title)}>
+                        {t.editPayment}
+                      </Link>
+                    )}
                     {stage === 'scheduled' && (
                       <ContractButton
                         contractId={contract.id}
@@ -139,6 +155,26 @@ export function ContractDetail({ detail, phases, dueByPayment, copy, backHref, n
           </li>
         </ul>
 
+        <ul className={styles.list} aria-label={t.extras}>
+          <li className={styles.listRow}>
+            <span className={styles.rowText}>
+              <strong>{t.extras}</strong>
+              <small>
+                {extras.approvedCount + extras.proposedCount === 0 ? t.extrasNoteEmpty : t.extrasNote(formatAmount(extras.approved), formatAmount(extras.proposed))}
+              </small>
+            </span>
+            <span className={styles.rowValue}>
+              <Link href={EXTRAS_PATH} className={styles.linkButton}>
+                {t.view}
+              </Link>
+            </span>
+          </li>
+        </ul>
+        <p className={styles.hint}>{t.extrasHint}</p>
+
+        <Link href={contractEditPath(contract.id)} className={styles.linkButton} aria-label={t.actionLabel(t.editContract, contract.title)}>
+          {t.editContract}
+        </Link>
         <ContractButton contractId={contract.id} label={t.deleteContract} ariaLabel={t.actionLabel(t.deleteContract, contract.title)} confirm={t.deleteContractConfirm(contract.title)} />
       </div>
 

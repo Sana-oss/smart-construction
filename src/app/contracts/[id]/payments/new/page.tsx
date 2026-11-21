@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { contractPath, contractsTextAr, getContractDetail, PaymentForm } from '@/modules/finance';
+import { addPaymentAction, contractPath, contractsTextAr, getContractDetail, PaymentForm } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
 import { BottomNav } from '../../../../_shell/BottomNav';
@@ -16,7 +16,7 @@ export default async function NewPaymentPage({ params }: { params: Promise<{ id:
   if (!detail) notFound();
   return <>
     <PaymentForm
-      contractId={detail.contract.id}
+      action={addPaymentAction.bind(null, detail.contract.id)}
       contractTitle={detail.contract.title}
       phases={project.phases.map((p) => ({ id: p.id, name: p.name }))}
       backHref={contractPath(detail.contract.id)}

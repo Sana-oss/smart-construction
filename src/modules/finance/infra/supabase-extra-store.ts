@@ -4,7 +4,7 @@ import { isExtraStatus } from '../domain/extras';
 import { mapExpenseError } from './supabase-expense-gateway';
 
 // Supabase adapter for extra works (table change_orders). Always used with the signed-in user's client, so RLS decides
-// (0001: members read, writers write). Contracts are not built: contract_id is never written here.
+// (0001: members read, writers write). contract_id links a work to a contract (3.16; the guard of 0022 checks the project).
 
 interface ExtraRow {
   id: string;
@@ -13,13 +13,14 @@ interface ExtraRow {
   status: string;
   occurred_on: string;
   phase_id: string | null;
+  contract_id: string | null;
   note: string | null;
   created_at: string;
 }
 
 export function toExtraRecord(r: ExtraRow): ExtraRecord | null {
   return isExtraStatus(r.status)
-    ? { id: r.id, title: r.title, costLyd: r.cost_lyd, status: r.status, occurredOn: r.occurred_on, phaseId: r.phase_id, note: r.note, createdAt: r.created_at }
+    ? { id: r.id, title: r.title, costLyd: r.cost_lyd, status: r.status, occurredOn: r.occurred_on, phaseId: r.phase_id, contractId: r.contract_id, note: r.note, createdAt: r.created_at }
     : null;
 }
 
@@ -29,7 +30,7 @@ export function supabaseExtraStore(supabase: SupabaseClient): ExtraStore {
       // The cost arrives as text, never as a JS number (data rules).
       const { data, error, count } = await supabase
         .from('change_orders')
-        .select('id, title, cost_lyd::text, status, occurred_on, phase_id, note, created_at', { count: 'exact' })
+        .select('id, title, cost_lyd::text, status, occurred_on, phase_id, contract_id, note, created_at', { count: 'exact' })
         .eq('project_id', projectId)
         .returns<ExtraRow[]>();
       if (error) throw new Error(`extra works unavailable: ${error.message}`);
@@ -46,6 +47,7 @@ export function supabaseExtraStore(supabase: SupabaseClient): ExtraStore {
         cost_lyd: e.costLyd,
         status: e.status,
         phase_id: e.phaseId,
+        contract_id: e.contractId,
         note: e.note,
       };
       if (e.occurredOn) row.occurred_on = e.occurredOn; // otherwise the database's default: today in Libya
@@ -55,6 +57,12 @@ export function supabaseExtraStore(supabase: SupabaseClient): ExtraStore {
 
     async setStatus(projectId, id, status) {
       const { data, error } = await supabase.from('change_orders').update({ status }).eq('id', id).eq('project_id', projectId).select('id');
+      if (error) return { status: 'failed', reason: mapExpenseError(error) };
+      return data && data.length === 1 ? { status: 'done' } : { status: 'failed', reason: 'not_found' };
+    },
+
+    async setContract(projectId, id, contractId) {
+      const { data, error } = await supabase.from('change_orders').update({ contract_id: contractId }).eq('id', id).eq('project_id', projectId).select('id');
       if (error) return { status: 'failed', reason: mapExpenseError(error) };
       return data && data.length === 1 ? { status: 'done' } : { status: 'failed', reason: 'not_found' };
     },

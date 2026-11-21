@@ -7,6 +7,7 @@ import { getBudgetView, type BudgetView, type ProjectBudget } from '../applicati
 import { supabaseBudgetStore } from '../infra/supabase-budget-store';
 import { getContract, getContracts, type ContractDetail, type ContractsView } from '../application/contracts';
 import { getExtras, type ExtrasView } from '../application/extras';
+import { contractExtras, type ContractExtras } from '../domain/extras';
 import { supabaseContractStore } from '../infra/supabase-contract-store';
 import { supabaseExtraStore } from '../infra/supabase-extra-store';
 import { supabaseRateStore } from '../infra/supabase-rate-store';
@@ -81,4 +82,10 @@ export async function getExpenseReportView(
   today: string,
 ): Promise<ExpenseReportView> {
   return getExpenseReport(supabaseReportStore(await createServerSupabase()), project, period, today);
+}
+
+/** The extra works linked to one contract: shown on its page, never part of its numbers (3.16 deepening). */
+export async function getContractExtras(projectId: string, contractId: string): Promise<ContractExtras> {
+  const all = await supabaseExtraStore(await createServerSupabase()).list(projectId);
+  return contractExtras(all.filter((e) => e.contractId === contractId.toLowerCase()));
 }

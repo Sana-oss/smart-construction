@@ -79,9 +79,11 @@ export { ContractDetail } from './ui/ContractDetail';
 export { ContractForm } from './ui/ContractForm';
 export { PaymentForm } from './ui/PaymentForm';
 export { getContractsView, getContractDetail } from './ui/queries';
-export { saveContract } from './ui/contract-save';
+export { saveContract, changeContract } from './ui/contract-save';
+export { addPaymentAction, updatePaymentAction } from './ui/contract-actions';
+export { getContractExtras } from './ui/queries';
 export { CONTRACT_FORM_FIELDS, type ContractFormState } from './ui/contract-form-state';
-export { CONTRACTS_PATH, CONTRACT_NEW_PATH, contractPath, paymentNewPath } from './ui/routes';
+export { CONTRACTS_PATH, CONTRACT_NEW_PATH, contractPath, contractEditPath, paymentNewPath, paymentEditPath } from './ui/routes';
 export { contractsTextAr, contractErrorsAr, contractFailedAr, contractCountAr } from './ui/messages.ar';
 
 // Paying an installment and releasing the retained part (design S17.3; FR-FIN-09; 3.16 contractual part, slice 2)

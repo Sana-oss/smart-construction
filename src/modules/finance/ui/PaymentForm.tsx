@@ -1,30 +1,36 @@
 'use client';
 
-// Add a payment to a contract's schedule (FR-FIN-09): name, amount, the phase it falls due after, and the retained part
+// Add a payment to a contract's schedule, or edit an unpaid one (FR-FIN-09; editing: 3.16 deepening): name, amount, the phase it falls due after, and the retained part
 // the owner typed (D9: never suggested). No design screen: built from the design's form fields (change register).
 
 import Link from 'next/link';
 import { useActionState } from 'react';
 import type { PaymentField } from '../domain/contracts';
-import { addPaymentAction, type PaymentFormState } from './contract-actions';
+import type { PaymentFormState } from './contract-actions';
 import { BackIcon } from './icons';
 import { contractsTextAr, expenseTextAr } from './messages.ar';
 import styles from './expense.module.css';
 
-const t = contractsTextAr.paymentForm;
+const add = contractsTextAr.paymentForm;
+const edit = contractsTextAr.editPaymentForm;
 const FORM_ID = 'payment-form';
 
 interface Props {
-  contractId: string;
+  /** The Server Action, bound by the page to the contract (adding) or to the payment (editing). */
+  action: (prev: PaymentFormState, form: FormData) => Promise<PaymentFormState>;
   contractTitle: string;
   phases: { id: string; name: string }[];
   backHref: string;
+  mode?: 'add' | 'edit';
+  /** The saved values when editing. */
+  initial?: Partial<Record<'title' | 'amount' | 'phaseId' | 'retained', string>>;
 }
 
-export function PaymentForm({ contractId, contractTitle, phases, backHref }: Props) {
-  const [state, formAction, pending] = useActionState(addPaymentAction.bind(null, contractId), {} as PaymentFormState);
+export function PaymentForm({ action, contractTitle, phases, backHref, mode = 'add', initial }: Props) {
+  const t = mode === 'edit' ? { ...add, ...edit } : add;
+  const [state, formAction, pending] = useActionState(action, {} as PaymentFormState);
   const errors = state.fieldErrors ?? {};
-  const values = state.values ?? {};
+  const values = state.values ?? initial ?? {};
   const invalid = (name: PaymentField) => ({
     'aria-invalid': errors[name] ? (true as const) : undefined,
     'aria-describedby': errors[name] ? `${name}-error` : undefined,

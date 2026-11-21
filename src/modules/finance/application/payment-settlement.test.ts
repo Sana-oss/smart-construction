@@ -29,6 +29,8 @@ function deps(p: PaymentRecord, opts: { expenseFails?: boolean; markFails?: bool
     async listPayments() { return [p]; },
     async addContract() { throw new Error('unused'); },
     async addPayment() { throw new Error('unused'); },
+    async updateContract() { throw new Error('unused'); },
+    async updatePayment() { throw new Error('unused'); },
     async removeContract() { throw new Error('unused'); },
     async removePayment() { throw new Error('unused'); },
   };

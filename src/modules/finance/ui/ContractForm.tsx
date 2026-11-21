@@ -1,18 +1,17 @@
 'use client';
 
-// Add a contract (FR-FIN-08): title, contractor, value, scope, cleanup clause (FR-FIN-12), contract copy. No design
+// Add or edit a contract (FR-FIN-08; editing: 3.16 deepening, owner's decision of 21 Nov 2026): title, contractor, value, scope, cleanup clause (FR-FIN-12), contract copy. No design
 // screen: built from the design's form fields (change register). The Server Action comes from the page (src/app),
 // because it checks the contract copy, a document of another module.
 
 import Link from 'next/link';
 import { useActionState } from 'react';
 import type { ContractField } from '../domain/contracts';
-import { type ContractFormState } from './contract-form-state';
+import { CONTRACT_FORM_FIELDS, type ContractFormState } from './contract-form-state';
 import { BackIcon } from './icons';
 import { contractsTextAr, expenseTextAr } from './messages.ar';
 import styles from './expense.module.css';
 
-const t = contractsTextAr.form;
 const FORM_ID = 'contract-form';
 
 interface Props {
@@ -20,12 +19,16 @@ interface Props {
   /** The project's documents of type «عقد», to choose the contract copy from. */
   copies: { id: string; title: string }[];
   backHref: string;
+  /** 'edit' shows the saved values and the editing texts; the Server Action (from the page) then updates the contract. */
+  mode?: 'add' | 'edit';
+  initial?: Partial<Record<(typeof CONTRACT_FORM_FIELDS)[number], string>>;
 }
 
-export function ContractForm({ action, copies, backHref }: Props) {
+export function ContractForm({ action, copies, backHref, mode = 'add', initial }: Props) {
+  const t = mode === 'edit' ? contractsTextAr.editForm : contractsTextAr.form;
   const [state, formAction, pending] = useActionState(action, {} as ContractFormState);
   const errors = state.fieldErrors ?? {};
-  const values = state.values ?? {};
+  const values = state.values ?? initial ?? {};
   const invalid = (name: ContractField) => ({
     'aria-invalid': errors[name] ? (true as const) : undefined,
     'aria-describedby': errors[name] ? `${name}-error` : undefined,

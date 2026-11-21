@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { contingencyUse, EXTRA_TITLE_MAX, validateExtra } from './extras';
+import { contingencyUse, contractExtras, EXTRA_TITLE_MAX, validateExtra } from './extras';
 
 const TODAY = '2026-11-20';
 const PHASE = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const CONTRACT = 'c1c1c1c1-c1c1-4c1c-8c1c-c1c1c1c1c1c1';
 const fixed = (m: { toFixed: (n: number) => string }) => m.toFixed(3);
 
 describe('validateExtra (FR-FIN-10)', () => {
@@ -76,5 +77,36 @@ describe('contingencyUse (approved works come out of the contingency first)', ()
   it('nothing approved: nothing used, even with a zero contingency', () => {
     const u = contingencyUse({ total: '1000', contingency: '0', extras: [] });
     expect([u.usedUp, fixed(u.contingencyLeft)]).toEqual([false, '0.000']);
+  });
+});
+
+describe('the contract of an extra work (3.16)', () => {
+  it('is optional, and kept lowercase when given', () => {
+    const none = validateExtra({ title: 'باب إضافي', cost: '500' }, TODAY);
+    expect(none.ok && none.value.contractId).toBeNull();
+    const given = validateExtra({ title: 'باب إضافي', cost: '500', contractId: CONTRACT.toUpperCase() }, TODAY);
+    expect(given.ok && given.value.contractId).toBe(CONTRACT);
+  });
+
+  it('refuses a contract that is not an id', () => {
+    const r = validateExtra({ title: 'باب إضافي', cost: '500', contractId: 'x' }, TODAY);
+    expect(r.ok ? [] : r.errors).toEqual([{ field: 'contractId', code: 'invalid_id' }]);
+  });
+});
+
+describe('contractExtras', () => {
+  it('sums the approved and the proposed works apart, and ignores the rejected', () => {
+    const r = contractExtras([
+      { status: 'approved', costLyd: '12000.500' },
+      { status: 'approved', costLyd: '3000' },
+      { status: 'proposed', costLyd: '800' },
+      { status: 'rejected', costLyd: '99999' },
+    ]);
+    expect([fixed(r.approved), fixed(r.proposed), r.approvedCount, r.proposedCount]).toEqual(['15000.500', '800.000', 2, 1]);
+  });
+
+  it('is zero without works', () => {
+    const r = contractExtras([]);
+    expect([fixed(r.approved), fixed(r.proposed), r.approvedCount, r.proposedCount]).toEqual(['0.000', '0.000', 0, 0]);
   });
 });

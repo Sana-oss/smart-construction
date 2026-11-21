@@ -8,13 +8,13 @@ import { redirect } from 'next/navigation';
 import { todayInTripoli } from '@/shared-kernel';
 import { getMyProject } from '@/modules/projects';
 import { createServerSupabase } from '@/platform/supabase/server';
-import { addExtra, removeExtra, setExtraStatus } from '../application/extras';
+import { addExtra, linkExtraToContract, removeExtra, setExtraStatus } from '../application/extras';
 import type { ExtraField } from '../domain/extras';
 import { supabaseExtraStore } from '../infra/supabase-extra-store';
 import { cashflowFailedAr, expenseErrorsAr } from './messages.ar';
 import { EXTRAS_PATH } from './routes';
 
-const FIELDS = ['title', 'cost', 'occurredOn', 'phaseId', 'status', 'note'] as const;
+const FIELDS = ['title', 'cost', 'occurredOn', 'phaseId', 'contractId', 'status', 'note'] as const;
 
 export interface ExtraFormState {
   fieldErrors?: Partial<Record<ExtraField, string>>;
@@ -48,6 +48,16 @@ export async function setExtraStatusAction(id: string, status: string): Promise<
   const result = await setExtraStatus(supabaseExtraStore(await createServerSupabase()), { projectId: project.id, id, status });
   revalidatePath('/', 'layout');
   redirect(result.ok ? `${EXTRAS_PATH}?done=changed` : EXTRAS_PATH);
+}
+
+/** Bound to one row: link the work to a contract, or unlink it (the empty choice). 3.16 deepening. */
+export async function setExtraContractAction(id: string, form: FormData): Promise<void> {
+  const project = await getMyProject();
+  if (!project) redirect(EXTRAS_PATH);
+  const contractId = String(form.get('contractId') ?? '');
+  const result = await linkExtraToContract(supabaseExtraStore(await createServerSupabase()), { projectId: project.id, id, contractId });
+  revalidatePath('/', 'layout');
+  redirect(result.ok ? `${EXTRAS_PATH}?done=${contractId.trim() === '' ? 'unlinked' : 'linked'}` : EXTRAS_PATH);
 }
 
 export async function deleteExtraAction(id: string): Promise<void> {
