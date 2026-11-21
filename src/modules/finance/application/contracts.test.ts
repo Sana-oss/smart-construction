@@ -54,7 +54,7 @@ const contract = (id: string, valueLyd: string, title = 'عقد'): ContractRecor
   id, title, contractor: 'مقاول', valueLyd, scope: null, cleanupClause: null, documentId: null, createdAt: '2026-11-21T10:00:00Z',
 });
 const payment = (id: string, contractId: string, amountLyd: string, paidOn: string | null = null): PaymentRecord => ({
-  id, contractId, title: 'دفعة', amountLyd, retainedLyd: '0.000', phaseId: null, paidOn, createdAt: '2026-11-21T10:00:00Z',
+  id, contractId, title: 'دفعة', amountLyd, retainedLyd: '0.000', phaseId: null, paidOn, expenseId: null, releaseOpId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', releasedOn: null, releaseExpenseId: null, createdAt: '2026-11-21T10:00:00Z',
 });
 
 describe('addContract', () => {

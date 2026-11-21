@@ -4,6 +4,7 @@ import { CONTRACTS_PATH, ContractDetail, contractsTextAr, getContractDetail } fr
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
 import { BottomNav } from '../../_shell/BottomNav';
+import { dueByPayment } from '../due';
 
 export const metadata = { title: `${contractsTextAr.detail.pageTitle} · ركيزة` };
 
@@ -18,12 +19,14 @@ export default async function ContractPage({ params, searchParams }: { params: P
   if (!detail) notFound();
   const documentId = detail.contract.documentId;
   const doc = documentId ? (await getProjectDocuments(project.id)).find((d) => d.id === documentId && d.kind === 'contract') : undefined;
+  const due = await dueByPayment(project, detail.payments);
   const { done } = await searchParams;
   const notice = done === 'added' || done === 'payment-added' || done === 'payment-deleted' ? done : null;
   return <>
     <ContractDetail
       detail={detail}
       phases={project.phases.map((p) => ({ id: p.id, name: p.name }))}
+      dueByPayment={due}
       copy={doc ? { title: doc.title, url: doc.url } : null}
       backHref={CONTRACTS_PATH}
       notice={notice}

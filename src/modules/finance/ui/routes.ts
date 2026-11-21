@@ -25,3 +25,5 @@ export const CONTRACTS_PATH = '/contracts';
 export const CONTRACT_NEW_PATH = '/contracts/new';
 export const contractPath = (id: string) => `/contracts/${id}`;
 export const paymentNewPath = (contractId: string) => `/contracts/${contractId}/payments/new`;
+/** One installment (design S17.3): confirm the payment, release the retained part, undo. */
+export const paymentPath = (contractId: string, paymentId: string) => `/contracts/${contractId}/payments/${paymentId}`;

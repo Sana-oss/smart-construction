@@ -34,8 +34,15 @@ export interface PaymentRecord {
   amountLyd: string;
   retainedLyd: string;
   phaseId: string | null;
-  /** "YYYY-MM-DD"; null until paid (slice 2). */
+  /** "YYYY-MM-DD"; null until paid. */
   paidOn: string | null;
+  /** The ONE expense the payment made (amount minus the retained part); null while unpaid, when the whole payment is retained, or after the owner deleted that expense. */
+  expenseId: string | null;
+  /** The key of the second expense (the release), made once with the row so a retry never makes two. */
+  releaseOpId: string;
+  /** "YYYY-MM-DD"; the day the retained part was released. */
+  releasedOn: string | null;
+  releaseExpenseId: string | null;
   createdAt: string;
 }
 

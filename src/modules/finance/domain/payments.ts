@@ -98,12 +98,14 @@ export function decidePayment(input: PayInput, due: DueState, today: string): Pa
 export interface ReleaseInput {
   /** Empty = today in Libya. */
   releasedOn?: string | null;
+  /** Empty = «يد عاملة», like the payment itself. */
+  expenseType?: string | null;
   /** The owner ticked «أؤكد الإفراج» after seeing the warning. */
   confirmed?: boolean;
 }
 
 export type ReleaseDecision =
-  | { ok: true; releasedOn: string; /** True when the owner confirmed releasing while a phase is not done. */ confirmedEarly: boolean }
+  | { ok: true; releasedOn: string; expenseType: ExpenseType; /** True when the owner confirmed releasing while a phase is not done. */ confirmedEarly: boolean }
   | { ok: false; kind: 'invalid'; errors: PayError[] }
   | { ok: false; kind: 'needs_confirm' };
 
@@ -113,21 +115,27 @@ export type ReleaseDecision =
  * @param today the date in Libya.
  */
 export function decideRelease(input: ReleaseInput, ctx: { today: string; paidOn: string; allPhasesDone: boolean }): ReleaseDecision {
+  const errors: PayError[] = [];
   let releasedOn = ctx.today;
   const date = clean(input.releasedOn);
   if (date !== '') {
-    if (!isIsoDate(date)) return { ok: false, kind: 'invalid', errors: [{ field: 'releasedOn', code: 'invalid_date' }] };
-    if (date > ctx.today) return { ok: false, kind: 'invalid', errors: [{ field: 'releasedOn', code: 'date_in_future' }] };
-    if (date < ctx.paidOn) return { ok: false, kind: 'invalid', errors: [{ field: 'releasedOn', code: 'before_paid' }] };
-    releasedOn = date;
+    if (!isIsoDate(date)) errors.push({ field: 'releasedOn', code: 'invalid_date' });
+    else if (date > ctx.today) errors.push({ field: 'releasedOn', code: 'date_in_future' });
+    else if (date < ctx.paidOn) errors.push({ field: 'releasedOn', code: 'before_paid' });
+    else releasedOn = date;
   } else if (releasedOn < ctx.paidOn) {
     releasedOn = ctx.paidOn;
   }
+  const typeRaw = clean(input.expenseType);
+  const expenseType = typeRaw === '' ? 'labor' : (EXPENSE_TYPES as readonly string[]).includes(typeRaw) ? (typeRaw as ExpenseType) : null;
+  if (expenseType === null) errors.push({ field: 'expenseType', code: 'unknown_choice' });
+  if (errors.length > 0 || expenseType === null) return { ok: false, kind: 'invalid', errors };
+
   if (!ctx.allPhasesDone) {
     if (input.confirmed !== true) return { ok: false, kind: 'needs_confirm' };
-    return { ok: true, releasedOn, confirmedEarly: true };
+    return { ok: true, releasedOn, expenseType, confirmedEarly: true };
   }
-  return { ok: true, releasedOn, confirmedEarly: false };
+  return { ok: true, releasedOn, expenseType, confirmedEarly: false };
 }
 
 const truncate = (s: string, max: number) => ([...s].length <= max ? s : `${[...s].slice(0, max - 1).join('')}…`);

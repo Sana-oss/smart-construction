@@ -24,6 +24,10 @@ interface PaymentRow {
   retained_lyd: string;
   phase_id: string | null;
   paid_on: string | null;
+  expense_id: string | null;
+  release_op_id: string;
+  released_on: string | null;
+  release_expense_id: string | null;
   created_at: string;
 }
 
@@ -46,6 +50,10 @@ export const toPaymentRecord = (r: PaymentRow): PaymentRecord => ({
   retainedLyd: r.retained_lyd,
   phaseId: r.phase_id,
   paidOn: r.paid_on,
+  expenseId: r.expense_id,
+  releaseOpId: r.release_op_id,
+  releasedOn: r.released_on,
+  releaseExpenseId: r.release_expense_id,
   createdAt: r.created_at,
 });
 
@@ -70,7 +78,7 @@ export function supabaseContractStore(supabase: SupabaseClient): ContractStore {
     async listPayments(projectId) {
       const { data, error, count } = await supabase
         .from('payments')
-        .select('id, contract_id, title, amount_lyd::text, retained_lyd::text, phase_id, paid_on, created_at', { count: 'exact' })
+        .select('id, contract_id, title, amount_lyd::text, retained_lyd::text, phase_id, paid_on, expense_id, release_op_id, released_on, release_expense_id, created_at', { count: 'exact' })
         .eq('project_id', projectId)
         .order('created_at', { ascending: true })
         .order('id', { ascending: true })

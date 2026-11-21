@@ -77,6 +77,14 @@ export { saveContract } from './ui/contract-save';
 export { CONTRACT_FORM_FIELDS, type ContractFormState } from './ui/contract-form-state';
 export { CONTRACTS_PATH, CONTRACT_NEW_PATH, contractPath, paymentNewPath } from './ui/routes';
 export { contractsTextAr, contractErrorsAr, contractFailedAr, contractCountAr } from './ui/messages.ar';
+
+// Paying an installment and releasing the retained part (design S17.3; FR-FIN-09; 3.16 contractual part, slice 2)
+export { PaymentDetail } from './ui/PaymentDetail';
+export { payPayment, releasePayment, undoPaymentPaid, undoPaymentRelease } from './ui/payment-settle';
+export { paymentDue, type DueState } from './domain/payments';
+export { paymentPath } from './ui/routes';
+export { settleTextAr, settleErrorsAr, settleFailedAr } from './ui/messages.ar';
+export type { PayFormState, ReleaseFormState } from './ui/settle-form-state';
 export type { ContractsView } from './application/contracts';
 
 // Event handler: purchase.recorded -> one expense (FR-FIN-03). Called by the app right after a purchase is saved.

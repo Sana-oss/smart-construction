@@ -431,3 +431,18 @@ ul.list {
 .filterBar a {
   color: var(--color-accent);
 }
+
+/* A checkbox with its text, inside a warning (payment and release confirmations). Logical properties only. */
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.checkRow input {
+  inline-size: 24px;
+  block-size: 24px;
+  flex: none;
+}

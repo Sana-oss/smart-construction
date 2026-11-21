@@ -5,10 +5,11 @@
 import Link from 'next/link';
 import { formatAmount, money } from '@/shared-kernel';
 import type { ContractDetail as ContractDetailData } from '../application/contracts';
+import { paymentStage, type DueState } from '../domain/payments';
 import { ContractButton } from './ContractButton';
 import { BackIcon } from './icons';
-import { contractsTextAr } from './messages.ar';
-import { paymentNewPath } from './routes';
+import { contractsTextAr, settleTextAr } from './messages.ar';
+import { paymentNewPath, paymentPath } from './routes';
 import styles from './expense.module.css';
 
 const t = contractsTextAr.detail;
@@ -16,13 +17,15 @@ const t = contractsTextAr.detail;
 interface Props {
   detail: ContractDetailData;
   phases: { id: string; name: string }[];
+  /** FR-FIN-09: is each installment due? Computed by the page from the phase and its photos (other modules). */
+  dueByPayment: Record<string, DueState>;
   /** The contract copy: a document of type «عقد» with its short-lived link; null when none is linked. */
   copy: { title: string; url: string | null } | null;
   backHref: string;
   notice?: 'added' | 'payment-added' | 'payment-deleted' | null;
 }
 
-export function ContractDetail({ detail, phases, copy, backHref, notice = null }: Props) {
+export function ContractDetail({ detail, phases, dueByPayment, copy, backHref, notice = null }: Props) {
   const { contract, payments } = detail;
   const s = contract.summary;
   const phaseName = (id: string | null) => (id ? phases.find((p) => p.id === id)?.name ?? null : null);
@@ -65,24 +68,32 @@ export function ContractDetail({ detail, phases, copy, backHref, notice = null }
               <p>{t.noPaymentsNote}</p>
             </li>
           ) : (
-            payments.map((p) => (
-              <li key={p.id} className={styles.listRow}>
-                <span className={styles.rowText}>
-                  <strong>{p.title}</strong>
-                  <small>{t.paymentNote(phaseName(p.phaseId), money(p.retainedLyd).gt(0) ? formatAmount(p.retainedLyd) : null, p.paidOn !== null)}</small>
-                </span>
-                <span className={styles.rowValue}>
-                  <bdi dir="ltr">{formatAmount(p.amountLyd)}</bdi> {contractsTextAr.lyd}
-                  <ContractButton
-                    contractId={contract.id}
-                    paymentId={p.id}
-                    label={t.delete}
-                    ariaLabel={t.actionLabel(t.delete, p.title)}
-                    confirm={t.deletePaymentConfirm(p.title)}
-                  />
-                </span>
-              </li>
-            ))
+            payments.map((p) => {
+              const stage = paymentStage(p);
+              const due = dueByPayment[p.id];
+              const stageLabel =
+                stage !== 'scheduled' ? settleTextAr.stage.paid : due?.state === 'due' ? settleTextAr.stage.due : due?.state === 'waiting' ? settleTextAr.stage.waiting : settleTextAr.stage.scheduled;
+              return (
+                <li key={p.id} className={styles.listRow}>
+                  <Link href={paymentPath(contract.id, p.id)} className={`${styles.rowText} ${styles.rowLink}`}>
+                    <strong>{p.title}</strong>
+                    <small>{t.paymentNote(stageLabel, phaseName(p.phaseId), money(p.retainedLyd).gt(0) ? formatAmount(p.retainedLyd) : null)}</small>
+                  </Link>
+                  <span className={styles.rowValue}>
+                    <bdi dir="ltr">{formatAmount(p.amountLyd)}</bdi> {contractsTextAr.lyd}
+                    {stage === 'scheduled' && (
+                      <ContractButton
+                        contractId={contract.id}
+                        paymentId={p.id}
+                        label={t.delete}
+                        ariaLabel={t.actionLabel(t.delete, p.title)}
+                        confirm={t.deletePaymentConfirm(p.title)}
+                      />
+                    )}
+                  </span>
+                </li>
+              );
+            })
           )}
           {s.unscheduled.gt(0) && (
             <li className={styles.listRow}>

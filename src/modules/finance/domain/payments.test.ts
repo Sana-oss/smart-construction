@@ -109,18 +109,23 @@ describe('decideRelease (FR-FIN-09, D2)', () => {
   const ctx = (allPhasesDone: boolean) => ({ today: TODAY, paidOn: '2026-11-01', allPhasesDone });
 
   it('releases today when every phase is done', () => {
-    expect(decideRelease({}, ctx(true))).toEqual({ ok: true, releasedOn: TODAY, confirmedEarly: false });
+    expect(decideRelease({}, ctx(true))).toEqual({ ok: true, releasedOn: TODAY, expenseType: 'labor', confirmedEarly: false });
   });
 
   it('asks first while a phase is not done, then releases and says it was early', () => {
     expect(decideRelease({}, ctx(false))).toEqual({ ok: false, kind: 'needs_confirm' });
-    expect(decideRelease({ confirmed: true }, ctx(false))).toEqual({ ok: true, releasedOn: TODAY, confirmedEarly: true });
+    expect(decideRelease({ confirmed: true }, ctx(false))).toEqual({ ok: true, releasedOn: TODAY, expenseType: 'labor', confirmedEarly: true });
   });
 
   it('refuses a wrong date, a future date, and a date before the payment', () => {
     expect(decideRelease({ releasedOn: 'x' }, ctx(true))).toEqual({ ok: false, kind: 'invalid', errors: [{ field: 'releasedOn', code: 'invalid_date' }] });
     expect(decideRelease({ releasedOn: '2026-11-22' }, ctx(true))).toEqual({ ok: false, kind: 'invalid', errors: [{ field: 'releasedOn', code: 'date_in_future' }] });
     expect(decideRelease({ releasedOn: '2026-10-31' }, ctx(true))).toEqual({ ok: false, kind: 'invalid', errors: [{ field: 'releasedOn', code: 'before_paid' }] });
+  });
+
+  it('keeps the expense type the owner chose and refuses an unknown one', () => {
+    expect(decideRelease({ expenseType: 'services' }, ctx(true))).toMatchObject({ ok: true, expenseType: 'services' });
+    expect(decideRelease({ expenseType: 'cars' }, ctx(true))).toEqual({ ok: false, kind: 'invalid', errors: [{ field: 'expenseType', code: 'unknown_choice' }] });
   });
 
   it('accepts the payment day itself', () => {
