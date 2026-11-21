@@ -1,3 +1,4 @@
+import { paidAmount } from './payments';
 import { addMoney, isUuid, money, readMoneyInput, subMoney, type Money, type MoneyInput, type MoneyInputError } from '@/shared-kernel';
 
 // Contracts and the payment schedule (FR-FIN-08, FR-FIN-09, UC-16; 3.16 contractual part, slice 1; owner's decisions of
@@ -146,24 +147,25 @@ export interface ContractSummary {
   unscheduled: Money;
   /** What the schedule adds beyond the contract value (zero while it fits). D2: a warning, never a block. */
   overScheduled: Money;
-  /** The sum of the installments already paid (a payment with a paid date). */
+  /** The money already paid: a paid installment minus its retained part while that is still held. */
   paid: Money;
   /** The contract value minus what is paid (S17.2: «المتبقي»). */
   remaining: Money;
-  /** The sum of the retained parts across the schedule (held back until handover). */
+  /** The retained parts not released yet (held back until handover). */
   retained: Money;
   /** FR-FIN-08: the schedule adds up to more than the contract value. */
   scheduleExceedsValue: boolean;
 }
 
-/** FR-FIN-08: the figures of S17.2. A paid payment is one with a paid date. */
+/** FR-FIN-08: the figures of S17.2. A paid payment is one with a paid date; its retained part counts as paid once released. */
 export function contractSummary(input: {
   value: MoneyInput;
-  payments: readonly { amountLyd: MoneyInput; retainedLyd: MoneyInput; paidOn: string | null }[];
+  payments: readonly { amountLyd: MoneyInput; retainedLyd: MoneyInput; paidOn: string | null; releasedOn?: string | null }[];
 }): ContractSummary {
   const value = money(input.value);
   const scheduled = addMoney('0', ...input.payments.map((p) => p.amountLyd));
-  const paid = addMoney('0', ...input.payments.filter((p) => p.paidOn !== null).map((p) => p.amountLyd));
+  // Money that left the owner's hands: a paid payment minus the retained part still held (slice 2).
+  const paid = addMoney('0', ...input.payments.map((p) => paidAmount({ ...p, releasedOn: p.releasedOn ?? null })));
   const gap = subMoney(value, scheduled);
   return {
     value,
@@ -172,7 +174,7 @@ export function contractSummary(input: {
     overScheduled: gap.isNegative() ? gap.negated() : money('0'),
     paid,
     remaining: subMoney(value, paid),
-    retained: addMoney('0', ...input.payments.map((p) => p.retainedLyd)),
+    retained: addMoney('0', ...input.payments.filter((p) => (p.releasedOn ?? null) === null).map((p) => p.retainedLyd)),
     scheduleExceedsValue: gap.isNegative(),
   };
 }
