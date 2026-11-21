@@ -2,16 +2,17 @@
 
 ## 1. Immediate next action
 
-**Commit and open the PR for FR-FIN-05 (expenses report), branch `feat/phase-expense-report`, once the owner says so.**
-Then ask the owner which P2 item comes next (contracts deepening, or the quick-expense form fix). No migration in FR-FIN-05.
+**Ask the owner which P2 item comes next:** contracts deepening (edit a contract or a payment after saving; link existing extra
+works to a contract), or the quick-expense form fix (keep the owner's answers when a receipt upload fails). All earlier work,
+including 3.16 and FR-FIN-05, is merged to `main`; no migration is pending (next number 0033).
+
+With about six weeks to the 1 January 2027 delivery, prefer small, bounded items and keep the last weeks for review, testing and
+the committee documentation.
 
 ## 2. Prioritized backlog
 
 **P0 — blockers**
 - Stabilize the dev environment: repo on USB `E:` disconnects (crashes e2e) when worked on locally. Move to an internal disk or fix USB (owner's call).
-
-**P1 — high**
-- Refresh `docs/status_report_week1.md` section 4 table (stale since 19 Nov; it does not mention 3.16 contracts) — docs only.
 
 **P2 — normal**
 - Contracts deepening: edit a contract or a payment after saving (today: delete and re-record); link existing extra works

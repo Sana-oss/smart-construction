@@ -51,7 +51,7 @@ tests on Postgres 16). n8n and the AI assistant are planned, read-only, not buil
 
 ## 2. Work completed (all merged to `main`)
 
-Merged PRs in this and earlier sessions: up to **#44**. Recent features, each with domain + tests, migration + RLS test +
+Merged PRs in this and earlier sessions: up to **#47**. Recent features, each with domain + tests, migration + RLS test +
 mutation run, UI, e2e on staging, and docs:
 
 | Feature | Requirement | Migration | Main paths |
@@ -70,15 +70,16 @@ mutation run, UI, e2e on staging, and docs:
 | 3.13 concrete log + reminders on engineer's dates | FR-QLT-04/05 | 0030 | `quality/domain/concrete.ts`, `/concrete/*` |
 | 3.16 contracts and payment schedule (slice 1) | FR-FIN-08, FR-FIN-12, FR-FIN-09 (schedule) | 0031 | `finance/domain/contracts.ts`, `/contracts/*` |
 | 3.16 pay an installment, its expense, release the retained part (slice 2) | FR-FIN-09 | 0032 | `finance/domain/payments.ts`, `/contracts/[id]/payments/[paymentId]`, `src/app/contracts/due.ts` |
-| Expenses report by phase and type; planned vs actual for «كل الفترات» (branch `feat/phase-expense-report`, not yet merged) | FR-FIN-05 | — | `finance/domain/expense-report.ts`, `/expenses/report` |
+| Expenses report by phase and type; planned vs actual for «كل الفترات» (PR #47) | FR-FIN-05 | — | `finance/domain/expense-report.ts`, `/expenses/report` |
 
 Bugs fixed along the way (all merged): a form refusal in the page wiped the owner's answers (React resets a form after
 its action — check/upload moved to `onSubmit`, in `CheckItemForm` and `IssueForm`); the pre-pour form offered the
 readiness template (now filtered by kind); several old DB tests adapted to new rules (`rls_0002`, `rls_0007`, `rls_0010`,
 `rls_0025`, `rls_0027`) with comments — each still tests what it tested.
 
-Last verified results (21 Nov, on `feat/concrete-log` = merged into `main` via #44): `npm run check` 557 unit tests pass;
-`npm run build` passes; 59 DB test files pass (PGlite); full e2e 52 passed, 1 skipped (HEIC, needs a real iPhone file).
+Last verified results (21 Nov, after PR #47): `npm run check` 628 unit tests pass; `npm run build` passes; 63 DB test files pass
+(Postgres 16; mutation runs for every new migration); full e2e on staging 58 passed, 1 skipped (HEIC, needs a real iPhone file);
+all 34 Mermaid diagrams in `analysis_and_design.md` parse.
 
 ---
 
@@ -86,8 +87,8 @@ Last verified results (21 Nov, on `feat/concrete-log` = merged into `main` via #
 
 - **Working:** everything in section 2, on staging, at phone size.
 - **Partially implemented:** 3.12/3.14/3.15 templates hold
-  **unreviewed** engineering content awaiting the engineer (D4); `docs/status_report_week1.md` table in its section 4 is
-  stale (dated 19 Nov; the narrative in section 9 is current).
+  **unreviewed** engineering content awaiting the engineer (D4). The table in section 4 of `docs/status_report_week1.md` was
+  refreshed on 21 Nov.
 - **Broken:** nothing known in code. Environment: the USB drive `E:` (holds the repo) disconnects intermittently — see §6.
 - **Not built:** 3.22 trade packs, 3.6 AI assistant + knowledge base, 3.20 offline,
   3.21 weekly report (n8n) + outbox worker, 3.11 read-only share link, 3.23 phase handover/stock count (cut, "designed and
@@ -168,11 +169,9 @@ projects' `outbox_events` and `audit_log` rows (projects cascade). Test files ar
 
 ## 9. Git status (verified 21 Nov)
 
-- Current branch: `feat/concrete-log` at `96ca690`, pushed, **PR #44 merged** into `main` (`main` contains it).
-- Uncommitted changes: **none** in tracked files.
-- Untracked: `.claude/` and `AGENTS.md` — **deliberately never committed** (owner's rule).
-- New, untracked: these four handoff files (created now, not committed — commit only if the owner asks).
-- Nothing unfinished or unpushed.
+- `main` @ `ad8d2fa` contains PR #46 (contracts and payments) and PR #47 (FR-FIN-05 expenses report).
+- Untracked: `.claude/` and `AGENTS.md` — **deliberately never committed** (owner's rule). `.env.local` is git-ignored.
+- Nothing unfinished.
 
 ---
 

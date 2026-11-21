@@ -1,17 +1,18 @@
 # CURRENT_STATE.md — 21 Nov 2026
 
 **Where we are:** priority 0 and 1 complete; priority 2 nearly complete. 3.16 is complete (financial part + contracts and
-payments, merged via PR #46). FR-FIN-05 (expenses report by phase and type, planned vs actual) is built on branch
-`feat/phase-expense-report`, not yet committed (waiting for the owner's go-ahead to commit and open the PR).
+payments, PR #46) and FR-FIN-05 (expenses report by phase and type, planned vs actual) is merged (PR #47). Everything built is
+merged to `main`; no work in progress.
 
-**Git:** `main` @ `ddb77d7` (PR #46). Working branch `feat/phase-expense-report` from it. Untracked by rule: `.claude/`, `AGENTS.md`
-(never commit). `.env.local` (public staging URL and key) is git-ignored.
+**Git:** `main` @ `ad8d2fa` (PR #47). Untracked by rule: `.claude/`, `AGENTS.md` (never commit). `.env.local` (public staging
+URL and key) is git-ignored.
 
 **Database:** migrations `0001`–`0032`, all applied to staging `rakeeza-staging`. Next number: **0033**.
 
-**Last verified (21 Nov, on `feat/phase-expense-report`, local Windows):** `npm run check` 628 unit tests; build OK; full e2e on
-staging 58 passed / 1 skipped (HEIC). DB tests unchanged since PR #46 (63 files; FR-FIN-05 adds no migration). Staging test
-accounts cleaned afterwards; one known orphan photo remains in the bucket.
+**Last verified (21 Nov):** 628 unit tests; 63 DB test files (Postgres 16) incl. mutation runs (21 for 0031, 27 for 0032, all
+caught); build OK; full e2e on staging 58 passed / 1 skipped (HEIC) (run on the FR-FIN-05 branch, which contained everything in
+PR #46). All 34 Mermaid diagrams in `docs/analysis_and_design.md` parse (checked 21 Nov). Staging test accounts cleaned; one
+known orphan photo remains in the bucket.
 
 **Built, by feature:** core (wizard, phases/tasks, expenses + receipts, documents, photos, dashboard), 3.7, 3.18, 3.16
 (financial part + contracts and payments: S17.1–S17.3), 3.3 (calculators + quantity table/purchases), 3.12 (+ photos), 3.15,
