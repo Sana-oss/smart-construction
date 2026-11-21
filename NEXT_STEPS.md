@@ -2,37 +2,23 @@
 
 ## 1. Immediate next action
 
-**Start 3.16 contractual part: contracts and payments (FR-FIN-08, FR-FIN-09; UC-16; design S17.1, S17.2, S17.3).**
-Proposed to the owner at the end of the last session; **not started and not yet confirmed** — begin by syncing `main`
-(`git checkout main && git pull`, new branch e.g. `feat/contracts`) and asking the open decisions.
+**Merge the contracts pull request (3.16 contracts and payments, FR-FIN-08, FR-FIN-09, FR-FIN-12), then pick the next P2 item.**
+After the merge: `git checkout main && git pull`. Migrations 0031 and 0032 are already applied to staging.
 
-- Existing schema (0001): `contracts(id, project_id, contractor, value_lyd, has_cleanup_clause, created_at)`,
-  `payments(id, project_id, contract_id, phase_id, amount_lyd, withheld, paid_on)`; `change_orders.contract_id` is optional
-  since 0022 (extra works can later be linked). Check staging rows are empty before altering.
-- FR-FIN-08: contract value, scope, payment schedule; shown on the dashboard. FR-FIN-09: a payment tied to a phase, with an
-  optional withheld part released after handover; «لا تُعلَّم الدفعة مستحقة قبل اعتماد المالك للمرحلة بصور». FR-FIN-12 (P3):
-  cleanup clause field. D9: retention percentage is left to owner/contractor agreement (shown as an option, never imposed).
-- Questions to ask first (suggested): does paying a payment create an expense (one expense, like purchases — idempotent,
-  composed in the app layer)? Is "phase approved with photos" = phase status `done` + at least one phase photo (photos
-  belong to `documents`, L2 → compose in app)? Link existing extra works to a contract now or later?
-- Files likely involved: new `src/modules/finance/domain/contracts.ts` (+ tests), `application/`, `infra/`, `ui/`,
-  `src/app/contracts/…`, migration `supabase/migrations/0031_*.sql`, `tests/db/rls_0031.test.sql`, `tests/e2e/contracts.spec.ts`,
-  docs (change register, requirements, analysis_and_design §28, status report, e2e README, CLAUDE.md range 0001–0031).
-- Must not change: applied migrations 0001–0030; the money rules (Decimal, numeric(14,3)); D2 (warn, never block);
-  `update_phase_schedule` signature unless re-created deliberately (tests `rls_0010`, `rls_0027`, `rls_0029` name it).
-- Done when: `npm run check` + build pass; DB tests + mutation run pass; migration applied to staging **after owner says
-  yes**; new e2e spec and full e2e pass; staging test accounts cleaned; docs updated; owner asked "commit and open the PR?".
+Suggested next feature: **FR-FIN-05 expense report per phase + planned vs actual** (depends on budget allocations: done), or
+the small deepening items below. Ask the owner which first.
 
 ## 2. Prioritized backlog
 
 **P0 — blockers**
-- Stabilize the dev environment: repo on USB `E:` disconnects (crashes e2e). Move to an internal disk or fix USB (owner's call).
+- Stabilize the dev environment: repo on USB `E:` disconnects (crashes e2e) when worked on locally. Move to an internal disk or fix USB (owner's call).
 
 **P1 — high**
-- 3.16 contracts & payments (above). Depends on nothing new; reuses the finance module and the app-layer composition pattern.
-- Refresh `docs/status_report_week1.md` section 4 table (stale since 19 Nov) — docs only.
+- Refresh `docs/status_report_week1.md` section 4 table (stale since 19 Nov; it does not mention 3.16 contracts) — docs only.
 
 **P2 — normal**
+- Contracts deepening: edit a contract or a payment after saving (today: delete and re-record); link existing extra works
+  (`change_orders.contract_id`) to a contract; a paid payment whose expense the owner deleted shows as paid without an expense.
 - FR-FIN-05 expense report per phase + planned vs actual (status report §9 item 3). Depends on budget allocations (done).
 - Quick-expense form: keep the owner's answers when a receipt upload fails (same fix as `CheckItemForm`, move to `onSubmit`).
 - 3.22 trade packs — **blocked on the engineer** (D7, D8); engine (quality checklists) is ready.
