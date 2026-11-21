@@ -44,7 +44,7 @@ Vercel sign-in; GitHub `Sana-oss/smart-construction` with CI (`.github/workflows
 tests on Postgres 16). n8n and the AI assistant are planned, read-only, not built.
 
 **Structure (top level).** `src/app` (routes), `src/modules`, `src/shared-kernel`, `src/platform`, `supabase/migrations`
-(0001–0030), `tests/db` (RLS/migration SQL tests), `tests/e2e` (Playwright), `docs/` (source-of-truth documents),
+(0001–0032), `tests/db` (RLS/migration SQL tests), `tests/e2e` (Playwright), `docs/` (source-of-truth documents),
 `Design/` (teammate's Figma exports + outline), `scripts/test-db.sh`.
 
 ---
@@ -68,6 +68,8 @@ mutation run, UI, e2e on staging, and docs:
 | 3.14 safe stop points (stop plan + costs → stop scenario) | FR-DEC-04 | 0028 | `/stop-plan`, `src/app/decision/inputs/page.tsx` |
 | 3.17 defects list + warning at phase end | FR-QLT-06/07 | 0029 | `quality/domain/issue.ts`, `/issues/*` |
 | 3.13 concrete log + reminders on engineer's dates | FR-QLT-04/05 | 0030 | `quality/domain/concrete.ts`, `/concrete/*` |
+| 3.16 contracts and payment schedule (slice 1) | FR-FIN-08, FR-FIN-12, FR-FIN-09 (schedule) | 0031 | `finance/domain/contracts.ts`, `/contracts/*` |
+| 3.16 pay an installment, its expense, release the retained part (slice 2) | FR-FIN-09 | 0032 | `finance/domain/payments.ts`, `/contracts/[id]/payments/[paymentId]`, `src/app/contracts/due.ts` |
 
 Bugs fixed along the way (all merged): a form refusal in the page wiped the owner's answers (React resets a form after
 its action — check/upload moved to `onSubmit`, in `CheckItemForm` and `IssueForm`); the pre-pour form offered the
@@ -82,14 +84,14 @@ Last verified results (21 Nov, on `feat/concrete-log` = merged into `main` via #
 ## 3. Current state
 
 - **Working:** everything in section 2, on staging, at phone size.
-- **Partially implemented:** 3.16 (financial part done; **contracts & payments not built**); 3.12/3.14/3.15 templates hold
+- **Partially implemented:** 3.12/3.14/3.15 templates hold
   **unreviewed** engineering content awaiting the engineer (D4); `docs/status_report_week1.md` table in its section 4 is
   stale (dated 19 Nov; the narrative in section 9 is current).
 - **Broken:** nothing known in code. Environment: the USB drive `E:` (holds the repo) disconnects intermittently — see §6.
-- **Not built:** 3.16 contracts/payments (FR-FIN-08/09), 3.22 trade packs, 3.6 AI assistant + knowledge base, 3.20 offline,
+- **Not built:** 3.22 trade packs, 3.6 AI assistant + knowledge base, 3.20 offline,
   3.21 weekly report (n8n) + outbox worker, 3.11 read-only share link, 3.23 phase handover/stock count (cut, "designed and
   documented"), FR-FIN-05 expense report per phase, engineer review workflow (no engineer accounts by design).
-- **Stage:** priority 0 and 1 complete; priority 2 nearly complete (contracts remain; trade packs wait for the engineer).
+- **Stage:** priority 0 and 1 complete; priority 2 nearly complete (3.16 done; trade packs wait for the engineer).
 
 ---
 
@@ -122,13 +124,13 @@ priorities §8, decisions D1–D10 §16.3, execution rules §17); `docs/system_a
 cite them in commits); `docs/project_change_register.md` (every decision and slice, dated); `docs/status_report_week1.md`;
 `tests/e2e/README.md` (one paragraph per spec); `Design/Screens/rakeza-v2-63-screens.outline.txt` (screen texts S01–S34).
 
-**Database:** `supabase/migrations/0001…0030` (append-only; never edit an applied one). All applied to staging
+**Database:** `supabase/migrations/0001…0032` (append-only; never edit an applied one). All applied to staging
 `rakeeza-staging`. Every table has RLS (`is_member`/`can_write` in schema `private`); global reference tables without
 `project_id` are the stated exception: `phase_templates`, `calc_coefficients`, `checklist_templates`, `kb_entries`,
 `trade_templates`. Helpers: `private.today_tripoli()`, `private.log_audit()`, `private.emit_event()` (outbox),
 `private.cashflow_audit()` (generic AFTER UPDATE/DELETE audit trigger). Public RPCs (all SECURITY INVOKER, anon revoked):
 `create_first_project`, `create_expense`, `update_phase_schedule` (8 params since 0029: `p_start_gaps`,
-`p_close_open_issues`), `record_purchase`, `create_checklist`, `create_readiness_checklist`, `create_stop_plan`.
+`p_close_open_issues`), `record_purchase`, `create_checklist`, `create_readiness_checklist`, `create_stop_plan`, `confirm_payment_paid`, `release_payment_retained` (0032).
 Rule: no callable SECURITY DEFINER function in `public`.
 
 **Storage:** private bucket `project-files`; paths `<project id>/{photos,documents,receipts,checklists,issues}/<uuid>.jpg`;
@@ -161,7 +163,7 @@ projects' `outbox_events` and `audit_log` rows (projects cascade). Test files ar
 
 ---
 
-## 8. Immediate next step → `NEXT_STEPS.md` §1 (3.16 contracts & payments, after the owner confirms).
+## 8. Immediate next step → `NEXT_STEPS.md` §1 (merge the contracts pull request, then the next P2 item).
 
 ## 9. Git status (verified 21 Nov)
 

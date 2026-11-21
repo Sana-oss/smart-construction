@@ -1,24 +1,30 @@
 # CURRENT_STATE.md — 21 Nov 2026
 
-**Where we are:** priority 0 and 1 complete; priority 2 nearly complete. Everything built is merged to `main` (last: PR #44,
-3.13 concrete log). No work in progress, no uncommitted tracked changes.
+**Where we are:** priority 0 and 1 complete; priority 2 nearly complete. 3.16 is now complete (financial part + contracts and
+payments). The contracts work is on branch `feat/contracts`, pushed to `origin/claude/beautiful-sagan-v9nftx` and covered by one
+pull request (see Git); everything before it is merged to `main` (last: PR #45, handoff files).
 
-**Git:** branch `feat/concrete-log` @ `96ca690` (pushed; merged via #44). Untracked by rule: `.claude/`, `AGENTS.md`. New
-untracked handoff files: `PROJECT_HANDOFF.md`, `CURRENT_STATE.md`, `NEXT_STEPS.md`, `DECISIONS_LOG.md` (not committed).
+**Git:** local branch `feat/contracts` tracks `origin/claude/beautiful-sagan-v9nftx` @ `bafb65a`+ (the session could push only to that
+branch). Untracked by rule: `.claude/`, `AGENTS.md` (never commit). `.env.local` (public staging URL and key) is git-ignored.
 
-**Database:** migrations `0001`–`0030`, all applied to staging `rakeeza-staging`. Next number: **0031**.
+**Database:** migrations `0001`–`0032`, all applied to staging `rakeeza-staging`. Next number: **0033**.
 
-**Last verified (21 Nov):** 557 unit tests; 59 DB test files (PGlite) incl. mutation runs for each new migration; build OK;
-full e2e on staging 52 passed / 1 skipped (HEIC).
+**Last verified (21 Nov):** 617 unit tests; 63 DB test files (Postgres 16) incl. mutation runs (21 for 0031, 27 for 0032, all
+caught); build OK; e2e on staging: 57 passed / 1 skipped (HEIC) of 58. Two runs: the full run gave 47 passed; 3 specs (documents, photos, receipt) failed only because the
+test process's own HTTP client could not resolve the Supabase host through this container's proxy, and they plus their 8 dependent
+tests passed (10) when re-run with the proxy set for the test client.
 
 **Built, by feature:** core (wizard, phases/tasks, expenses + receipts, documents, photos, dashboard), 3.7, 3.18, 3.16
-(financial part), 3.3 (calculators + quantity table/purchases), 3.12 (+ photos), 3.15, 3.14, 3.17, 3.13.
+(financial part + contracts and payments: S17.1–S17.3), 3.3 (calculators + quantity table/purchases), 3.12 (+ photos), 3.15,
+3.14, 3.17, 3.13.
 
-**Not built:** 3.16 contracts & payments (FR-FIN-08/09) ← next; 3.22 trade packs (waits for engineer D7/D8); 3.21 weekly report +
-outbox worker; 3.6 assistant/knowledge base; 3.20 offline; 3.11 share link; 3.23 handover (cut: "designed and documented");
-FR-FIN-05 expense report per phase.
+**Not built:** 3.22 trade packs (waits for engineer D7/D8); 3.21 weekly report + outbox worker; 3.6 assistant/knowledge base;
+3.20 offline; 3.11 share link; 3.23 handover (cut: "designed and documented"); FR-FIN-05 expense report per phase; editing a
+contract or a payment after saving; linking existing extra works to a contract.
 
 **Waiting on people:** the engineer has not answered the confirmation file → templates for pre-pour (D4), readiness, stop
 plan, and the rebar coefficient (162) stay `unreviewed`; «فحص التسليح» requires a photo by the owner's decision.
 
-**Environment risk:** repo is on USB drive `E:` that disconnects intermittently; C: had ~5.4 GB free on 21 Nov.
+**Environment note:** the repo used to live on USB drive `E:` that disconnects intermittently. The 21 Nov contracts work was done in a
+cloud session (Linux container); to run e2e there the session needed the staging host allowed in the environment's network and
+`NODE_USE_ENV_PROXY=1` for Node's fetch.

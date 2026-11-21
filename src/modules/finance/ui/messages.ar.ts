@@ -1,4 +1,5 @@
 import type { ExpenseFailure } from '../application/expense-gateway';
+import type { ContractErrorCode } from '../domain/contracts';
 import type { Currency } from '../domain/currency';
 import type { ExpenseErrorCode, ExpenseField, ExpenseType } from '../domain/expense';
 import type { ExpensePeriod } from '../domain/expense-filter';
@@ -337,7 +338,12 @@ export const budgetTextAr = {
         action: 'عرض',
       },
       cashflow: { title: 'الالتزامات والدخل', note: 'الدفعات القادمة ومصادر التمويل', action: 'عرض' },
-      contracts: { title: 'العقود والدفعات', note: 'متابعة العقود والاستحقاقات', action: 'قريبًا' },
+      contracts: {
+        title: 'العقود والدفعات',
+        noteEmpty: 'سجّل عقد المقاول وجدول دفعاته',
+        note: (count: string, total: string) => `${count} · بقيمة ${total} د.ل`,
+        action: 'عرض',
+      },
       decision: { title: 'الاستمرار أو التوقف', note: 'مراجعة السيناريو المالي', action: 'مراجعة' },
     },
   },
@@ -418,5 +424,205 @@ export const extrasTextAr = {
     optional: 'اختياري',
     submit: 'حفظ العمل',
     submitting: 'جارٍ الحفظ…',
+  },
+} as const;
+
+/**
+ * Contracts and the payment schedule (design S17.1, S17.2; FR-FIN-08, FR-FIN-09; 3.16 contractual part, slice 1).
+ * The forms have no design screen: built from the design's form fields and list styles (change register). The wording
+ * never imposes a retention percentage (D9) and never says a payment is approved by an engineer (not built, owner's
+ * decision of 21 Nov 2026).
+ */
+export const contractErrorsAr = {
+  ...expenseErrorsAr,
+  retained_exceeds_amount: 'المبلغ المحتجز لا يزيد على قيمة الدفعة.',
+} as const satisfies Record<ContractErrorCode, string>;
+
+export const contractFailedAr: Record<ExpenseFailure | 'no_project', string> = {
+  ...expenseFailedAr,
+  not_allowed: 'لا تملك صلاحية تعديل عقود هذا المشروع، أو انتهت الجلسة. سجّل الدخول من جديد.',
+  unknown_reference: 'المرحلة أو العقد المختار لا يخص هذا المشروع. اختر من القائمة.',
+  rejected: 'تعذّر الحفظ. راجع البيانات وحاول مرة أخرى.',
+  not_found: 'لم يُعثر على العقد أو الدفعة. ربما حُذفا من قبل.',
+  unavailable: 'تعذّر الاتصال الآن. تحقق من الاتصال وحاول مرة أخرى.',
+};
+
+/** «عقد واحد» / «عقدان» / «3 عقود» / «11 عقدًا»: Arabic counts agree with the number. */
+export const contractCountAr = (n: number): string => {
+  if (n === 0) return 'لا عقود مسجلة';
+  if (n === 1) return 'عقد واحد مسجل';
+  if (n === 2) return 'عقدان مسجلان';
+  if (n <= 10) return `${n} عقود مسجلة`;
+  return `${n} عقدًا مسجلًا`;
+};
+
+export const contractsTextAr = {
+  back: 'رجوع',
+  lyd: 'د.ل',
+  optional: 'اختياري',
+  list: {
+    pageTitle: 'العقود والدفعات',
+    title: 'العقود والدفعات',
+    empty: 'لا عقود مسجلة',
+    emptyNote: 'سجّل عقد المقاول بقيمته، ثم جدول دفعاته المرتبطة بمراحل المشروع.',
+    context: 'الدفعات مرتبطة بمراحل استحقاق يراجعها المسؤول عن المشروع.',
+    contractor: (name: string) => `المقاول: ${name}`,
+    paidRemaining: (paid: string, remaining: string) => `المدفوع: ${paid} · المتبقي: ${remaining}`,
+    add: 'إضافة عقد',
+    added: 'حُفظ العقد.',
+    deleted: 'حُذف العقد ودفعاته، وبقيت قيمها في سجل التدقيق.',
+  },
+  detail: {
+    pageTitle: 'العقد',
+    contractValue: 'قيمة العقد',
+    paidRemaining: (paid: string, remaining: string) => `المدفوع: ${paid} · المتبقي: ${remaining}`,
+    scope: 'نطاق العقد',
+    cleanup: 'بند النظافة',
+    cleanupNone: 'لم يُتفق عليه بعد',
+    copy: 'نسخة العقد',
+    copyNone: 'لم تُربط وثيقة',
+    view: 'عرض',
+    schedule: 'جدول الدفعات',
+    noPayments: 'لا دفعات في الجدول بعد',
+    noPaymentsNote: 'أضف كل دفعة اتفقتما عليها، بمبلغها والمرحلة التي تستحق بعدها.',
+    unscheduled: 'باقي الدفعات',
+    unscheduledNote: 'وفق جدول العقد',
+    scheduleExceeds: (over: string) => `مجموع الدفعات أكبر من قيمة العقد بـ ${over} د.ل. هذا تنبيه، ويمكنك الإبقاء عليه.`,
+    retainedTotal: (retained: string) => `المحتجز في الجدول: ${retained} د.ل · يُفرج عنه بعد التسليم`,
+    paymentNote: (stage: string, phase: string | null, retained: string | null) =>
+      [stage, phase ? `بعد مرحلة «${phase}»` : 'غير مرتبطة بمرحلة', retained ? `محتجز ${retained} د.ل` : null].filter(Boolean).join(' · '),
+    addPayment: 'إضافة دفعة',
+    contractAdded: 'حُفظ العقد. أضف دفعاته إلى الجدول.',
+    paymentAdded: 'حُفظت الدفعة في الجدول.',
+    paymentDeleted: 'حُذفت الدفعة، وبقيت قيمتها في سجل التدقيق.',
+    delete: 'حذف',
+    deleteContract: 'حذف العقد',
+    deleteContractConfirm: (title: string) => `حذف «${title}» مع كل دفعاته؟ تبقى قيمها في سجل التدقيق.`,
+    deletePaymentConfirm: (title: string) => `حذف الدفعة «${title}»؟ تبقى قيمتها في سجل التدقيق.`,
+    actionLabel: (action: string, title: string) => `${action}: ${title}`,
+    notFound: 'لم يُعثر على هذا العقد. ربما حُذف من قبل.',
+  },
+  form: {
+    pageTitle: 'إضافة عقد',
+    title: 'إضافة عقد',
+    subtitle: 'عقد مقاول وقيمته ونطاقه',
+    titleLabel: 'عنوان العقد',
+    titleHint: 'مثل: عقد الهيكل الخرساني',
+    contractor: 'المقاول',
+    value: 'قيمة العقد · د.ل',
+    scope: 'نطاق العقد',
+    cleanup: 'بند النظافة',
+    cleanupHint: 'من يزيل المخلفات وعلى حساب من',
+    copy: 'نسخة العقد',
+    noCopy: 'بلا نسخة الآن',
+    copyHint: 'اختر وثيقة نوعها «عقد» رفعتَها من صفحة الوثائق.',
+    submit: 'حفظ العقد',
+    submitting: 'جارٍ الحفظ…',
+  },
+  paymentForm: {
+    pageTitle: 'إضافة دفعة',
+    title: 'إضافة دفعة',
+    subtitle: (contract: string) => `إلى جدول «${contract}»`,
+    titleLabel: 'اسم الدفعة',
+    titleHint: 'مثل: الدفعة الأولى',
+    amount: 'قيمة الدفعة · د.ل',
+    phase: 'تستحق بعد المرحلة',
+    noPhase: 'غير مرتبطة بمرحلة (مثل بداية الأعمال)',
+    retained: 'الجزء المحتجز · د.ل',
+    retainedHint: 'اتفقتما عليه أنت والمقاول، ويُفرج عنه بعد التسليم. اتركه فارغًا إن لم يُتفق على احتجاز.',
+    submit: 'حفظ الدفعة',
+    submitting: 'جارٍ الحفظ…',
+  },
+} as const;
+
+/**
+ * Paying an installment (design S17.3, FR-FIN-09; slice 2). The design's «اعتماد المهندس» step is NOT built (no engineer
+ * accounts, owner's decision of 21 Nov 2026). Warnings never block (D2): they list what is missing and ask.
+ */
+export const settleErrorsAr = {
+  invalid_date: 'التاريخ غير صحيح.',
+  date_in_future: 'التاريخ لا يكون بعد اليوم.',
+  before_paid: 'تاريخ الإفراج لا يسبق تاريخ الدفع.',
+  unknown_choice: 'اختر من القائمة.',
+} as const;
+
+export const settleFailedAr: Record<ExpenseFailure | 'no_project' | 'already_paid' | 'not_paid' | 'already_released' | 'nothing_retained' | 'not_released', string> = {
+  ...contractFailedAr,
+  already_paid: 'هذه الدفعة مدفوعة من قبل.',
+  not_paid: 'هذه الدفعة غير مدفوعة.',
+  already_released: 'أُفرج عن المحتجز من قبل. تراجع عن الإفراج أولًا إن أردت التراجع عن السداد.',
+  nothing_retained: 'لا مبلغ محتجز على هذه الدفعة.',
+  not_released: 'لم يُفرَج عن المحتجز بعد.',
+};
+
+export const settleTextAr = {
+  back: 'العودة للعقد',
+  lyd: 'د.ل',
+  pageTitle: 'تفاصيل الدفعة',
+  contractLine: (contract: string, payment: string) => `${contract} · ${payment}`,
+  amount: 'قيمة الدفعة',
+  paidNow: (cash: string) => `يُحوَّل الآن: ${cash} د.ل`,
+  disclaimer: 'لا تُعتبر الدفعة مدفوعة إلا بعد توثيق الدفع. النظام يوثّق ولا يمنع.',
+  gap: { phase_not_done: 'المرحلة لم تُنجَز بعد', phase_without_photo: 'لا صورة موثّقة للمرحلة' } as const,
+  due: {
+    title: 'شرط الاستحقاق',
+    notTied: ['غير مرتبطة بمرحلة', 'لا شرط استحقاق عليها'],
+    due: ['مستحقة', 'المرحلة منجزة وعليها صور'],
+    waiting: (gaps: string) => ['بانتظار اعتماد المرحلة', gaps],
+  },
+  transfer: {
+    title: 'تأكيد التحويل',
+    unpaid: ['غير مدفوعة', 'لم يُوثَّق دفعها بعد'],
+    paid: (date: string) => ['مدفوعة', `وُثّق دفعها في ${date}`],
+  },
+  retained: {
+    title: 'الجزء المحتجز',
+    held: (amount: string) => ['محتجز', `${amount} د.ل حتى التسليم`],
+    released: (amount: string, date: string) => ['أُفرج عنه', `${amount} د.ل في ${date}`],
+  },
+  stage: {
+    scheduled: 'مجدولة',
+    due: 'مستحقة',
+    waiting: 'بانتظار اعتماد المرحلة',
+    paid: 'مدفوعة',
+    paidHeld: (retained: string) => `مدفوعة · محتجز ${retained} د.ل`,
+  },
+  notice: {
+    paid: 'وُثّق الدفع وسُجّل مصروف واحد.',
+    paidNoExpense: 'وُثّق الدفع. الدفعة كلها محتجزة، فلا مصروف الآن.',
+    released: 'أُفرج عن المحتجز وسُجّل مصروفه.',
+    undonePaid: 'تراجعتَ عن السداد: عادت الدفعة غير مدفوعة وحُذف مصروفها، وبقي أثر ذلك في سجل التدقيق.',
+    undoneRelease: 'تراجعتَ عن الإفراج: حُذف مصروفه، وبقي أثر ذلك في سجل التدقيق.',
+  },
+  payForm: {
+    title: 'تأكيد السداد',
+    date: 'تاريخ التحويل',
+    type: 'نوع المصروف',
+    typeHint: 'يُسجَّل مصروف واحد بهذا النوع.',
+    notDueTitle: 'الدفعة غير مستحقة بعد',
+    notDueNote: 'يمكنك الدفع مع ذلك، فالقرار لك. سيُسجَّل في سجل التدقيق ما كان ناقصًا.',
+    confirm: 'أعلم أن الدفعة غير مستحقة بعد، وأؤكد السداد',
+    needsConfirm: 'اضغط على خانة التأكيد أولًا.',
+    submit: 'تأكيد السداد',
+    submitting: 'جارٍ الحفظ…',
+  },
+  releaseForm: {
+    title: 'الإفراج عن المحتجز',
+    note: (amount: string) => `يُسجَّل مصروف ثانٍ بقيمة ${amount} د.ل. لا نسبة ولا موعد يفرضهما النظام: الاتفاق بينك وبين المقاول.`,
+    date: 'تاريخ الإفراج',
+    type: 'نوع المصروف',
+    notDoneTitle: 'لم تُنجَز كل المراحل بعد',
+    notDoneNote: 'الإفراج يكون عادةً بعد التسليم. يمكنك المتابعة، وسيُسجَّل في التدقيق.',
+    confirm: 'أعلم أن المراحل لم تنتهِ، وأؤكد الإفراج',
+    needsConfirm: 'اضغط على خانة التأكيد أولًا.',
+    submit: 'تأكيد الإفراج',
+    submitting: 'جارٍ الحفظ…',
+  },
+  undo: {
+    payment: 'تراجع عن السداد',
+    paymentConfirm: (title: string) => `التراجع عن سداد «${title}»؟ يُحذف مصروفه وتعود غير مدفوعة، ويبقى أثره في سجل التدقيق.`,
+    release: 'تراجع عن الإفراج',
+    releaseConfirm: (title: string) => `التراجع عن الإفراج عن محتجز «${title}»؟ يُحذف مصروفه، ويبقى أثره في سجل التدقيق.`,
+    actionLabel: (action: string, title: string) => `${action}: ${title}`,
   },
 } as const;
