@@ -65,6 +65,15 @@ export interface NewPaymentRecord {
   phaseId: string | null;
 }
 
+export interface UpdatedPaymentRecord {
+  projectId: string;
+  id: string;
+  title: string;
+  amountLyd: string;
+  retainedLyd: string;
+  phaseId: string | null;
+}
+
 export type StoreOutcome = { status: 'done' } | { status: 'failed'; reason: ExpenseFailure };
 
 /** Port. The Supabase adapter is infra/supabase-contract-store.ts; tests use a fake. */
@@ -74,6 +83,10 @@ export interface ContractStore {
   listPayments(projectId: string): Promise<PaymentRecord[]>;
   addContract(contract: NewContractRecord): Promise<{ status: 'done'; id: string } | { status: 'failed'; reason: ExpenseFailure }>;
   addPayment(payment: NewPaymentRecord): Promise<StoreOutcome>;
+  /** Edits a contract (3.16 deepening). The database stamps updated_at and audits the old values (0031). */
+  updateContract(contract: NewContractRecord & { id: string }): Promise<StoreOutcome>;
+  /** Edits an UNPAID installment (the database refuses changing the amount of a paid one, 0032). */
+  updatePayment(payment: UpdatedPaymentRecord): Promise<StoreOutcome>;
   removeContract(projectId: string, id: string): Promise<StoreOutcome>;
   removePayment(projectId: string, id: string): Promise<StoreOutcome>;
 }
@@ -113,6 +126,54 @@ export async function addPayment(store: ContractStore, command: PaymentInput & {
   const outcome = await store.addPayment({
     projectId: command.projectId.toLowerCase(),
     contractId: command.contractId.toLowerCase(),
+    title: v.title,
+    amountLyd: toDb(v.amountLyd),
+    retainedLyd: toDb(v.retainedLyd),
+    phaseId: v.phaseId,
+  });
+  return outcome.status === 'done' ? { ok: true } : { ok: false, kind: 'failed', reason: outcome.reason };
+}
+
+export type UpdateContractResult = AddContractResult;
+
+/** Edit a contract after saving (owner's decision of 21 Nov 2026: every field). The old values stay in the audit log. */
+export async function updateContract(store: ContractStore, command: ContractInput & { projectId: string; id: string }): Promise<UpdateContractResult> {
+  if (!isUuid(command.projectId) || !isUuid(command.id)) return { ok: false, kind: 'failed', reason: 'not_found' };
+  const valid = validateContract(command);
+  if (!valid.ok) return { ok: false, kind: 'invalid', errors: valid.errors };
+  const v = valid.value;
+  const outcome = await store.updateContract({
+    projectId: command.projectId.toLowerCase(),
+    id: command.id.toLowerCase(),
+    title: v.title,
+    contractor: v.contractor,
+    valueLyd: toDb(v.valueLyd),
+    scope: v.scope,
+    cleanupClause: v.cleanupClause,
+    documentId: v.documentId,
+  });
+  return outcome.status === 'done' ? { ok: true, id: command.id.toLowerCase() } : { ok: false, kind: 'failed', reason: outcome.reason };
+}
+
+export type UpdatePaymentResult =
+  | { ok: true }
+  | { ok: false; kind: 'invalid'; errors: PaymentError[] }
+  /** The installment is already paid: what was paid is a fact; undo the payment first (owner's decision of 21 Nov 2026). */
+  | { ok: false; kind: 'paid' }
+  | { ok: false; kind: 'failed'; reason: ExpenseFailure };
+
+/** Edit an unpaid installment: its name, amount, retained part and phase. */
+export async function updatePayment(store: ContractStore, command: PaymentInput & { projectId: string; id: string }): Promise<UpdatePaymentResult> {
+  if (!isUuid(command.projectId) || !isUuid(command.id)) return { ok: false, kind: 'failed', reason: 'not_found' };
+  const valid = validatePayment(command);
+  if (!valid.ok) return { ok: false, kind: 'invalid', errors: valid.errors };
+  const current = (await store.listPayments(command.projectId.toLowerCase())).find((p) => p.id === command.id.toLowerCase());
+  if (!current) return { ok: false, kind: 'failed', reason: 'not_found' };
+  if (current.paidOn !== null) return { ok: false, kind: 'paid' };
+  const v = valid.value;
+  const outcome = await store.updatePayment({
+    projectId: command.projectId.toLowerCase(),
+    id: command.id.toLowerCase(),
     title: v.title,
     amountLyd: toDb(v.amountLyd),
     retainedLyd: toDb(v.retainedLyd),

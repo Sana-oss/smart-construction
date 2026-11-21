@@ -16,7 +16,7 @@ export const EXTRA_TITLE_MIN = 2;
 export const EXTRA_TITLE_MAX = 80;
 export const EXTRA_NOTE_MAX = 200;
 
-export type ExtraField = 'title' | 'cost' | 'occurredOn' | 'phaseId' | 'status' | 'note';
+export type ExtraField = 'title' | 'cost' | 'occurredOn' | 'phaseId' | 'contractId' | 'status' | 'note';
 export type ExtraErrorCode = MoneyInputError | 'too_short' | 'too_long' | 'invalid_date' | 'date_in_future' | 'invalid_id' | 'unknown_choice';
 export interface ExtraError {
   field: ExtraField;
@@ -30,6 +30,8 @@ export interface ExtraInput {
   /** When it was proposed or agreed. Empty = today in Libya. */
   occurredOn?: string | null;
   phaseId?: string | null;
+  /** The contract the work belongs to (optional; the contracts screens, 3.16). */
+  contractId?: string | null;
   /** Empty = proposed. */
   status?: string | null;
   note?: string | null;
@@ -41,6 +43,7 @@ export interface NewExtra {
   /** null = today in Libya (the database's default). */
   occurredOn: string | null;
   phaseId: string | null;
+  contractId: string | null;
   status: ExtraStatus;
   note: string | null;
 }
@@ -74,6 +77,13 @@ export function validateExtra(input: ExtraInput, today: string): { ok: true; val
     else errors.push({ field: 'phaseId', code: 'invalid_id' });
   }
 
+  let contractId: string | null = null;
+  const contract = clean(input.contractId).toLowerCase();
+  if (contract !== '') {
+    if (isUuid(contract)) contractId = contract;
+    else errors.push({ field: 'contractId', code: 'invalid_id' });
+  }
+
   const statusRaw = clean(input.status);
   const status: ExtraStatus | null = statusRaw === '' ? 'proposed' : isExtraStatus(statusRaw) ? statusRaw : null;
   if (status === null) errors.push({ field: 'status', code: 'unknown_choice' });
@@ -82,7 +92,7 @@ export function validateExtra(input: ExtraInput, today: string): { ok: true; val
   if (note !== null && length(note) > EXTRA_NOTE_MAX) errors.push({ field: 'note', code: 'too_long' });
 
   if (errors.length > 0 || !cost.ok || status === null) return { ok: false, errors };
-  return { ok: true, value: { title, costLyd: cost.value, occurredOn, phaseId, status, note } };
+  return { ok: true, value: { title, costLyd: cost.value, occurredOn, phaseId, contractId, status, note } };
 }
 
 export interface ContingencyUse {
@@ -118,5 +128,29 @@ export function contingencyUse(input: {
     beyondContingency: beyond,
     usedUp: approved.gt(0) && approved.gte(contingency),
     expectedTotal: addMoney(input.total, beyond),
+  };
+}
+
+export interface ContractExtras {
+  /** Sum of the approved extra works linked to the contract. */
+  approved: Money;
+  /** Sum of the proposed ones: shown apart, counted nowhere. */
+  proposed: Money;
+  approvedCount: number;
+  proposedCount: number;
+}
+
+/**
+ * Extra works linked to a contract (3.16, owner's decision of 21 Nov 2026): shown on the contract page and nowhere in its
+ * numbers. The contract value and what is left to pay do not change, and the budget already counts the approved works
+ * through the contingency (contingencyUse), so nothing is counted twice. Rejected works are not shown here.
+ */
+export function contractExtras(extras: readonly { status: ExtraStatus; costLyd: MoneyInput }[]): ContractExtras {
+  const of = (s: ExtraStatus) => extras.filter((e) => e.status === s);
+  return {
+    approved: addMoney('0', ...of('approved').map((e) => e.costLyd)),
+    proposed: addMoney('0', ...of('proposed').map((e) => e.costLyd)),
+    approvedCount: of('approved').length,
+    proposedCount: of('proposed').length,
   };
 }

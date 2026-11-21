@@ -446,3 +446,23 @@ ul.list {
   block-size: 24px;
   flex: none;
 }
+
+/* A small form inside a list row (the contract of an extra work: a list and a button on one line). Logical properties only. */
+.inlineForm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+}
+
+.inlineForm select {
+  min-inline-size: 0;
+  flex: 1;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid rgb(182 186 186 / 0.333);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  color: inherit;
+  font: inherit;
+}

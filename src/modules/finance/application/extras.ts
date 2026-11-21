@@ -14,6 +14,8 @@ export interface ExtraRecord {
   /** "YYYY-MM-DD" */
   occurredOn: string;
   phaseId: string | null;
+  /** The contract the work belongs to; null = none (3.16). */
+  contractId: string | null;
   note: string | null;
   createdAt: string;
 }
@@ -25,6 +27,7 @@ export interface NewExtraRecord {
   status: ExtraStatus;
   occurredOn: string | null;
   phaseId: string | null;
+  contractId: string | null;
   note: string | null;
 }
 
@@ -35,6 +38,8 @@ export interface ExtraStore {
   list(projectId: string): Promise<ExtraRecord[]>;
   add(extra: NewExtraRecord): Promise<ExtraOutcome>;
   setStatus(projectId: string, id: string, status: ExtraStatus): Promise<ExtraOutcome>;
+  /** Links the work to a contract of the same project, or unlinks it (null). The database checks the project (0022). */
+  setContract(projectId: string, id: string, contractId: string | null): Promise<ExtraOutcome>;
   remove(projectId: string, id: string): Promise<ExtraOutcome>;
 }
 
@@ -53,6 +58,7 @@ export async function addExtra(store: ExtraStore, command: ExtraInput & { projec
     status: v.status,
     occurredOn: v.occurredOn,
     phaseId: v.phaseId,
+    contractId: v.contractId,
     note: v.note,
   });
   return outcome.status === 'done' ? { ok: true } : { ok: false, kind: 'failed', reason: outcome.reason };
@@ -65,6 +71,17 @@ export async function setExtraStatus(
 ): Promise<{ ok: true } | { ok: false; reason: ExpenseFailure }> {
   if (!isUuid(command.projectId) || !isUuid(command.id) || !isExtraStatus(command.status)) return { ok: false, reason: 'not_found' };
   const outcome = await store.setStatus(command.projectId.toLowerCase(), command.id.toLowerCase(), command.status);
+  return outcome.status === 'done' ? { ok: true } : { ok: false, reason: outcome.reason };
+}
+
+/** Link an extra work to a contract, or unlink it (contractId empty). Recorded by the audit trigger (0022). */
+export async function linkExtraToContract(
+  store: ExtraStore,
+  command: { projectId: string; id: string; contractId: string | null },
+): Promise<{ ok: true } | { ok: false; reason: ExpenseFailure }> {
+  const contract = (command.contractId ?? '').trim().toLowerCase();
+  if (!isUuid(command.projectId) || !isUuid(command.id) || (contract !== '' && !isUuid(contract))) return { ok: false, reason: 'not_found' };
+  const outcome = await store.setContract(command.projectId.toLowerCase(), command.id.toLowerCase(), contract === '' ? null : contract);
   return outcome.status === 'done' ? { ok: true } : { ok: false, reason: outcome.reason };
 }
 

@@ -6,6 +6,8 @@ import {
   getContracts,
   removeContract,
   removePayment,
+  updateContract,
+  updatePayment,
   type ContractRecord,
   type ContractStore,
   type NewContractRecord,
@@ -21,6 +23,7 @@ const C2 = 'c2c2c2c2-c2c2-4c2c-8c2c-c2c2c2c2c2c2';
 function fakeStore(initial: { contracts?: ContractRecord[]; payments?: PaymentRecord[] } = {}, failWith?: 'not_allowed') {
   const added: { contracts: NewContractRecord[]; payments: NewPaymentRecord[] } = { contracts: [], payments: [] };
   const removed: string[] = [];
+  const updates: unknown[] = [];
   const store: ContractStore = {
     async listContracts() {
       return initial.contracts ?? [];
@@ -38,6 +41,14 @@ function fakeStore(initial: { contracts?: ContractRecord[]; payments?: PaymentRe
       added.payments.push(p);
       return { status: 'done' };
     },
+    async updateContract(c) {
+      updates.push(c);
+      return { status: 'done' };
+    },
+    async updatePayment(p) {
+      updates.push(p);
+      return { status: 'done' };
+    },
     async removeContract(_p, id) {
       removed.push(`contract:${id}`);
       return { status: 'done' };
@@ -47,7 +58,7 @@ function fakeStore(initial: { contracts?: ContractRecord[]; payments?: PaymentRe
       return { status: 'done' };
     },
   };
-  return { store, added, removed };
+  return { store, added, removed, updates };
 }
 
 const contract = (id: string, valueLyd: string, title = 'عقد'): ContractRecord => ({
@@ -145,5 +156,61 @@ describe('getContracts / getContract', () => {
     const { store } = fakeStore(initial);
     expect(await getContract(store, PROJECT, 'd3d3d3d3-d3d3-4d3d-8d3d-d3d3d3d3d3d3')).toBeNull();
     expect(await getContract(store, PROJECT, 'x')).toBeNull();
+  });
+});
+
+describe('updateContract (3.16 deepening)', () => {
+  it('stores every cleaned field, with the value as a decimal string, and returns the id', async () => {
+    const { store, updates } = fakeStore();
+    const r = await updateContract(store, {
+      projectId: PROJECT.toUpperCase(),
+      id: C1.toUpperCase(),
+      title: ' عقد  الهيكل المعدّل ',
+      contractor: 'شركة البناء',
+      value: '95,000',
+      scope: ' الهيكل والسلالم ',
+      cleanupClause: 'المقاول يزيل المخلفات',
+    });
+    expect(r).toEqual({ ok: true, id: C1 });
+    expect(updates).toEqual([
+      { projectId: PROJECT, id: C1, title: 'عقد الهيكل المعدّل', contractor: 'شركة البناء', valueLyd: '95000.000', scope: 'الهيكل والسلالم', cleanupClause: 'المقاول يزيل المخلفات', documentId: null },
+    ]);
+  });
+
+  it('saves nothing when a field is wrong, or an id is not a uuid', async () => {
+    const { store, updates } = fakeStore();
+    const bad = await updateContract(store, { projectId: PROJECT, id: C1, title: '', contractor: 'م', value: '0' });
+    expect(bad.ok === false && bad.kind).toBe('invalid');
+    expect(await updateContract(store, { projectId: PROJECT, id: 'x', title: 'عقد', contractor: 'مقاول', value: '1' })).toEqual({ ok: false, kind: 'failed', reason: 'not_found' });
+    expect(updates).toEqual([]);
+  });
+});
+
+describe('updatePayment (3.16 deepening)', () => {
+  const P1 = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1';
+  const P2 = 'a2a2a2a2-a2a2-4a2a-8a2a-a2a2a2a2a2a2';
+  const unpaid = payment(P1, C1, '30000');
+  const paid = payment(P2, C1, '15000', '2026-11-01');
+  const initial = { contracts: [contract(C1, '90000')], payments: [unpaid, paid] };
+
+  it('edits an unpaid installment: name, amount, retained part and phase', async () => {
+    const { store, updates } = fakeStore(initial);
+    const r = await updatePayment(store, { projectId: PROJECT, id: P1, title: ' الدفعة  الأولى ', amount: '32,000', retained: '3,200', phaseId: PHASE.toUpperCase() });
+    expect(r).toEqual({ ok: true });
+    expect(updates).toEqual([{ projectId: PROJECT, id: P1, title: 'الدفعة الأولى', amountLyd: '32000.000', retainedLyd: '3200.000', phaseId: PHASE }]);
+  });
+
+  it('refuses a paid installment without touching the database: undo the payment first', async () => {
+    const { store, updates } = fakeStore(initial);
+    expect(await updatePayment(store, { projectId: PROJECT, id: P2, title: 'دفعة', amount: '1' })).toEqual({ ok: false, kind: 'paid' });
+    expect(updates).toEqual([]);
+  });
+
+  it('refuses a wrong field, a retained part above the amount, and an installment that is not there', async () => {
+    const { store, updates } = fakeStore(initial);
+    const over = await updatePayment(store, { projectId: PROJECT, id: P1, title: 'دفعة', amount: '100', retained: '101' });
+    expect(over.ok === false && over.kind === 'invalid' && over.errors).toEqual([{ field: 'retained', code: 'retained_exceeds_amount' }]);
+    expect(await updatePayment(store, { projectId: PROJECT, id: 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0', title: 'دفعة', amount: '1' })).toEqual({ ok: false, kind: 'failed', reason: 'not_found' });
+    expect(updates).toEqual([]);
   });
 });

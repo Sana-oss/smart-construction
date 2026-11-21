@@ -119,6 +119,37 @@ export function supabaseContractStore(supabase: SupabaseClient): ContractStore {
       return error ? { status: 'failed', reason: mapExpenseError(error) } : { status: 'done' };
     },
 
+    async updateContract(c) {
+      const { data, error } = await supabase
+        .from('contracts')
+        .update({
+          title: c.title,
+          contractor: c.contractor,
+          value_lyd: c.valueLyd,
+          scope: c.scope,
+          cleanup_clause: c.cleanupClause,
+          document_id: c.documentId,
+        })
+        .eq('id', c.id)
+        .eq('project_id', c.projectId)
+        .select('id');
+      if (error) return { status: 'failed', reason: mapExpenseError(error) };
+      return data && data.length === 1 ? { status: 'done' } : { status: 'failed', reason: 'not_found' };
+    },
+
+    async updatePayment(p) {
+      // Only an unpaid installment: the filter makes a payment that was paid in the meantime not found.
+      const { data, error } = await supabase
+        .from('payments')
+        .update({ title: p.title, amount_lyd: p.amountLyd, retained_lyd: p.retainedLyd, phase_id: p.phaseId })
+        .eq('id', p.id)
+        .eq('project_id', p.projectId)
+        .is('paid_on', null)
+        .select('id');
+      if (error) return { status: 'failed', reason: mapExpenseError(error) };
+      return data && data.length === 1 ? { status: 'done' } : { status: 'failed', reason: 'not_found' };
+    },
+
     async removeContract(projectId, id) {
       const { data, error } = await supabase.from('contracts').delete().eq('id', id).eq('project_id', projectId).select('id');
       if (error) return { status: 'failed', reason: mapExpenseError(error) };

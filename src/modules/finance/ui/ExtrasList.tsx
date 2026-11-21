@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { formatAmount } from '@/shared-kernel';
 import type { ExtrasView } from '../application/extras';
 import { ExtraButton } from './ExtraButton';
+import { setExtraContractAction } from './extra-actions';
 import { BackIcon } from './icons';
 import { extrasTextAr } from './messages.ar';
 import { EXTRA_NEW_PATH } from './routes';
@@ -17,13 +18,16 @@ const dayMonthAr = (iso: string) =>
 interface Props {
   view: ExtrasView;
   phases: { id: string; name: string }[];
+  /** The project's contracts, to link each work to one (3.16 deepening). */
+  contracts: { id: string; title: string }[];
   backHref: string;
-  notice?: 'added' | 'changed' | 'deleted' | null;
+  notice?: 'added' | 'changed' | 'deleted' | 'linked' | 'unlinked' | null;
 }
 
-export function ExtrasList({ view, phases, backHref, notice = null }: Props) {
+export function ExtrasList({ view, phases, contracts, backHref, notice = null }: Props) {
   const { use, extras } = view;
   const phaseName = (id: string | null) => (id ? phases.find((p) => p.id === id)?.name : undefined);
+  const contractTitle = (id: string | null) => (id ? contracts.find((c) => c.id === id)?.title : undefined);
   return (
     <main className={styles.screen}>
       <header className={styles.header}>
@@ -39,7 +43,7 @@ export function ExtrasList({ view, phases, backHref, notice = null }: Props) {
       <div className={styles.scroll}>
         {notice && (
           <p role="status" className={styles.info}>
-            {notice === 'added' ? t.added : notice === 'changed' ? t.changed : t.deleted}
+            {notice === 'added' ? t.added : notice === 'changed' ? t.changed : notice === 'linked' ? t.linked : notice === 'unlinked' ? t.unlinked : t.deleted}
           </p>
         )}
 
@@ -63,7 +67,22 @@ export function ExtrasList({ view, phases, backHref, notice = null }: Props) {
               <li key={e.id} className={styles.listRow}>
                 <span className={styles.rowText}>
                   <strong>{e.title}</strong>
-                  <small>{[extrasTextAr.status[e.status], dayMonthAr(e.occurredOn), phaseName(e.phaseId), e.note].filter(Boolean).join(' · ')}</small>
+                  <small>{[extrasTextAr.status[e.status], dayMonthAr(e.occurredOn), phaseName(e.phaseId), contractTitle(e.contractId), e.note].filter(Boolean).join(' · ')}</small>
+                  {contracts.length > 0 && (
+                    <form action={setExtraContractAction.bind(null, e.id)} className={styles.inlineForm}>
+                      <select name="contractId" defaultValue={e.contractId ?? ''} aria-label={t.linkLabel(e.title)}>
+                        <option value="">{t.noContract}</option>
+                        {contracts.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="submit" className={styles.linkButton}>
+                        {t.link}
+                      </button>
+                    </form>
+                  )}
                 </span>
                 <span className={styles.rowValue}>
                   <bdi dir="ltr">{formatAmount(e.costLyd)}</bdi> {extrasTextAr.lyd}

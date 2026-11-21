@@ -14,7 +14,18 @@ import styles from './expense.module.css';
 const t = extrasTextAr.form;
 const FORM_ID = 'extra-form';
 
-export function ExtraForm({ phases, today, backHref }: { phases: { id: string; name: string }[]; today: string; backHref: string }) {
+export function ExtraForm({
+  phases,
+  contracts,
+  today,
+  backHref,
+}: {
+  phases: { id: string; name: string }[];
+  /** The project's contracts, to link the work to one (optional; 3.16). */
+  contracts: { id: string; title: string }[];
+  today: string;
+  backHref: string;
+}) {
   const [state, formAction, pending] = useActionState(addExtraAction, {} as ExtraFormState);
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? { occurredOn: today, status: 'proposed' };
@@ -94,6 +105,21 @@ export function ExtraForm({ phases, today, backHref }: { phases: { id: string; n
               ))}
             </select>
             {errorOf('phaseId')}
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="contractId" className={styles.label}>
+              {t.contract} <small className={styles.optional}>({t.optional})</small>
+            </label>
+            <select id="contractId" name="contractId" className={styles.input} defaultValue={values.contractId ?? ''} {...invalid('contractId')}>
+              <option value="">{t.noContract}</option>
+              {contracts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+            {errorOf('contractId')}
           </div>
 
           <div className={styles.field}>

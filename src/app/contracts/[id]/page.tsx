@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { getProjectDocuments } from '@/modules/documents';
-import { CONTRACTS_PATH, ContractDetail, contractsTextAr, getContractDetail } from '@/modules/finance';
+import { CONTRACTS_PATH, ContractDetail, contractsTextAr, getContractDetail, getContractExtras } from '@/modules/finance';
 import { getSignedInUserId, SIGN_IN_PATH } from '@/modules/identity';
 import { getMyProject, SETUP_DETAILS_PATH } from '@/modules/projects';
 import { BottomNav } from '../../_shell/BottomNav';
@@ -19,14 +19,15 @@ export default async function ContractPage({ params, searchParams }: { params: P
   if (!detail) notFound();
   const documentId = detail.contract.documentId;
   const doc = documentId ? (await getProjectDocuments(project.id)).find((d) => d.id === documentId && d.kind === 'contract') : undefined;
-  const due = await dueByPayment(project, detail.payments);
+  const [due, extras] = await Promise.all([dueByPayment(project, detail.payments), getContractExtras(project.id, detail.contract.id)]);
   const { done } = await searchParams;
-  const notice = done === 'added' || done === 'payment-added' || done === 'payment-deleted' ? done : null;
+  const notice = done === 'added' || done === 'updated' || done === 'payment-added' || done === 'payment-updated' || done === 'payment-deleted' ? done : null;
   return <>
     <ContractDetail
       detail={detail}
       phases={project.phases.map((p) => ({ id: p.id, name: p.name }))}
       dueByPayment={due}
+      extras={extras}
       copy={doc ? { title: doc.title, url: doc.url } : null}
       backHref={CONTRACTS_PATH}
       notice={notice}

@@ -12,6 +12,7 @@ import {
 // - The photo is optional: with it, the expense stores a compressed JPEG in the project's receipts folder, the saved
 //   screen says it is attached, and the list opens it through a signed link.
 // - A form the server would refuse (missing amount) uploads NOTHING.
+// - A receipt that cannot be uploaded keeps the owner's answers and the photo, and saving again works.
 // - A stranger cannot download the receipt.
 
 const owner = newTestAccount();
@@ -74,6 +75,37 @@ test.describe.serial('receipt photo on a quick expense', () => {
     const res = await page.request.get(href);
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toContain('image/jpeg');
+  });
+
+  test('a failed receipt upload keeps the owner\'s answers, and saving again works', async ({ page }) => {
+    await page.goto('/sign-in');
+    await page.getByLabel('رقم الهاتف').fill(owner.localPhone);
+    await page.getByRole('textbox', { name: 'كلمة المرور', exact: true }).fill(owner.password);
+    await page.getByRole('button', { name: 'تسجيل الدخول' }).click();
+    await page.getByRole('link', { name: 'إضافة مصروف سريع' }).click();
+    const photo = await phoneReceiptJpeg(page);
+    await page.getByLabel('اسم المصروف').fill('فاتورة الحديد');
+    await page.getByLabel('المبلغ · د.ل').fill('4300');
+    await page.getByLabel('نوع المصروف').selectOption({ label: 'مواد' });
+    await page.locator('input[type="file"]').setInputFiles({ name: 'receipt.jpg', mimeType: 'image/jpeg', buffer: photo });
+    await expect(page.getByText('تغيير الصورة')).toBeVisible({ timeout: 30_000 });
+
+    // The browser cannot reach the storage: the upload fails. The page says so and keeps every answer and the photo
+    // (the form used to be wiped, because it was sent with `action` and React resets such a form when the action ends).
+    const upload = '**/storage/v1/object/upload/sign/**';
+    await page.route(upload, (route) => route.abort());
+    await page.getByRole('button', { name: 'حفظ المصروف' }).click();
+    await expect(page.getByText('تعذّر رفع صورة الفاتورة')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByLabel('اسم المصروف')).toHaveValue('فاتورة الحديد');
+    await expect(page.getByLabel('المبلغ · د.ل')).toHaveValue('4300');
+    await expect(page.getByLabel('نوع المصروف')).toHaveValue('materials');
+    await expect(page.getByText('تغيير الصورة')).toBeVisible();
+
+    // With the connection back, saving again (no retyping) stores the expense once, with its receipt.
+    await page.unroute(upload);
+    await page.getByRole('button', { name: 'حفظ المصروف' }).click();
+    await expect(page.getByText('تم حفظ المصروف')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('مرفقة')).toBeVisible();
   });
 
   test('an expense without a receipt is unchanged (three answers, no link)', async ({ page }) => {

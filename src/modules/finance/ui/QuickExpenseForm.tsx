@@ -160,7 +160,18 @@ function ExpenseRound({ phases, today, homeHref, rates, onAnother }: Props & { o
       <div className={styles.scroll}>
         {/* key: after a refused submission React resets the form, and a <select> does not take its new default value
             (the type went back to «اختر نوع المصروف»). Rebuilding the form with the values sent back keeps every field. */}
-        <form id={FORM_ID} action={send} noValidate key={JSON.stringify(state.values ?? {})}>
+        {/* onSubmit, not action={send}: React resets a form when its action function ends, and `send` ends early when the receipt
+            cannot be uploaded: the owner's answers would be wiped. Here nothing resets unless the server refuses (then the key below
+            rebuilds the form with the values sent back), the same fix as CheckItemForm and IssueForm. */}
+        <form
+          id={FORM_ID}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void send(new FormData(e.currentTarget));
+          }}
+          noValidate
+          key={JSON.stringify(state.values ?? {})}
+        >
           {state.formError && (
             <p role="alert" className={styles.errorSummary}>
               {state.formError}
