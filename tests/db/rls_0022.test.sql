@@ -36,8 +36,9 @@ begin
   select id into v_project from projects where owner_id = '00000000-0000-0000-0000-0000000000a1';
   reset role;
   select ph.id into v_other_phase from phases ph join projects p on p.id = ph.project_id where p.owner_id = '00000000-0000-0000-0000-0000000000a2' limit 1;
-  insert into contracts (project_id, contractor, value_lyd)
-    select id, 'مقاول آخر', 1 from projects where owner_id = '00000000-0000-0000-0000-0000000000a2' returning id into v_other_contract;
+  -- 0031 made a contract title required: the row is only a contract of another project, as before.
+  insert into contracts (project_id, title, contractor, value_lyd)
+    select id, 'عقد آخر', 'مقاول آخر', 1 from projects where owner_id = '00000000-0000-0000-0000-0000000000a2' returning id into v_other_contract;
   set role authenticated;
   begin
     insert into change_orders (project_id, cost_lyd) values (v_project, 10);
