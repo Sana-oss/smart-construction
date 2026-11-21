@@ -78,18 +78,10 @@ export function budgetPlan(input: {
   total: MoneyInput;
   contingency: MoneyInput;
 }): BudgetPlan {
-  const limit = money(DEVIATION_PCT).plus(100).dividedBy(100);
   const rows = input.phases.map((p): PhaseBudgetRow => {
     const allocated = input.allocations.get(p.id) ?? null;
     const spent = money(input.spentByPhase.get(p.id) ?? '0');
-    const planned = allocated !== null && allocated.gt(0);
-    return {
-      phaseId: p.id,
-      allocated,
-      spent,
-      usedPct: planned ? spent.times(100).dividedBy(allocated).floor().toNumber() : null,
-      over: planned ? spent.gt(allocated.times(limit)) : false,
-    };
+    return { phaseId: p.id, allocated, spent, ...phaseUse(allocated, spent) };
   });
   const allocatedTotal = addMoney('0', ...rows.map((r) => r.allocated ?? '0'));
   const forPhases = subMoney(input.total, input.contingency);
@@ -101,6 +93,16 @@ export function budgetPlan(input: {
     overAllocated: allocatedTotal.gt(forPhases),
     overPhases: rows.filter((r) => r.over).length,
   };
+}
+
+/**
+ * How much of a phase's allocation is spent, and FR-FIN-11's warning (spent > allocated × (1 + D5)). Shared by the
+ * budget plan (S15.2) and the expenses report (FR-FIN-05), so both screens say the same thing.
+ */
+export function phaseUse(allocated: Money | null, spent: Money): { usedPct: number | null; over: boolean } {
+  if (allocated === null || !allocated.gt(0)) return { usedPct: null, over: false };
+  const limit = money(DEVIATION_PCT).plus(100).dividedBy(100);
+  return { usedPct: spent.times(100).dividedBy(allocated).floor().toNumber(), over: spent.gt(allocated.times(limit)) };
 }
 
 /** Expenses summed by phase (null = no phase), in the domain so the screens never add money themselves (rule R5). */

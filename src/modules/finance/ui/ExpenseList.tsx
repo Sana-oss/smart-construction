@@ -10,8 +10,8 @@ import type { ExpenseList as ExpenseListData } from '../application/list-expense
 import { filterQuery, isFiltered, type ExpenseFilter } from '../domain/expense-filter';
 import { ForeignNote } from './ForeignNote';
 import { BackIcon } from './icons';
-import { expenseCountAr, expensePeriodAr, expenseTextAr, expenseTypeAr } from './messages.ar';
-import { EXPENSE_NEW_PATH, EXPENSES_FILTER_PATH, EXPENSES_PATH, expensePath } from './routes';
+import { expenseCountAr, expensePeriodAr, expenseTextAr, expenseTypeAr, reportTextAr } from './messages.ar';
+import { EXPENSE_NEW_PATH, EXPENSES_FILTER_PATH, EXPENSES_PATH, EXPENSES_REPORT_PATH, expensePath } from './routes';
 import styles from './expense.module.css';
 
 const t = expenseTextAr.list;
@@ -185,6 +185,13 @@ export function ExpenseList({ projectName, list, phases, homeHref, notice = null
                 <span className={styles.rowText}>
                   <strong>{tf.open}</strong>
                   <small>{tf.openNote}</small>
+                </span>
+              </Link>
+              {/* FR-FIN-05: not in design S13.1; added with the report (decision of 21 Nov 2026). */}
+              <Link href={EXPENSES_REPORT_PATH} className={styles.quickLink}>
+                <span className={styles.rowText}>
+                  <strong>{reportTextAr.open}</strong>
+                  <small>{reportTextAr.openNote}</small>
                 </span>
               </Link>
             </nav>

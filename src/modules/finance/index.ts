@@ -32,6 +32,12 @@ export { EXPENSE_NEW_PATH, EXPENSES_FILTER_PATH, EXPENSES_PATH, expensePath } fr
 export { filterQuery, parseExpenseFilter, type ExpenseFilter, type ExpenseFilterParams } from './domain/expense-filter';
 export { ExpenseFilterForm } from './ui/ExpenseFilterForm';
 
+// The expenses report (FR-FIN-05): by phase and type for a period; planned against actual for «كل الفترات»
+export { ExpenseReport } from './ui/ExpenseReport';
+export { getExpenseReportView } from './ui/queries';
+export { EXPENSES_REPORT_PATH } from './ui/routes';
+export { reportTextAr } from './ui/messages.ar';
+
 // Edit and delete one expense (decision of 19 Nov 2026; the database audits every change, migration 0016)
 export { EditExpenseForm } from './ui/EditExpenseForm';
 export { updateExpense, deleteExpense, type UpdateExpenseCommand } from './application/change-expense';

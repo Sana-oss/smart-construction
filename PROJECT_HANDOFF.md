@@ -70,6 +70,7 @@ mutation run, UI, e2e on staging, and docs:
 | 3.13 concrete log + reminders on engineer's dates | FR-QLT-04/05 | 0030 | `quality/domain/concrete.ts`, `/concrete/*` |
 | 3.16 contracts and payment schedule (slice 1) | FR-FIN-08, FR-FIN-12, FR-FIN-09 (schedule) | 0031 | `finance/domain/contracts.ts`, `/contracts/*` |
 | 3.16 pay an installment, its expense, release the retained part (slice 2) | FR-FIN-09 | 0032 | `finance/domain/payments.ts`, `/contracts/[id]/payments/[paymentId]`, `src/app/contracts/due.ts` |
+| Expenses report by phase and type; planned vs actual for «كل الفترات» (branch `feat/phase-expense-report`, not yet merged) | FR-FIN-05 | — | `finance/domain/expense-report.ts`, `/expenses/report` |
 
 Bugs fixed along the way (all merged): a form refusal in the page wiped the owner's answers (React resets a form after
 its action — check/upload moved to `onSubmit`, in `CheckItemForm` and `IssueForm`); the pre-pour form offered the
@@ -90,7 +91,7 @@ Last verified results (21 Nov, on `feat/concrete-log` = merged into `main` via #
 - **Broken:** nothing known in code. Environment: the USB drive `E:` (holds the repo) disconnects intermittently — see §6.
 - **Not built:** 3.22 trade packs, 3.6 AI assistant + knowledge base, 3.20 offline,
   3.21 weekly report (n8n) + outbox worker, 3.11 read-only share link, 3.23 phase handover/stock count (cut, "designed and
-  documented"), FR-FIN-05 expense report per phase, engineer review workflow (no engineer accounts by design).
+  documented"), engineer review workflow (no engineer accounts by design).
 - **Stage:** priority 0 and 1 complete; priority 2 nearly complete (3.16 done; trade packs wait for the engineer).
 
 ---
