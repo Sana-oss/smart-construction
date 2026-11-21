@@ -7,6 +7,8 @@ export const EXPENSES_PATH = '/expenses';
 export const expensePath = (id: string) => `/expenses/${id}`;
 /** Filter the expenses list (design S13.2). The filter itself travels in the list's address (?q=&period=...). */
 export const EXPENSES_FILTER_PATH = '/expenses/filter';
+/** The expenses report (FR-FIN-05): by phase and type, for a period (?period=). No design screen; decision of 21 Nov 2026. */
+export const EXPENSES_REPORT_PATH = '/expenses/report';
 /** Obligations and expected income (design S16.1), and adding one (S16.2). */
 export const CASHFLOW_PATH = '/cashflow';
 export const CASHFLOW_NEW_PATH = '/cashflow/new';

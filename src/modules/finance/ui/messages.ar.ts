@@ -125,6 +125,32 @@ export const expenseTextAr = {
   },
 } as const;
 
+/** The expenses report (FR-FIN-05; no design screen, built from the design's components, decision of 21 Nov 2026). */
+export const reportTextAr = {
+  pageTitle: 'تقرير المصروفات',
+  title: 'تقرير المصروفات',
+  subtitle: 'حسب المرحلة ونوع المصروف',
+  period: 'الفترة',
+  show: 'عرض التقرير',
+  total: (period: string) => `مجموع المصروفات · ${period}`,
+  byType: 'حسب نوع المصروف',
+  byPhase: 'حسب المرحلة',
+  unspecified: 'غير محدد',
+  noPhase: 'مصروفات بلا مرحلة',
+  noPhaseNote: 'سُجّلت دون ربطها بمرحلة',
+  nothing: 'لا مصروفات',
+  allocated: (amount: string) => `المخصص: ${amount} د.ل`,
+  noAllocation: 'بلا مخصص',
+  usedPct: (pct: number) => `${pct}% من المخصص`,
+  over: 'تجاوز المخصص بأكثر من 10%',
+  planNote: 'المقارنة بالمخصص تظهر مع «كل الفترات» فقط، لأن مخصص المرحلة يغطي المشروع كله لا شهرًا بعينه.',
+  deviationNote: 'التنبيه حين يزيد مصروف المرحلة على مخصصها بأكثر من 10%. هذه نسبة مؤقتة (القرار D5).',
+  before: (amount: string) => `لا يشمل التقرير المصروف قبل التطبيق (${amount} د.ل)، لأنه غير مسجّل بمراحل ولا بتواريخ.`,
+  open: 'تقرير المصروفات',
+  openNote: 'حسب المرحلة والنوع، ومقارنة المخطط بالفعلي',
+  backToList: 'العودة للمصروفات',
+} as const;
+
 /** «الفترة» choices (design S13.2; list decided 19 Nov 2026). */
 export const expensePeriodAr: Record<ExpensePeriod, string> = {
   all: 'كل الفترات',

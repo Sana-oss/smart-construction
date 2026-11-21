@@ -52,6 +52,8 @@ mistake, it fails with "stranger can read projects".
 
 `cashflow.spec.ts` (design S16, FR-FIN-06, FR-FIN-07; needs migration 0017): the current liquidity is the wizard's available figure minus later expenses; obligations and expected income give the 30-day balance; income that arrives after an obligation does not cover it (a shortfall is shown); an overdue obligation is flagged; deleting asks first and is audited; a stranger can neither see nor change the movements.
 
+`expense-report.spec.ts` (FR-FIN-05): opened from the expenses list; totals by type and by phase add up to every expense; «كل الفترات» compares each phase with its allocation (123% and the 10% warning); «الشهر الماضي» shows only that month without the allocation, and says why; an unknown period falls back to «كل الفترات».
+
 `expense-filter.spec.ts` (design S13.2, FR-FIN-05): search by name or supplier, period, phase and type narrow the list; the results card totals all matching expenses; no match has its own message; «مسح التصفية» goes back; a hand-made address with odd characters is cleaned, never an error.
 
 `expense-edit.spec.ts` (decision of 19 Nov 2026, FR-SYS-03; needs migration 0016): the owner opens an expense from the list and edits it, and the audit log keeps the old and the new values; a refused edit keeps the typed values; deleting asks twice, then removes the expense and its receipt photo, and the audit log keeps the old values; a stranger can neither open, edit nor delete it.

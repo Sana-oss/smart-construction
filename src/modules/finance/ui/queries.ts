@@ -16,6 +16,9 @@ import { supabaseFileStore } from '@/platform/supabase/storage';
 import type { ExpenseFilter } from '../domain/expense-filter';
 import { findExpense, listExpenses, type ExpenseList, type ExpenseListItem } from '../application/list-expenses';
 import { supabaseExpenseReader } from '../infra/supabase-expense-reader';
+import { getExpenseReport, type ExpenseReportView } from '../application/expense-report';
+import { supabaseReportStore } from '../infra/supabase-report-store';
+import type { ExpensePeriod } from '../domain/expense-filter';
 
 /**
  * The expenses list of a project (design S13.1), filtered when `filter` is given (S13.2).
@@ -69,4 +72,13 @@ export async function getContractsView(projectId: string): Promise<ContractsView
 /** One contract with its payment schedule (design S17.2); null when not found (or not visible to this user). */
 export async function getContractDetail(projectId: string, contractId: string): Promise<ContractDetail | null> {
   return getContract(supabaseContractStore(await createServerSupabase()), projectId, contractId);
+}
+
+/** The expenses report (FR-FIN-05). `project` (id, phases in plan order) comes from the projects module (the page). */
+export async function getExpenseReportView(
+  project: { id: string; phases: readonly { id: string }[] },
+  period: ExpensePeriod,
+  today: string,
+): Promise<ExpenseReportView> {
+  return getExpenseReport(supabaseReportStore(await createServerSupabase()), project, period, today);
 }

@@ -2,11 +2,8 @@
 
 ## 1. Immediate next action
 
-**Merge the contracts pull request (3.16 contracts and payments, FR-FIN-08, FR-FIN-09, FR-FIN-12), then pick the next P2 item.**
-After the merge: `git checkout main && git pull`. Migrations 0031 and 0032 are already applied to staging.
-
-Suggested next feature: **FR-FIN-05 expense report per phase + planned vs actual** (depends on budget allocations: done), or
-the small deepening items below. Ask the owner which first.
+**Commit and open the PR for FR-FIN-05 (expenses report), branch `feat/phase-expense-report`, once the owner says so.**
+Then ask the owner which P2 item comes next (contracts deepening, or the quick-expense form fix). No migration in FR-FIN-05.
 
 ## 2. Prioritized backlog
 
@@ -19,7 +16,7 @@ the small deepening items below. Ask the owner which first.
 **P2 — normal**
 - Contracts deepening: edit a contract or a payment after saving (today: delete and re-record); link existing extra works
   (`change_orders.contract_id`) to a contract; a paid payment whose expense the owner deleted shows as paid without an expense.
-- FR-FIN-05 expense report per phase + planned vs actual (status report §9 item 3). Depends on budget allocations (done).
+- FR-FIN-05 deepening: a period with two dates the owner picks; export or print; review the report screen with the designer (no design screen existed).
 - Quick-expense form: keep the owner's answers when a receipt upload fails (same fix as `CheckItemForm`, move to `onSubmit`).
 - 3.22 trade packs — **blocked on the engineer** (D7, D8); engine (quality checklists) is ready.
 - Engineer review of unreviewed content (D4, D10, rebar coefficient 162, readiness and stop-plan templates) — external.
