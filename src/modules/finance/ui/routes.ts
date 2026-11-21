@@ -20,3 +20,8 @@ export const BUDGET_EDIT_PATH = '/budget/phases/edit';
 /** Extra works and changes (FR-FIN-10), and adding one. */
 export const EXTRAS_PATH = '/budget/extras';
 export const EXTRA_NEW_PATH = '/budget/extras/new';
+/** Contracts and payments (design S17.1), one contract (S17.2) and adding a contract or a payment (FR-FIN-08, FR-FIN-09). */
+export const CONTRACTS_PATH = '/contracts';
+export const CONTRACT_NEW_PATH = '/contracts/new';
+export const contractPath = (id: string) => `/contracts/${id}`;
+export const paymentNewPath = (contractId: string) => `/contracts/${contractId}/payments/new`;

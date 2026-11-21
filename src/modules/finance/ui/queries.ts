@@ -5,7 +5,9 @@ import { getCashflow, type CashflowView } from '../application/cashflow';
 import { getRateLog, type RateLog } from '../application/rates';
 import { getBudgetView, type BudgetView, type ProjectBudget } from '../application/budget-plan';
 import { supabaseBudgetStore } from '../infra/supabase-budget-store';
+import { getContract, getContracts, type ContractDetail, type ContractsView } from '../application/contracts';
 import { getExtras, type ExtrasView } from '../application/extras';
+import { supabaseContractStore } from '../infra/supabase-contract-store';
 import { supabaseExtraStore } from '../infra/supabase-extra-store';
 import { supabaseRateStore } from '../infra/supabase-rate-store';
 import type { LatestRates } from './ExpenseFields';
@@ -57,4 +59,14 @@ export async function getProjectBudget(project: ProjectBudget): Promise<BudgetVi
 /** Extra works and their effect on the contingency (FR-FIN-10). `project` comes from the projects module (the page). */
 export async function getExtrasView(project: { id: string; totalBudgetLyd: string; contingencyPct: string }): Promise<ExtrasView> {
   return getExtras(supabaseExtraStore(await createServerSupabase()), project);
+}
+
+/** Every contract of the project with its figures (design S17.1). */
+export async function getContractsView(projectId: string): Promise<ContractsView> {
+  return getContracts(supabaseContractStore(await createServerSupabase()), projectId);
+}
+
+/** One contract with its payment schedule (design S17.2); null when not found (or not visible to this user). */
+export async function getContractDetail(projectId: string, contractId: string): Promise<ContractDetail | null> {
+  return getContract(supabaseContractStore(await createServerSupabase()), projectId, contractId);
 }

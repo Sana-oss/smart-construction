@@ -67,5 +67,17 @@ export { getExtrasView } from './ui/queries';
 export { EXTRA_NEW_PATH, EXTRAS_PATH } from './ui/routes';
 export { extrasTextAr } from './ui/messages.ar';
 
+// Contracts and the payment schedule (design S17.1, S17.2; FR-FIN-08, FR-FIN-09; 3.16 contractual part, slice 1)
+export { ContractList } from './ui/ContractList';
+export { ContractDetail } from './ui/ContractDetail';
+export { ContractForm } from './ui/ContractForm';
+export { PaymentForm } from './ui/PaymentForm';
+export { getContractsView, getContractDetail } from './ui/queries';
+export { saveContract } from './ui/contract-save';
+export { CONTRACT_FORM_FIELDS, type ContractFormState } from './ui/contract-form-state';
+export { CONTRACTS_PATH, CONTRACT_NEW_PATH, contractPath, paymentNewPath } from './ui/routes';
+export { contractsTextAr, contractErrorsAr, contractFailedAr, contractCountAr } from './ui/messages.ar';
+export type { ContractsView } from './application/contracts';
+
 // Event handler: purchase.recorded -> one expense (FR-FIN-03). Called by the app right after a purchase is saved.
 export { recordPurchaseExpense } from './ui/purchase-expense';

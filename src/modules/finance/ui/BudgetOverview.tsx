@@ -1,6 +1,6 @@
 // Project budget (design S15.1 «ميزانية المشروع»): the hub of the budget screens. Server Component: every number comes
 // from the finance domain (budgetSummary, budgetPlan); this file only displays them (rule R5).
-// The design's «العقود والدفعات» row shows «قريبًا»: contracts are priority 2 (FR-FIN-08) and not built.
+// The «العقود والدفعات» row links to the contracts screen and shows how many contracts and their value (FR-FIN-08).
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -8,7 +8,7 @@ import { formatAmount } from '@/shared-kernel';
 import type { BudgetView } from '../application/budget-plan';
 import type { ContingencyUse } from '../domain/extras';
 import { BackIcon } from './icons';
-import { budgetTextAr } from './messages.ar';
+import { budgetTextAr, contractCountAr } from './messages.ar';
 import styles from './expense.module.css';
 
 const t = budgetTextAr.overview;
@@ -18,7 +18,9 @@ interface Props {
   /** FR-FIN-10: approved extra works, taken from the contingency first. */
   extras: ContingencyUse;
   backHref: string;
-  links: { phases: string; extras: string; cashflow: string; decision: string };
+  /** FR-FIN-08: how many contracts the project has and the sum of their values ("90000.000"). */
+  contracts: { count: number; totalValueLyd: string };
+  links: { phases: string; extras: string; cashflow: string; contracts: string; decision: string };
 }
 
 function Row({ href, title, note, action }: { href?: string; title: string; note: string; action: ReactNode }) {
@@ -42,7 +44,7 @@ function Row({ href, title, note, action }: { href?: string; title: string; note
   );
 }
 
-export function BudgetOverview({ view, extras, backHref, links }: Props) {
+export function BudgetOverview({ view, extras, contracts, backHref, links }: Props) {
   const { summary, plan } = view;
   return (
     <main className={styles.screen}>
@@ -92,7 +94,12 @@ export function BudgetOverview({ view, extras, backHref, links }: Props) {
             action={t.rows.extras.action}
           />
           <Row href={links.cashflow} title={t.rows.cashflow.title} note={t.rows.cashflow.note} action={t.rows.cashflow.action} />
-          <Row title={t.rows.contracts.title} note={t.rows.contracts.note} action={t.rows.contracts.action} />
+          <Row
+            href={links.contracts}
+            title={t.rows.contracts.title}
+            note={contracts.count === 0 ? t.rows.contracts.noteEmpty : t.rows.contracts.note(contractCountAr(contracts.count), formatAmount(contracts.totalValueLyd))}
+            action={t.rows.contracts.action}
+          />
           <Row href={links.decision} title={t.rows.decision.title} note={t.rows.decision.note} action={t.rows.decision.action} />
         </nav>
       </div>
