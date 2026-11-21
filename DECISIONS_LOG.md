@@ -48,6 +48,15 @@ read-only share link); hard-blocking phase closure or work start; WhatsApp, supp
   closes defects (no engineer accounts), with advice to close after the engineer's review.
 - **3.13:** the owner copies the engineer's two dates per pour (curing until, formwork removal); **no number of days
   anywhere**; reminders from 2 days before (display window) until «تمّ» (stamped by DB, undoable); design S27.2 fields.
+- **3.16 contractual (21 Nov):** contract = contractor, title, value, scope, optional cleanup clause, contract copy = a document of
+  type «عقد» chosen in the app layer, no contract number, no engineer approval; the retained part is an amount the owner types on
+  the payment (D9: no percentage suggested). A payment tied to a phase is due when the phase is done and has at least one photo;
+  paying earlier warns, needs an explicit tick and is logged (D2). Paying makes ONE expense (amount minus retained) keyed by the
+  payment id; releasing the retained part (any time, warning while a phase is not done) makes a second one; undo of either
+  deletes its expense; expense type chosen by the owner, default «عمالة».
+- **3.16 deepening (21 Nov):** every contract field is editable; only an UNPAID payment is editable (name, amount, retained, phase)
+  and a paid one needs its payment undone first; extra works link to a contract (optional choice when recorded, plus a row control)
+  and are shown on the contract page without touching its value or what is left (they already come out of the contingency).
 
 ## Technical patterns established
 - DB per feature: BEFORE guard trigger (same project, never moves, no future dates, server-stamped timestamps) + AFTER

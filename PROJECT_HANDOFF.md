@@ -71,14 +71,15 @@ mutation run, UI, e2e on staging, and docs:
 | 3.16 contracts and payment schedule (slice 1) | FR-FIN-08, FR-FIN-12, FR-FIN-09 (schedule) | 0031 | `finance/domain/contracts.ts`, `/contracts/*` |
 | 3.16 pay an installment, its expense, release the retained part (slice 2) | FR-FIN-09 | 0032 | `finance/domain/payments.ts`, `/contracts/[id]/payments/[paymentId]`, `src/app/contracts/due.ts` |
 | Expenses report by phase and type; planned vs actual for «كل الفترات» (PR #47) | FR-FIN-05 | — | `finance/domain/expense-report.ts`, `/expenses/report` |
+| 3.16 deepening: edit a contract and an unpaid payment; link extra works to a contract (open PR) | FR-FIN-08/09, FR-FIN-10 | — | `finance/application/contracts.ts`, `/contracts/[id]/edit`, `/contracts/[id]/payments/[paymentId]/edit`, `ExtrasList` |
 
 Bugs fixed along the way (all merged): a form refusal in the page wiped the owner's answers (React resets a form after
 its action — check/upload moved to `onSubmit`, in `CheckItemForm` and `IssueForm`); the pre-pour form offered the
 readiness template (now filtered by kind); several old DB tests adapted to new rules (`rls_0002`, `rls_0007`, `rls_0010`,
 `rls_0025`, `rls_0027`) with comments — each still tests what it tested.
 
-Last verified results (21 Nov, after PR #47): `npm run check` 628 unit tests pass; `npm run build` passes; 63 DB test files pass
-(Postgres 16; mutation runs for every new migration); full e2e on staging 58 passed, 1 skipped (HEIC, needs a real iPhone file);
+Last verified results (21 Nov, open pull request): `npm run check` 641 unit tests pass; `npm run build` passes; 63 DB test files pass
+(Postgres 16; mutation runs for every new migration); full e2e on staging 62 passed, 1 skipped (HEIC, needs a real iPhone file);
 all 34 Mermaid diagrams in `analysis_and_design.md` parse.
 
 ---
@@ -111,7 +112,7 @@ all 34 Mermaid diagrams in `analysis_and_design.md` parse.
 | Node "out of memory / committing semi space failed" | C: was full (0.25 GB) → page file could not grow. Caused by a 1.87 GB runaway task log (an accidental interactive `python -` in a pipe) | Fixed: log deleted, caches cleared, C: had ~5.4 GB free on 21 Nov. Never pipe a heredoc into a bare `python -` together with another heredoc |
 | Two unrelated e2e tests failed once (documents delete, expense stranger) | Timeouts on the slow USB drive | Passed when rerun alone and in the next full run |
 | One orphan test photo in staging bucket `project-files/e4817b2f-…/checklists/16f94a95-….jpg` | Run interrupted by the drive before cleanup; Supabase forbids deleting storage rows via SQL; its project no longer exists | Harmless; delete from the Supabase dashboard if wanted |
-| Quick expense: a receipt upload failure wipes the form | Same React form-reset pattern as the fixed bug | Not fixed (noted in change register) |
+| Quick expense: a receipt upload failure wiped the form | Same React form-reset pattern as the fixed bug (form sent with `action`) | **Fixed 21 Nov** (`onSubmit`); e2e test blocks the upload and fails without the fix |
 | Supabase security advisor: leaked-password protection off | Project setting | Owner's decision; not changed |
 | Writing test titles with an apostrophe from Python heredocs broke files | Quoting | Use double-quoted titles, or the Edit tool |
 | Python printing Arabic crashes on Windows console | cp1252 | Run scripts with `python -I -X utf8` (`-I` ignores `PYTHONIOENCODING`) |
@@ -169,7 +170,8 @@ projects' `outbox_events` and `audit_log` rows (projects cascade). Test files ar
 
 ## 9. Git status (verified 21 Nov)
 
-- `main` @ `ad8d2fa` contains PR #46 (contracts and payments) and PR #47 (FR-FIN-05 expenses report).
+- `main` @ `ad8d2fa` contains PR #46 (contracts and payments) and PR #47 (FR-FIN-05 expenses report). One pull request is open on top
+  of it (contracts deepening, quick-expense fix, status refresh).
 - Untracked: `.claude/` and `AGENTS.md` — **deliberately never committed** (owner's rule). `.env.local` is git-ignored.
 - Nothing unfinished.
 
