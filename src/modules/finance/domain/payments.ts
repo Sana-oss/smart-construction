@@ -14,7 +14,7 @@ import { EXPENSE_PAYEE_MAX, EXPENSE_TITLE_MAX, EXPENSE_TYPES, type ExpenseType, 
 //     phase is not done.
 
 export type DueGap = 'phase_not_done' | 'phase_without_photo';
-export type DueState = { state: 'not_tied' } | { state: 'due' } | { state: 'waiting'; gaps: DueGap[] };
+export type DueState = { state: 'not_tied' } | { state: 'due' } | { state: 'waiting'; gaps: readonly DueGap[] };
 
 /** FR-FIN-09: is the installment due? `phaseStatus` null = the phase was not found (treated as not done). */
 export function paymentDue(input: { phaseId: string | null; phaseStatus: string | null; phasePhotoCount: number }): DueState {
@@ -68,10 +68,10 @@ export interface PayInput {
 }
 
 export type PayDecision =
-  | { ok: true; paidOn: string; expenseType: ExpenseType; /** What was missing and the owner confirmed; null when nothing was. */ confirmedGaps: DueGap[] | null }
+  | { ok: true; paidOn: string; expenseType: ExpenseType; /** What was missing and the owner confirmed; null when nothing was. */ confirmedGaps: readonly DueGap[] | null }
   | { ok: false; kind: 'invalid'; errors: PayError[] }
   /** Not due and not confirmed yet: show the gaps and ask (D2). */
-  | { ok: false; kind: 'needs_confirm'; gaps: DueGap[] };
+  | { ok: false; kind: 'needs_confirm'; gaps: readonly DueGap[] };
 
 /** @param today the date in Libya. */
 export function decidePayment(input: PayInput, due: DueState, today: string): PayDecision {
